@@ -3,3 +3,6 @@
 ################################################################################
 
 /.vs
+*.user
+/Business.SourceGenerator/bin
+/Business.SourceGenerator/obj
