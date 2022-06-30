@@ -3591,7 +3591,7 @@ namespace Business.SourceGenerator
                 );
 
                 #region public static Type MakeGenericType(Type type, params Type[] typeArguments)
-
+                /*
                 var argsId = SyntaxFactory.Identifier("args");
                 var typeName = SyntaxFactory.IdentifierName("type");
                 var typeArgumentsName = SyntaxFactory.IdentifierName("typeArguments");
@@ -3616,7 +3616,7 @@ namespace Business.SourceGenerator
                     .Add(SyntaxFactory.Interpolation(SyntaxFactory.IdentifierName(argsId)))
                     .Add(SyntaxFactory.InterpolatedStringText(SyntaxFactoryExt.Token(SyntaxKind.InterpolatedStringTextToken, ">"))), SyntaxFactory.Token(SyntaxKind.InterpolatedStringEndToken))))
                     ));
-
+                */
                 #endregion
 
                 if (!string.IsNullOrEmpty(context.Compilation.AssemblyName))
