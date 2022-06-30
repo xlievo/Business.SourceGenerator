@@ -177,6 +177,7 @@ namespace Business.SourceGenerator
 
         public static VariableDeclarationSyntax VariableDeclaration(string type, params VariableDeclaratorSyntax[] variables) => SyntaxFactory.VariableDeclaration(SyntaxFactory.IdentifierName(type), new SeparatedSyntaxList<VariableDeclaratorSyntax>().AddRange(variables));
         public static VariableDeclaratorSyntax VariableDeclarator(string identifier, ExpressionSyntax initializer) => SyntaxFactory.VariableDeclarator(identifier).WithInitializer(SyntaxFactory.EqualsValueClause(initializer));
+        public static VariableDeclaratorSyntax VariableDeclarator(SyntaxToken identifier, ExpressionSyntax initializer) => SyntaxFactory.VariableDeclarator(identifier).WithInitializer(SyntaxFactory.EqualsValueClause(initializer));
 
         public static InvocationExpressionSyntax InvocationExpression(ExpressionSyntax expression, params ExpressionSyntax[] arg) => SyntaxFactory.InvocationExpression(expression, ArgumentList(arg));
 
