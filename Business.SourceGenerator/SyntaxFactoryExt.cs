@@ -1,13 +1,29 @@
-﻿using Microsoft.CodeAnalysis;
-using Microsoft.CodeAnalysis.CSharp;
-using Microsoft.CodeAnalysis.CSharp.Syntax;
-using System;
-using System.Collections.Generic;
-using System.Linq;
-using TypeNameFormatter;
+﻿/*==================================
+             ########
+            ##########
+             ########
+            ##########
+          ##############
+         #######  #######
+        ######      ######
+        #####        #####
+        ####          ####
+        ####   ####   ####
+        #####  ####  #####
+         ################
+          ##############
+==================================*/
 
-namespace Business.SourceGenerator
+namespace Business.SourceGenerator.Analysis
 {
+    using Microsoft.CodeAnalysis;
+    using Microsoft.CodeAnalysis.CSharp;
+    using Microsoft.CodeAnalysis.CSharp.Syntax;
+    using System;
+    using System.Collections.Generic;
+    using System.Linq;
+    using TypeNameFormatter;
+
     public static class SyntaxFactoryExt
     {
         public static ObjectCreationExpressionSyntax ParseObjectCreation(TypeSyntax type, ArgumentListSyntax? argumentList, InitializerExpressionSyntax? initializer)

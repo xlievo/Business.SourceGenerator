@@ -1,5 +1,22 @@
-﻿namespace Business.SourceGenerator
+﻿/*==================================
+             ########
+            ##########
+             ########
+            ##########
+          ##############
+         #######  #######
+        ######      ######
+        #####        #####
+        ####          ####
+        ####   ####   ####
+        #####  ####  #####
+         ################
+          ##############
+==================================*/
+
+namespace Business.SourceGenerator
 {
+    using Business.SourceGenerator.Analysis;
     using System;
     using System.Linq;
 
