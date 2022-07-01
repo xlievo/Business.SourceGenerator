@@ -51,7 +51,7 @@ namespace Business.SourceGenerator
                 var property = SyntaxFactoryExt.ParseProperty(generatorGenericTypes, typeof(IEnumerable<Type>), SyntaxFactory.AccessorDeclaration(SyntaxKind.GetAccessorDeclaration).WithSemicolonToken(SyntaxFactory.Token(SyntaxKind.SemicolonToken)).WithExpressionBody(SyntaxFactory.ArrowExpressionClause(SyntaxFactory.IdentifierName(generatorGenericTypesToLower))), null, SyntaxKind.PublicKeyword);
 
                 MemberDeclarationSyntax utils = SyntaxFactoryExt.ParseClass(Utils.Name).AddModifiers(SyntaxKind.PublicKeyword, SyntaxKind.PartialKeyword)
-                .AddBaseListTypes(SyntaxFactoryExt.QualifiedName(SyntaxFactoryExt.QualifiedName("Business", "SourceGenerator"), nameof(IGeneratorCode)))
+                .AddBaseListTypes(SyntaxFactory.ParseName(TypeNameFormatter.TypeName.GetFormattedName(typeof(IGeneratorCode), TypeNameFormatter.TypeNameFormatOptions.Namespaces)))
                 .AddMembers(
                 field,
                 property,

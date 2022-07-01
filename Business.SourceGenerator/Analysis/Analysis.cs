@@ -29,7 +29,7 @@ namespace Business.SourceGenerator.Analysis
     [AttributeUsage(AttributeTargets.Interface, Inherited = false, AllowMultiple = false)]
     public sealed class GeneratorGenericType : Attribute
     {
-        const string Key = "Business.SourceGenerator.GeneratorGenericType";
+        static readonly string Key = TypeNameFormatter.TypeName.GetFormattedName(typeof(GeneratorGenericType), TypeNameFormatter.TypeNameFormatOptions.Namespaces);
 
         static readonly IEqualityComparer<ITypeSymbol> typeSymbolEquality = Expression.Equality<ITypeSymbol>.CreateComparer(c => c.GetFullName());
 
