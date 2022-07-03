@@ -136,6 +136,25 @@ namespace Business.SourceGenerator.Analysis
 
         public static ArgumentSyntax ParseElementArgument(TypeSyntax type, params (ExpressionSyntax key, ExpressionSyntax value)[] value) => SyntaxFactory.Argument(ParseObjectCreation(type, null, ParseElementInitializer(value)));
 
+        public static TypeArgumentListSyntax TypeArgumentList(params TypeSyntax[] arg)
+        {
+            if (!(arg?.Any() ?? false)) { return SyntaxFactory.TypeArgumentList(); }
+
+            return SyntaxFactory.TypeArgumentList().AddArguments(arg);
+        }
+
+        public static TypeArgumentListSyntax Add(this TypeArgumentListSyntax list, params TypeSyntax[] arg)
+        {
+            if (list is null)
+            {
+                throw new ArgumentNullException(nameof(list));
+            }
+
+            if (!(arg?.Any() ?? false)) { return list; }
+
+            return list.AddArguments(arg);
+        }
+
         public static ArgumentListSyntax ArgumentList(params ExpressionSyntax[] arg)
         {
             if (!(arg?.Any() ?? false)) { return SyntaxFactory.ArgumentList(); }
@@ -199,9 +218,30 @@ namespace Business.SourceGenerator.Analysis
 
         public static QualifiedNameSyntax QualifiedName(string left, string right) => SyntaxFactory.QualifiedName(SyntaxFactory.IdentifierName(left), SyntaxFactory.IdentifierName(right));
 
+        public static QualifiedNameSyntax QualifiedName(string left, params string[] right)
+        {
+            QualifiedNameSyntax qualifiedName = null;
+
+            foreach (var item in right)
+            {
+                if (null == qualifiedName)
+                {
+                    qualifiedName = SyntaxFactory.QualifiedName(SyntaxFactory.IdentifierName(left), SyntaxFactory.IdentifierName(item));
+                }
+                else
+                {
+                    qualifiedName = SyntaxFactory.QualifiedName(qualifiedName, SyntaxFactory.IdentifierName(item));
+                }
+            }
+
+            return qualifiedName;
+        }
+
         public static QualifiedNameSyntax QualifiedName(NameSyntax left, string right) => SyntaxFactory.QualifiedName(left, SyntaxFactory.IdentifierName(right));
 
         public static QualifiedNameSyntax QualifiedName(string left, SimpleNameSyntax right) => SyntaxFactory.QualifiedName(SyntaxFactory.IdentifierName(left), right);
+
+        public static QualifiedNameSyntax QualifiedName(NameSyntax left, SimpleNameSyntax right) => SyntaxFactory.QualifiedName(left, right);
 
         #region namespace
 

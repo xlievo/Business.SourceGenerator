@@ -18,7 +18,6 @@ namespace Business.SourceGenerator
 {
     using Business.SourceGenerator.Analysis;
     using System;
-    using System.Linq;
 
     public static partial class Utils
     {
@@ -46,8 +45,9 @@ namespace Business.SourceGenerator
         /// </summary>
         public static IGeneratorCode GeneratorCode { get => generatorCode; }
 
-        public static Type GetGeneratorCodeType(this System.Reflection.Assembly assembly) => assembly.GetType($"{entryAssembly?.GetName().Name}.{Name}", false);
+        public static Type GetGeneratorCodeType(this System.Reflection.Assembly assembly) => assembly.GetType($"{assembly?.GetName().Name}.{Name}", false);
 
+        /*
         /// <summary>
         /// Replace System.Type.MakeGenericType(params Type[] typeArguments).
         /// <para>Find IGeneratorCode in Assembly.GetEntryAssembly().</para>
@@ -64,7 +64,7 @@ namespace Business.SourceGenerator
         /// <param name="type">type</param>
         /// <param name="typeArguments">An array of types to be substituted for the type parameters of the current generic type.</param>
         /// <returns></returns>
-        public static Type MakeGenericType(this IGeneratorCode generatorCode, Type type, params Type[] typeArguments) => generatorCode?.MakeGenericType(MakeGenericTypeName(type, typeArguments));
+        public static Type MakeGenericType(this IGeneratorCode generatorCode, Type type, params Type[] typeArguments) => generatorCode?.GetGenericType(MakeGenericTypeName(type, typeArguments));
 
         public static string MakeGenericTypeName(Type type, params Type[] typeArguments)
         {
@@ -82,5 +82,6 @@ namespace Business.SourceGenerator
 
             return $"{typeName}<{args}>";
         }
+        */
     }
 }

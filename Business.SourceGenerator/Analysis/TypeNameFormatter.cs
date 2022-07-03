@@ -3,7 +3,7 @@
 
 // ReSharper disable All
 
-namespace TypeNameFormatter
+namespace Business.SourceGenerator.TypeNameFormatter
 {
     using System;
     using System.CodeDom.Compiler;

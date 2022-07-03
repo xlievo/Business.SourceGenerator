@@ -202,9 +202,13 @@ namespace Business.SourceGenerator.Analysis
     {
         IEnumerable<Type> GeneratorGenericTypes { get; }
 
-        Type MakeGenericType(string key);
+        Type GetGenericType(string key);
 
-        //Type MakeGenericType(Type type, params Type[] typeArguments);
+        string GetGenericType(Type type, params Type[] typeArguments);
+
+        Type MakeGenericType(Type type, params Type[] typeArguments);
+
+        object CreateGenericType(Type type, params Type[] typeArguments);
     }
 
     //[AttributeUsage(AttributeTargets.Method, Inherited = false, AllowMultiple = true)]
