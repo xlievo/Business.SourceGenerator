@@ -11,6 +11,8 @@ Because AOT mode cannot dynamically generate code and types at run time, it requ
 ## [MakeGenericType]
 **Replace System.Type.MakeGenericType(typeArguments) by generating generic type code in advance.**
 
-1. Declare ```C#[SourceGenerator.Analysis.GeneratorGenericType]``` features on structures or classes or interfaces that need to be generated in advance.
+```C#
+1. Declare [SourceGenerator.Analysis.GeneratorGenericType] features on structures or classes or interfaces that need to be generated in advance.
 2. Call ```C#Business.SourceGenerator.Utils.GeneratorCode.MakeGenericType(type, typeArguments)``` to get the specified type.
 3. Call ```C#Business.SourceGenerator.Utils.GeneratorCode.CreateGenericType(type, typeArguments)``` to get an instance of the specified type.
+```
