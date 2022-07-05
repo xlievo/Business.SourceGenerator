@@ -324,9 +324,9 @@ namespace Business.SourceGenerator.Analysis
             var references = compilation.ReferencedAssemblyNames.Select(c => c.Name);
 
             #region AddSource
-
+            
             var businessSourceGeneratorDirectory = context.GetMSBuildProperty("Business_SourceGenerator");
-            System.Diagnostics.Debugger.Log(0, "", $"BusinessSourceGeneratorDirectory: {businessSourceGeneratorDirectory}");
+            System.Diagnostics.Debug.WriteLine($"BusinessSourceGeneratorDirectory: {businessSourceGeneratorDirectory}");
 
             foreach (var item in references)
             {
@@ -344,7 +344,7 @@ namespace Business.SourceGenerator.Analysis
                     continue;
                 }
 
-                System.Diagnostics.Debugger.Log(0, "", $"ReferenceDirectory: {src}");
+                System.Diagnostics.Debug.WriteLine($"ReferenceDirectory: {src}");
                 foreach (var item2 in System.IO.Directory.GetFiles(src, "*.cs", System.IO.SearchOption.AllDirectories))
                 {
                     compilation = compilation.AddSyntaxTree(System.IO.File.ReadAllText(item2), out _, context.ParseOptions, item2);
@@ -586,7 +586,7 @@ namespace Business.SourceGenerator.Analysis
 
                             var symbol = model.GetSymbolInfo(syntax).Symbol;
 
-                            var atts = new ConcurrentDictionary<string, ConcurrentDictionary<string, AttributeSyntax>>();
+                            var attrs = new ConcurrentDictionary<string, ConcurrentDictionary<string, AttributeSyntax>>();
 
                             if (syntax is MemberDeclarationSyntax member)
                             {
@@ -596,13 +596,13 @@ namespace Business.SourceGenerator.Analysis
                                     {
                                         if (model.GetSymbolInfo(item2).Symbol is IMethodSymbol method)
                                         {
-                                            atts.GetOrAdd(method.ReceiverType.GetFullName(), c => new ConcurrentDictionary<string, AttributeSyntax>()).AddOrUpdate(item2.GetFullName(), item2, (x, y) => item2);
+                                            attrs.GetOrAdd(method.ReceiverType.GetFullName(), c => new ConcurrentDictionary<string, AttributeSyntax>()).AddOrUpdate(item2.GetFullName(), item2, (x, y) => item2);
                                         }
                                     }
                                 }
                             }
 
-                            var info = new SymbolInfo(syntax, symbol, declared, source, symbol?.DeclaringSyntaxReferences.FirstOrDefault()?.GetSyntax() ?? declared.DeclaringSyntaxReferences.FirstOrDefault()?.GetSyntax(), atts, model.Compilation.AssemblyName);
+                            var info = new SymbolInfo(syntax, symbol, declared, source, symbol?.DeclaringSyntaxReferences.FirstOrDefault()?.GetSyntax() ?? declared.DeclaringSyntaxReferences.FirstOrDefault()?.GetSyntax(), attrs, model.Compilation.AssemblyName);
 
                             //switch (syntax)
                             //{
