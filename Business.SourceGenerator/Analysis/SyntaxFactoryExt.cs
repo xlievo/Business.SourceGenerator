@@ -210,6 +210,35 @@ namespace Business.SourceGenerator.Analysis
         public static MemberAccessExpressionSyntax MemberAccessExpression(string left, SimpleNameSyntax right) => MemberAccessExpression(SyntaxFactory.IdentifierName(left), right);
         public static MemberAccessExpressionSyntax MemberAccessExpression(ExpressionSyntax left, SimpleNameSyntax right) => SyntaxFactory.MemberAccessExpression(SyntaxKind.SimpleMemberAccessExpression, left, right);
 
+        public static MemberAccessExpressionSyntax MemberAccessExpression(string left, params string[] right)
+        {
+            if (left is null)
+            {
+                throw new ArgumentNullException(nameof(left));
+            }
+
+            if (right is null)
+            {
+                throw new ArgumentNullException(nameof(right));
+            }
+
+            MemberAccessExpressionSyntax memberAccessExpression = null;
+
+            foreach (var item in right)
+            {
+                if (null == memberAccessExpression)
+                {
+                    memberAccessExpression = SyntaxFactory.MemberAccessExpression(SyntaxKind.SimpleMemberAccessExpression, SyntaxFactory.IdentifierName(left), SyntaxFactory.IdentifierName(item));
+                }
+                else
+                {
+                    memberAccessExpression = SyntaxFactory.MemberAccessExpression(SyntaxKind.SimpleMemberAccessExpression, memberAccessExpression, SyntaxFactory.IdentifierName(item));
+                }
+            }
+
+            return memberAccessExpression;
+        }
+
         public static VariableDeclarationSyntax VariableDeclaration(string type, params VariableDeclaratorSyntax[] variables) => SyntaxFactory.VariableDeclaration(SyntaxFactory.IdentifierName(type), new SeparatedSyntaxList<VariableDeclaratorSyntax>().AddRange(variables));
         public static VariableDeclaratorSyntax VariableDeclarator(string identifier, ExpressionSyntax initializer) => SyntaxFactory.VariableDeclarator(identifier).WithInitializer(SyntaxFactory.EqualsValueClause(initializer));
         public static VariableDeclaratorSyntax VariableDeclarator(SyntaxToken identifier, ExpressionSyntax initializer) => SyntaxFactory.VariableDeclarator(identifier).WithInitializer(SyntaxFactory.EqualsValueClause(initializer));
@@ -220,6 +249,16 @@ namespace Business.SourceGenerator.Analysis
 
         public static QualifiedNameSyntax QualifiedName(string left, params string[] right)
         {
+            if (left is null)
+            {
+                throw new ArgumentNullException(nameof(left));
+            }
+
+            if (right is null)
+            {
+                throw new ArgumentNullException(nameof(right));
+            }
+
             QualifiedNameSyntax qualifiedName = null;
 
             foreach (var item in right)
@@ -242,6 +281,35 @@ namespace Business.SourceGenerator.Analysis
         public static QualifiedNameSyntax QualifiedName(string left, SimpleNameSyntax right) => SyntaxFactory.QualifiedName(SyntaxFactory.IdentifierName(left), right);
 
         public static QualifiedNameSyntax QualifiedName(NameSyntax left, SimpleNameSyntax right) => SyntaxFactory.QualifiedName(left, right);
+
+        public static BinaryExpressionSyntax BinaryExpression(ExpressionSyntax left, params ExpressionSyntax[] right)
+        {
+            if (left is null)
+            {
+                throw new ArgumentNullException(nameof(left));
+            }
+
+            if (right is null)
+            {
+                throw new ArgumentNullException(nameof(right));
+            }
+
+            BinaryExpressionSyntax binaryExpression = null;
+
+            foreach (var item in right)
+            {
+                if (null == binaryExpression)
+                {
+                    binaryExpression = SyntaxFactory.BinaryExpression(SyntaxKind.BitwiseOrExpression, left, item);
+                }
+                else
+                {
+                    binaryExpression = SyntaxFactory.BinaryExpression(SyntaxKind.BitwiseOrExpression, binaryExpression, item);
+                }
+            }
+
+            return binaryExpression;
+        }
 
         #region namespace
 

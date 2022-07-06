@@ -32,8 +32,6 @@ namespace Business.SourceGenerator
         {
             //System.Diagnostics.Debugger.Launch();
 
-            var log = new System.Text.StringBuilder(null);
-
             try
             {
                 MetaData.Init(context);
@@ -75,20 +73,22 @@ namespace Business.SourceGenerator
                     #region public string GetGenericType(Type type, params Type[] typeArguments)
 
                     var argsId = SyntaxFactory.Identifier("args");
-                    var typeName = SyntaxFactory.IdentifierName("type");
-                    var typeArgumentsName = SyntaxFactory.IdentifierName("typeArguments");
+                    var typeId = SyntaxFactory.Identifier("type");
+                    var typeArgumentsId = SyntaxFactory.Identifier("typeArguments");
+                    var typeIdName = SyntaxFactory.IdentifierName("type");
+                    var typeArgumentsIdName = SyntaxFactory.IdentifierName("typeArguments");
 
                     utils = (utils as ClassDeclarationSyntax).AddMembers(SyntaxFactoryExt.ParseMethod(nameof(IGeneratorCode.GetGenericType)).AddModifiers(SyntaxKind.PublicKeyword)
                     .WithReturnType(typeof(string))
-                    .WithParameters(SyntaxFactory.Parameter(SyntaxFactory.Identifier("type")).WithType(SyntaxFactoryExt.ParseType(typeof(Type))), SyntaxFactory.Parameter(SyntaxFactory.Identifier("typeArguments")).WithType(SyntaxFactoryExt.ParseType(typeof(Type[]))).AddModifiers(SyntaxFactory.Token(SyntaxKind.ParamsKeyword)))
+                    .WithParameters(SyntaxFactory.Parameter(typeId).WithType(SyntaxFactoryExt.ParseType(typeof(Type))), SyntaxFactory.Parameter(typeArgumentsId).WithType(SyntaxFactoryExt.ParseType(typeof(Type[]))).AddModifiers(SyntaxFactory.Token(SyntaxKind.ParamsKeyword)))
                     .WithBody(
-                        SyntaxFactory.IfStatement(SyntaxFactory.IsPatternExpression(typeName, SyntaxFactory.ConstantPattern(SyntaxFactoryExt.ParseLiteralNull())), SyntaxFactory.Block(SyntaxFactory.ThrowStatement(SyntaxFactory.ObjectCreationExpression(SyntaxFactoryExt.ArgumentNullException(), SyntaxFactory.ArgumentList().Add(SyntaxFactoryExt.NameOf(typeName)), null)))),
+                        SyntaxFactory.IfStatement(SyntaxFactory.IsPatternExpression(typeIdName, SyntaxFactory.ConstantPattern(SyntaxFactoryExt.ParseLiteralNull())), SyntaxFactory.Block(SyntaxFactory.ThrowStatement(SyntaxFactory.ObjectCreationExpression(SyntaxFactoryExt.ArgumentNullException(), SyntaxFactory.ArgumentList().Add(SyntaxFactoryExt.NameOf(typeIdName)), null)))),
 
-                        SyntaxFactory.IfStatement(SyntaxFactory.IsPatternExpression(typeArgumentsName, SyntaxFactory.ConstantPattern(SyntaxFactoryExt.ParseLiteralNull())), SyntaxFactory.Block(SyntaxFactory.ThrowStatement(SyntaxFactory.ObjectCreationExpression(SyntaxFactoryExt.ArgumentNullException(), SyntaxFactory.ArgumentList().Add(SyntaxFactoryExt.NameOf(typeArgumentsName)), null)))),
+                        SyntaxFactory.IfStatement(SyntaxFactory.IsPatternExpression(typeArgumentsIdName, SyntaxFactory.ConstantPattern(SyntaxFactoryExt.ParseLiteralNull())), SyntaxFactory.Block(SyntaxFactory.ThrowStatement(SyntaxFactory.ObjectCreationExpression(SyntaxFactoryExt.ArgumentNullException(), SyntaxFactory.ArgumentList().Add(SyntaxFactoryExt.NameOf(typeArgumentsIdName)), null)))),
 
-                        SyntaxFactory.LocalDeclarationStatement(SyntaxFactoryExt.VariableDeclaration("var", SyntaxFactoryExt.VariableDeclarator("typeName", SyntaxFactoryExt.InvocationExpression(SyntaxFactoryExt.MemberAccessExpression(SyntaxFactoryExt.MemberAccessExpression("Business.SourceGenerator.TypeNameFormatter", "TypeName"), "GetFormattedName"), typeName, SyntaxFactory.BinaryExpression(SyntaxKind.BitwiseOrExpression, SyntaxFactory.BinaryExpression(SyntaxKind.BitwiseOrExpression, SyntaxFactory.BinaryExpression(SyntaxKind.BitwiseOrExpression, SyntaxFactoryExt.MemberAccessExpression(SyntaxFactoryExt.MemberAccessExpression("Business.SourceGenerator.TypeNameFormatter", "TypeNameFormatOptions"), "Namespaces"), SyntaxFactoryExt.MemberAccessExpression(SyntaxFactoryExt.MemberAccessExpression("Business.SourceGenerator.TypeNameFormatter", "TypeNameFormatOptions"), "NoKeywords")), SyntaxFactoryExt.MemberAccessExpression(SyntaxFactoryExt.MemberAccessExpression("Business.SourceGenerator.TypeNameFormatter", "TypeNameFormatOptions"), "NoAnonymousTypes")), SyntaxFactoryExt.MemberAccessExpression(SyntaxFactoryExt.MemberAccessExpression("Business.SourceGenerator.TypeNameFormatter", "TypeNameFormatOptions"), "NoGeneric")))))),
+                        SyntaxFactory.LocalDeclarationStatement(SyntaxFactoryExt.VariableDeclaration("var", SyntaxFactoryExt.VariableDeclarator("typeName", SyntaxFactoryExt.InvocationExpression(SyntaxFactoryExt.MemberAccessExpression(SyntaxFactoryExt.MemberAccessExpression("Business.SourceGenerator.TypeNameFormatter", "TypeName"), "GetFormattedName"), typeIdName, SyntaxFactoryExt.BinaryExpression(SyntaxFactoryExt.MemberAccessExpression("Business.SourceGenerator.TypeNameFormatter", "TypeNameFormatOptions", "Namespaces"), SyntaxFactoryExt.MemberAccessExpression("Business.SourceGenerator.TypeNameFormatter", "TypeNameFormatOptions", "NoKeywords"), SyntaxFactoryExt.MemberAccessExpression("Business.SourceGenerator.TypeNameFormatter", "TypeNameFormatOptions", "NoAnonymousTypes"), SyntaxFactoryExt.MemberAccessExpression("Business.SourceGenerator.TypeNameFormatter", "TypeNameFormatOptions", "NoGeneric")))))),
 
-                        SyntaxFactory.LocalDeclarationStatement(SyntaxFactoryExt.VariableDeclaration("var", SyntaxFactoryExt.VariableDeclarator(argsId, SyntaxFactoryExt.InvocationExpression(SyntaxFactoryExt.MemberAccessExpression("string", "Join"), SyntaxFactoryExt.ParseLiteral(", "), SyntaxFactoryExt.InvocationExpression(SyntaxFactoryExt.MemberAccessExpression("typeArguments", "Select"), SyntaxFactory.SimpleLambdaExpression(SyntaxFactory.Parameter(SyntaxFactory.ParseToken("c")), SyntaxFactoryExt.InvocationExpression(SyntaxFactoryExt.MemberAccessExpression(SyntaxFactoryExt.MemberAccessExpression("Business.SourceGenerator.TypeNameFormatter", "TypeName"), "GetFormattedName"), SyntaxFactory.IdentifierName("c"), SyntaxFactory.BinaryExpression(SyntaxKind.BitwiseOrExpression, SyntaxFactory.BinaryExpression(SyntaxKind.BitwiseOrExpression, SyntaxFactoryExt.MemberAccessExpression(SyntaxFactoryExt.MemberAccessExpression("Business.SourceGenerator.TypeNameFormatter", "TypeNameFormatOptions"), "Namespaces"), SyntaxFactoryExt.MemberAccessExpression(SyntaxFactoryExt.MemberAccessExpression("Business.SourceGenerator.TypeNameFormatter", "TypeNameFormatOptions"), "NoKeywords")), SyntaxFactoryExt.MemberAccessExpression(SyntaxFactoryExt.MemberAccessExpression("Business.SourceGenerator.TypeNameFormatter", "TypeNameFormatOptions"), "NoAnonymousTypes"))))))))),
+                        SyntaxFactory.LocalDeclarationStatement(SyntaxFactoryExt.VariableDeclaration("var", SyntaxFactoryExt.VariableDeclarator(argsId, SyntaxFactoryExt.InvocationExpression(SyntaxFactoryExt.MemberAccessExpression("string", "Join"), SyntaxFactoryExt.ParseLiteral(", "), SyntaxFactoryExt.InvocationExpression(SyntaxFactoryExt.MemberAccessExpression("typeArguments", "Select"), SyntaxFactory.SimpleLambdaExpression(SyntaxFactory.Parameter(SyntaxFactory.ParseToken("c")), SyntaxFactoryExt.InvocationExpression(SyntaxFactoryExt.MemberAccessExpression(SyntaxFactoryExt.MemberAccessExpression("Business.SourceGenerator.TypeNameFormatter", "TypeName"), "GetFormattedName"), SyntaxFactory.IdentifierName("c"), SyntaxFactoryExt.BinaryExpression(SyntaxFactoryExt.MemberAccessExpression("Business.SourceGenerator.TypeNameFormatter", "TypeNameFormatOptions", "Namespaces"), SyntaxFactoryExt.MemberAccessExpression("Business.SourceGenerator.TypeNameFormatter", "TypeNameFormatOptions", "NoKeywords"), SyntaxFactoryExt.MemberAccessExpression("Business.SourceGenerator.TypeNameFormatter", "TypeNameFormatOptions", "NoAnonymousTypes"))))))))),
 
                         SyntaxFactory.IfStatement(SyntaxFactoryExt.InvocationExpression(SyntaxFactoryExt.MemberAccessExpression(SyntaxFactory.PredefinedType(SyntaxFactory.Token(SyntaxKind.StringKeyword)), SyntaxFactory.IdentifierName("IsNullOrEmpty")), SyntaxFactory.IdentifierName(argsId)), SyntaxFactory.Block(SyntaxFactory.ReturnStatement(SyntaxFactory.IdentifierName("typeName")))),
 
@@ -105,8 +105,8 @@ namespace Business.SourceGenerator
 
                     utils = (utils as ClassDeclarationSyntax).AddMembers(SyntaxFactoryExt.ParseMethod(nameof(IGeneratorCode.MakeGenericType)).AddModifiers(SyntaxKind.PublicKeyword)
                     .WithReturnType(typeof(Type))
-                    .WithParameters(SyntaxFactory.Parameter(SyntaxFactory.Identifier("type")).WithType(SyntaxFactoryExt.ParseType(typeof(Type))), SyntaxFactory.Parameter(SyntaxFactory.Identifier("typeArguments")).WithType(SyntaxFactoryExt.ParseType(typeof(Type[]))).AddModifiers(SyntaxFactory.Token(SyntaxKind.ParamsKeyword)))
-                    .WithBody(SyntaxFactory.ReturnStatement(SyntaxFactoryExt.InvocationExpression(SyntaxFactory.IdentifierName("GetGenericType"), SyntaxFactoryExt.InvocationExpression(SyntaxFactory.IdentifierName("GetGenericType"), typeName, typeArgumentsName)))));
+                    .WithParameters(SyntaxFactory.Parameter(typeId).WithType(SyntaxFactoryExt.ParseType(typeof(Type))), SyntaxFactory.Parameter(typeArgumentsId).WithType(SyntaxFactoryExt.ParseType(typeof(Type[]))).AddModifiers(SyntaxFactory.Token(SyntaxKind.ParamsKeyword)))
+                    .WithBody(SyntaxFactory.ReturnStatement(SyntaxFactoryExt.InvocationExpression(SyntaxFactory.IdentifierName("GetGenericType"), SyntaxFactoryExt.InvocationExpression(SyntaxFactory.IdentifierName("GetGenericType"), typeIdName, typeArgumentsIdName)))));
 
                     #endregion
 
@@ -114,13 +114,13 @@ namespace Business.SourceGenerator
 
                     utils = (utils as ClassDeclarationSyntax).AddMembers(SyntaxFactoryExt.ParseMethod(nameof(IGeneratorCode.CreateGenericType)).AddModifiers(SyntaxKind.PublicKeyword)
                     .WithReturnType(typeof(object))
-                    .WithParameters(SyntaxFactory.Parameter(SyntaxFactory.Identifier("type")).WithType(SyntaxFactoryExt.ParseType(typeof(Type))), SyntaxFactory.Parameter(SyntaxFactory.Identifier("typeArguments")).WithType(SyntaxFactoryExt.ParseType(typeof(Type[]))).AddModifiers(SyntaxFactory.Token(SyntaxKind.ParamsKeyword)))
+                    .WithParameters(SyntaxFactory.Parameter(typeId).WithType(SyntaxFactoryExt.ParseType(typeof(Type))), SyntaxFactory.Parameter(typeArgumentsId).WithType(SyntaxFactoryExt.ParseType(typeof(Type[]))).AddModifiers(SyntaxFactory.Token(SyntaxKind.ParamsKeyword)))
                     .WithBody(
-                        SyntaxFactory.IfStatement(SyntaxFactory.IsPatternExpression(typeName, SyntaxFactory.ConstantPattern(SyntaxFactoryExt.ParseLiteralNull())), SyntaxFactory.Block(SyntaxFactory.ThrowStatement(SyntaxFactory.ObjectCreationExpression(SyntaxFactoryExt.ArgumentNullException(), SyntaxFactory.ArgumentList().Add(SyntaxFactoryExt.NameOf(typeName)), null)))),
+                        SyntaxFactory.IfStatement(SyntaxFactory.IsPatternExpression(typeIdName, SyntaxFactory.ConstantPattern(SyntaxFactoryExt.ParseLiteralNull())), SyntaxFactory.Block(SyntaxFactory.ThrowStatement(SyntaxFactory.ObjectCreationExpression(SyntaxFactoryExt.ArgumentNullException(), SyntaxFactory.ArgumentList().Add(SyntaxFactoryExt.NameOf(typeIdName)), null)))),
 
-                        SyntaxFactory.IfStatement(SyntaxFactory.IsPatternExpression(typeArgumentsName, SyntaxFactory.ConstantPattern(SyntaxFactoryExt.ParseLiteralNull())), SyntaxFactory.Block(SyntaxFactory.ThrowStatement(SyntaxFactory.ObjectCreationExpression(SyntaxFactoryExt.ArgumentNullException(), SyntaxFactory.ArgumentList().Add(SyntaxFactoryExt.NameOf(typeArgumentsName)), null)))),
+                        SyntaxFactory.IfStatement(SyntaxFactory.IsPatternExpression(typeArgumentsIdName, SyntaxFactory.ConstantPattern(SyntaxFactoryExt.ParseLiteralNull())), SyntaxFactory.Block(SyntaxFactory.ThrowStatement(SyntaxFactory.ObjectCreationExpression(SyntaxFactoryExt.ArgumentNullException(), SyntaxFactory.ArgumentList().Add(SyntaxFactoryExt.NameOf(typeArgumentsIdName)), null)))),
 
-                        SyntaxFactory.LocalDeclarationStatement(SyntaxFactoryExt.VariableDeclaration("var", SyntaxFactoryExt.VariableDeclarator("key", SyntaxFactoryExt.InvocationExpression(SyntaxFactory.IdentifierName("GetGenericType"), typeName, typeArgumentsName)))),
+                        SyntaxFactory.LocalDeclarationStatement(SyntaxFactoryExt.VariableDeclaration("var", SyntaxFactoryExt.VariableDeclarator("key", SyntaxFactoryExt.InvocationExpression(SyntaxFactory.IdentifierName("GetGenericType"), typeIdName, typeArgumentsIdName)))),
 
                         SyntaxFactoryExt.ParseSwitch(keyToLower,
                     SyntaxFactory.ReturnStatement(SyntaxFactoryExt.ParseDefaultLiteral()), types.Select(c => (SyntaxFactoryExt.ParseLiteral(c.Key) as ExpressionSyntax, SyntaxFactory.ReturnStatement(SyntaxFactoryExt.InvocationExpression(SyntaxFactoryExt.QualifiedName(SyntaxFactoryExt.QualifiedName("System", "Activator"), SyntaxFactory.GenericName("CreateInstance").WithTypeArgumentList(SyntaxFactoryExt.TypeArgumentList(SyntaxFactory.ParseTypeName(c.Value)))))) as StatementSyntax)).ToArray())
@@ -143,8 +143,8 @@ namespace Business.SourceGenerator
             catch (Exception ex)
             {
                 System.Diagnostics.Debug.WriteLine(ex);
-                log.AppendLine(Convert.ToString(ex));
-                context.AddSource("logs", Microsoft.CodeAnalysis.Text.SourceText.From($@"/*{ Environment.NewLine + log + Environment.NewLine}*/", System.Text.Encoding.UTF8));
+
+                context.AddSource("logs", Microsoft.CodeAnalysis.Text.SourceText.From($"/*{Environment.NewLine}{ex}{Environment.NewLine}*/", System.Text.Encoding.UTF8));
             }
         }
 
@@ -420,10 +420,7 @@ namespace Business.SourceGenerator
             //context.AddSource("code", code);
         }
 
-        public void Initialize(GeneratorInitializationContext context)
-        {
-            context.RegisterForSyntaxNotifications(() => new SyntaxReceiver());
-        }
+        public void Initialize(GeneratorInitializationContext context) => context.RegisterForSyntaxNotifications(() => new SyntaxReceiver());
     }
 
     internal class SyntaxReceiver : ISyntaxReceiver

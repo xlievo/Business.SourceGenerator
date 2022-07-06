@@ -271,7 +271,6 @@ namespace Business.SourceGenerator.Analysis
                 Attributes = attributes;
                 AssemblyName = assemblyName;
                 GenericArguments = genericArguments;
-
             }
 
             public SymbolInfo Clone(IEnumerable<ITypeSymbol> genericArguments) => new SymbolInfo(Syntax, Symbol, Declared, Source, References, Attributes, AssemblyName, genericArguments);
@@ -407,18 +406,7 @@ namespace Business.SourceGenerator.Analysis
 
                 foreach (var item2 in nodes.AsParallel())
                 {
-                    switch (item2)
-                    {
-                        case NamespaceDeclarationSyntax namespaces:
-                            foreach (var item3 in namespaces.DescendantNodes())
-                            {
-                                InitSymbols(model, item3);
-                            }
-                            break;
-                        default:
-                            InitSymbols(model, item2);
-                            break;
-                    }
+                    InitSymbols(model, item2);
                 }
             }
 
@@ -462,19 +450,6 @@ namespace Business.SourceGenerator.Analysis
 
         static void InitSymbols(SemanticModel model, SyntaxNode syntax)
         {
-            ////model.GetSpeculativeTypeInfo(0, null, SpeculativeBindingOption.BindAsTypeOrNamespace);
-
-            //var tt = Microsoft.CodeAnalysis.CSharp.SyntaxFactory.ParseTypeName("int");
-            //var tt2 = new SeparatedSyntaxList<TypeSyntax>().Add(tt);
-            //var aa = Microsoft.CodeAnalysis.CSharp.SyntaxFactory.TypeArgumentList(tt2);
-            ////aa.Arguments.Add(tt);
-
-            //var ddd = Microsoft.CodeAnalysis.CSharp.SyntaxFactory.GenericName(Microsoft.CodeAnalysis.CSharp.SyntaxFactory.ParseToken("sss"), aa);
-
-            //var ddd2 = model.GetSpeculativeTypeInfo(0, ddd, SpeculativeBindingOption.BindAsTypeOrNamespace);
-            ////var ddd2 = model.GetSymbolInfo(ddd);
-            ///
-
             switch (syntax.RawKind)
             {
                 case (int)SyntaxKind.InterfaceDeclaration:
@@ -604,67 +579,13 @@ namespace Business.SourceGenerator.Analysis
 
                             var info = new SymbolInfo(syntax, symbol, declared, source, symbol?.DeclaringSyntaxReferences.FirstOrDefault()?.GetSyntax() ?? declared.DeclaringSyntaxReferences.FirstOrDefault()?.GetSyntax(), attrs, model.Compilation.AssemblyName);
 
-                            //switch (syntax)
-                            //{
-                            //    case AssignmentExpressionSyntax node:
-                            //        var assignment = model.GetSymbolInfo(node.Left).Symbol;
-
-                            //        var assignment2 = node.Left.GetSymbolInfo();
-
-                            //        var assignment3 = assignment2.Symbol;
-
-                            //        if (null != assignment && assignment.IsStatic)// && (assignment is IFieldSymbol || assignment is IPropertySymbol)
-                            //        {
-                            //            //AnalysisInfo.StaticAssignments.GetOrAdd(assignment.GetFullName(), c => new ConcurrentDictionary<string, AssignmentExpressionSyntax>()).AddOrUpdate(node.GetFullName(), node, (x, y) => node);
-                            //            AnalysisInfo.StaticAssignments.GetOrAdd(assignment.GetFullName(), c => new ConcurrentDictionary<string, AssignmentExpressionSyntax>()).AddOrUpdate(node.GetFullName(), node, (x, y) => node);
-                            //        }
-                            //        break;
-                            //    case InvocationExpressionSyntax node:
-                            //        if (null != info.Symbol)
-                            //        {
-                            //            //if (syntax.ToString().Contains("Help.MD5"))
-                            //            //{
-
-                            //            //}
-                            //            //if (syntax.ToString().Contains("Help.Scale((decimal)value"))
-                            //            //{
-
-                            //            //}
-                            //            AnalysisInfo.Invocations.GetOrAdd(info.Symbol.GetFullNameOrig(), c => new ConcurrentDictionary<string, SymbolInfo>()).AddOrUpdate(info.Syntax.GetFullName(), info, (x, y) => info);
-                            //        }
-                            //        //else
-                            //        //{
-                            //        //    if (syntax.ToString().Contains("Help.MD5"))
-                            //        //    {
-
-                            //        //        symbol = model.GetSymbolInfo(node.Expression).Symbol;
-                            //        //        var s2 = model.GetTypeInfo(node.Expression);
-                            //        //        var s3 = model.GetDeclaredSymbol(node.Expression);
-                            //        //    }
-                            //        //}
-                            //        break;
-                            //    case MethodDeclarationSyntax node:
-
-                            //        SetGenericType(node, declared, model);
-
-                            //        break;
-                            //    default: break;
-                            //}
-
                             if (declared is ITypeSymbol type)
                             {
                                 var key = declared.GetFullName();
 
                                 AnalysisInfo.TypeSymbols.TryAdd(key, info);
-
-                                //if (type.DeclaringSyntaxReferences.Any())
-                                //{
-                                //    //TypeSymbols.AddOrUpdate(key, type, (x, y) => type);
-                                //    AnalysisInfo.TypeSymbols.TryAdd(key, info);
-                                //}
                             }
 
-                            //DeclaredSymbols.AddOrUpdate(syntax.GetFullName(), info, (x, y) => info);
                             AnalysisInfo.DeclaredSymbols.TryAdd(syntax.GetFullName(), info);
                         }
                     }
