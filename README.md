@@ -18,11 +18,13 @@ Because AOT mode cannot dynamically generate code and types at run time, it requ
 
 ## [About distributing nuget packages]
 1. Please create the following directory in the project root directory
+```C#
 ----Assets
 ----------build
 ---------------package.props
 ----------src
 ---------------Your source code file, and set the generation operation to No. <Only store the code marked with [SourceGenerator.Analysis.GeneratorGenericType]>
+```
 
 2. package.props <Your project name, replace dots with underscores "_"->".">
 ```C#
