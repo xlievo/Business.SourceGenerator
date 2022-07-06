@@ -23,7 +23,9 @@ Because AOT mode cannot dynamically generate code and types at run time, it requ
 ----------build
 ---------------package.props
 ----------src
----------------Your source code file, and set the generation operation to No. <Only store the code marked with [SourceGenerator.Analysis.GeneratorGenericType]>
+---------------Your source code file, and set the generation operation to No. 
+	The code here does not participate in compilation, but requires syntax modeling.
+	<Only store the code marked with [SourceGenerator.Analysis.GeneratorGenericType]>
 ```
 
 2. package.props <Your project name, replace dots with underscores "_"->".">
