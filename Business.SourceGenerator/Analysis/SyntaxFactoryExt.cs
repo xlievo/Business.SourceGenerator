@@ -186,6 +186,8 @@ namespace Business.SourceGenerator.Analysis
 
         public static InitializerExpressionSyntax ArrayInitializerExpression(params ExpressionSyntax[] expressions) => SyntaxFactory.InitializerExpression(SyntaxKind.ArrayInitializerExpression, new SeparatedSyntaxList<ExpressionSyntax>().AddRange(expressions));
 
+        public static ObjectCreationExpressionSyntax ObjectCreationExpression(TypeSyntax type, params ExpressionSyntax[] arg) => SyntaxFactory.ObjectCreationExpression(type, ArgumentList(arg), null);
+
         #region ParseToken
 
         public static SyntaxTokenList ParseTokenList(params SyntaxKind[] modifiers) => new SyntaxTokenList(ParseSyntaxToken(modifiers));

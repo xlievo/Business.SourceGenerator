@@ -31,11 +31,16 @@
   </Target>
 
   <ItemGroup>
+    <Compile Remove="Assets\src\code.cs" />
+  </ItemGroup>
+
+  <ItemGroup>
     <None Remove="Assets\src\code.txt" />
   </ItemGroup>
 
   <ItemGroup>
     <None Include="$(OutputPath)\$(AssemblyName).dll" Pack="true" PackagePath="analyzers/dotnet/cs" Visible="false" />
+    <None Include="Assets\src\code.cs" />
   </ItemGroup>
 
   <ItemGroup>
@@ -44,10 +49,6 @@
       <IncludeAssets>runtime; build; native; contentfiles; analyzers; buildtransitive</IncludeAssets>
     </PackageReference>
     <PackageReference Include="Microsoft.CodeAnalysis.CSharp.Workspaces" Version="4.2.0" PrivateAssets="all" />
-  </ItemGroup>
-
-  <ItemGroup>
-    <Folder Include="Assets\src\" />
   </ItemGroup>
 
 </Project>

@@ -42,21 +42,27 @@ namespace Business.SourceGenerator
 
                 if (types.Any())
                 {
+                    var generatorField = SyntaxFactoryExt.ParseField("generator", SyntaxFactory.ParseName(TypeNameFormatter.TypeName.GetFormattedName(typeof(Lazy<IGeneratorCode>), TypeNameFormatter.TypeNameFormatOptions.Namespaces)), SyntaxKind.StaticKeyword, SyntaxKind.ReadOnlyKeyword).Initializer(SyntaxFactoryExt.ObjectCreationExpression(SyntaxFactory.ParseName(TypeNameFormatter.TypeName.GetFormattedName(typeof(Lazy<IGeneratorCode>), TypeNameFormatter.TypeNameFormatOptions.Namespaces)), SyntaxFactory.ParenthesizedLambdaExpression(SyntaxFactoryExt.ObjectCreationExpression(SyntaxFactory.ParseTypeName(Utils.GeneratorCodeName)))));
+
+                    var generatorProperty = SyntaxFactoryExt.ParseProperty("Generator", SyntaxFactory.ParseName(TypeNameFormatter.TypeName.GetFormattedName(typeof(IGeneratorCode), TypeNameFormatter.TypeNameFormatOptions.Namespaces)), SyntaxFactory.AccessorDeclaration(SyntaxKind.GetAccessorDeclaration).WithSemicolonToken(SyntaxFactory.Token(SyntaxKind.SemicolonToken)).WithExpressionBody(SyntaxFactory.ArrowExpressionClause(SyntaxFactoryExt.QualifiedName("generator", "Value"))), null, SyntaxKind.PublicKeyword, SyntaxKind.StaticKeyword);
+
                     var key = SyntaxFactory.IdentifierName("key");
                     var keyToLower = SyntaxFactory.InvocationExpression(SyntaxFactory.MemberAccessExpression(SyntaxKind.SimpleMemberAccessExpression, key, SyntaxFactory.IdentifierName(keyFormat.GetName())));
 
                     var generatorGenericTypes = nameof(IGeneratorCode.GeneratorGenericTypes);
                     var generatorGenericTypesToLower = $"{generatorGenericTypes[0].ToString().ToLower()}{generatorGenericTypes.Substring(1)}";
 
-                    var field = SyntaxFactoryExt.ParseField(generatorGenericTypesToLower, typeof(Type[]), SyntaxKind.ReadOnlyKeyword).Initializer(SyntaxFactoryExt.ArrayInitializerExpression(types.Select(c => SyntaxFactory.TypeOfExpression(SyntaxFactory.ParseTypeName(c.Value))).ToArray()));
+                    var generatorGenericTypesField = SyntaxFactoryExt.ParseField(generatorGenericTypesToLower, typeof(Type[]), SyntaxKind.ReadOnlyKeyword).Initializer(SyntaxFactoryExt.ArrayInitializerExpression(types.Select(c => SyntaxFactory.TypeOfExpression(SyntaxFactory.ParseTypeName(c.Value))).ToArray()));
 
-                    var property = SyntaxFactoryExt.ParseProperty(generatorGenericTypes, typeof(IEnumerable<Type>), SyntaxFactory.AccessorDeclaration(SyntaxKind.GetAccessorDeclaration).WithSemicolonToken(SyntaxFactory.Token(SyntaxKind.SemicolonToken)).WithExpressionBody(SyntaxFactory.ArrowExpressionClause(SyntaxFactory.IdentifierName(generatorGenericTypesToLower))), null, SyntaxKind.PublicKeyword);
+                    var GeneratorGenericTypesProperty = SyntaxFactoryExt.ParseProperty(generatorGenericTypes, typeof(IEnumerable<Type>), SyntaxFactory.AccessorDeclaration(SyntaxKind.GetAccessorDeclaration).WithSemicolonToken(SyntaxFactory.Token(SyntaxKind.SemicolonToken)).WithExpressionBody(SyntaxFactory.ArrowExpressionClause(SyntaxFactory.IdentifierName(generatorGenericTypesToLower))), null, SyntaxKind.PublicKeyword);
 
-                    MemberDeclarationSyntax utils = SyntaxFactoryExt.ParseClass(Utils.Name).AddModifiers(SyntaxKind.PublicKeyword, SyntaxKind.PartialKeyword)
+                    MemberDeclarationSyntax utils = SyntaxFactoryExt.ParseClass(Utils.GeneratorCodeName).AddModifiers(SyntaxKind.PublicKeyword, SyntaxKind.PartialKeyword)
                     .AddBaseListTypes(SyntaxFactory.ParseName(TypeNameFormatter.TypeName.GetFormattedName(typeof(IGeneratorCode), TypeNameFormatter.TypeNameFormatOptions.Namespaces)))
                     .AddMembers(
-                    field,
-                    property,
+                    generatorField,
+                    generatorProperty,
+                    generatorGenericTypesField,
+                    GeneratorGenericTypesProperty,
                     #region public Type GetGenericType(string key)
 
                     SyntaxFactoryExt.ParseMethod(nameof(IGeneratorCode.GetGenericType)).AddModifiers(SyntaxKind.PublicKeyword)
@@ -123,7 +129,7 @@ namespace Business.SourceGenerator
                         SyntaxFactory.LocalDeclarationStatement(SyntaxFactoryExt.VariableDeclaration("var", SyntaxFactoryExt.VariableDeclarator("key", SyntaxFactoryExt.InvocationExpression(SyntaxFactory.IdentifierName("GetGenericType"), typeIdName, typeArgumentsIdName)))),
 
                         SyntaxFactoryExt.ParseSwitch(keyToLower,
-                    SyntaxFactory.ReturnStatement(SyntaxFactoryExt.ParseDefaultLiteral()), types.Select(c => (SyntaxFactoryExt.ParseLiteral(c.Key) as ExpressionSyntax, SyntaxFactory.ReturnStatement(SyntaxFactoryExt.InvocationExpression(SyntaxFactoryExt.QualifiedName(SyntaxFactoryExt.QualifiedName("System", "Activator"), SyntaxFactory.GenericName("CreateInstance").WithTypeArgumentList(SyntaxFactoryExt.TypeArgumentList(SyntaxFactory.ParseTypeName(c.Value)))))) as StatementSyntax)).ToArray())
+                    SyntaxFactory.ReturnStatement(SyntaxFactoryExt.ParseDefaultLiteral()), types.Select(c => (SyntaxFactoryExt.ParseLiteral(c.Key) as ExpressionSyntax, SyntaxFactory.ReturnStatement(SyntaxFactoryExt.ObjectCreationExpression(SyntaxFactory.ParseTypeName(c.Value))) as StatementSyntax)).ToArray())
                     ));
 
                     #endregion
@@ -137,7 +143,7 @@ namespace Business.SourceGenerator
 
                     var code = $"using System; using System.Collections.Generic; using System.Linq; {utils.ToCode()}";
 
-                    context.AddSource(Utils.Name, Microsoft.CodeAnalysis.Text.SourceText.From(code, System.Text.Encoding.UTF8));
+                    context.AddSource(Utils.GeneratorCodeName, Microsoft.CodeAnalysis.Text.SourceText.From(code, System.Text.Encoding.UTF8));
                 }
             }
             catch (Exception ex)
@@ -157,7 +163,7 @@ namespace Business.SourceGenerator
 
             var ddd = context.Compilation.Options.SourceReferenceResolver.GetType();
 
-            var code2 = System.IO.File.ReadAllText(System.IO.Path.Combine(@"D:\Repos\Business.SourceGenerator-main\Business.SourceGenerator\Assets\src", "code.txt"));
+            var code2 = System.IO.File.ReadAllText(System.IO.Path.Combine(@"D:\Repos\Business.SourceGenerator-main\Business.SourceGenerator\Assets\src", "code.cs"));
 
             var compilation = context.Compilation.AddSyntaxTree(code2, out SyntaxTree tree, context.ParseOptions);
 

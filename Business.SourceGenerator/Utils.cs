@@ -24,7 +24,7 @@ namespace Business.SourceGenerator
         /// <summary>
         /// "BusinessSourceGenerator"
         /// </summary>
-        public const string Name = "BusinessSourceGenerator";
+        public const string GeneratorCodeName = "BusinessSourceGenerator";
 
         static Utils()
         {
@@ -43,11 +43,11 @@ namespace Business.SourceGenerator
                 throw new ArgumentNullException(nameof(assembly));
             }
 
-            var type = assembly.GetType($"{assembly?.GetName().Name}.{Name}", false);
+            var type = assembly.GetType($"{assembly?.GetName().Name}.{GeneratorCodeName}", false);
 
             if (null != type)
             {
-                GeneratorCode = Activator.CreateInstance(type) as IGeneratorCode;
+                GeneratorCode = type.GetProperty("Generator").GetValue(null) as IGeneratorCode;
 
                 return true;
             }
