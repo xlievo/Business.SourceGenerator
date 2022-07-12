@@ -209,6 +209,10 @@ namespace Business.SourceGenerator.Analysis
         Type MakeGenericType(Type type, params Type[] typeArguments);
 
         object CreateGenericType(Type type, params Type[] typeArguments);
+
+        IEnumerable<string> Types { get; }
+
+        public bool ContainsType(Type type);
     }
 
     //[AttributeUsage(AttributeTargets.Method, Inherited = false, AllowMultiple = true)]
@@ -3227,6 +3231,54 @@ namespace Business.SourceGenerator.Analysis
             }
 
             return symbol.GetFullName().Equals(fullName);
+        }
+
+        public static IEnumerable<string> GetTypes(ConcurrentDictionary<string, MetaData.SymbolInfo> typeSymbols, GeneratorGenericType.TypeKeyFormat keyFormat = GeneratorGenericType.TypeKeyFormat.No)
+        {
+            var list = new List<string>();
+
+            foreach (var item in typeSymbols.Values)
+            {
+                if (!(item.Syntax.IsKind(SyntaxKind.GenericName) || item.Syntax.IsKind(SyntaxKind.InterfaceDeclaration) || item.Syntax.IsKind(SyntaxKind.ClassDeclaration) || item.Syntax.IsKind(SyntaxKind.StructDeclaration)))
+                {
+                    continue;
+                }
+
+                var typeSymbol = item.Declared as ITypeSymbol;
+
+                if ((TypeKind.Interface != typeSymbol.TypeKind && TypeKind.Class != typeSymbol.TypeKind && TypeKind.Struct != typeSymbol.TypeKind))
+                {
+                    continue;
+                }
+
+                //if (typeSymbol2 is INamedTypeSymbol namedType && namedType.IsUnboundGenericType)
+                //{
+                //    continue;
+                //}
+
+                var name = typeSymbol.GetFullName(new Expression.GetFullNameOpt(standardFormat: true));
+
+                switch (keyFormat)
+                {
+                    case GeneratorGenericType.TypeKeyFormat.ToLower:
+                        name = name.ToLower(); break;
+                    case GeneratorGenericType.TypeKeyFormat.ToUpper:
+                        name = name.ToUpper(); break;
+                    default: break;
+                }
+
+                if (!list.Contains(name))
+                {
+                    list.Add(name);
+                }
+            }
+
+            if (0 < list.Count)
+            {
+                return list;
+            }
+
+            return Array.Empty<string>();
         }
     }
 }

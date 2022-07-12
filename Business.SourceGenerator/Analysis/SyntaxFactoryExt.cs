@@ -401,6 +401,8 @@ namespace Business.SourceGenerator.Analysis
 
         //public static LiteralExpressionSyntax ParseStringLiteral(string text) => SyntaxFactory.LiteralExpression(SyntaxKind.StringLiteralExpression, SyntaxFactory.Token(SyntaxTriviaList.Empty, SyntaxKind.StringLiteralToken, $"\"{text}\"", nameof(String), SyntaxTriviaList.Empty));
 
+        public static LiteralExpressionSyntax ParseBooleanLiteral(bool value) => value ? SyntaxFactory.LiteralExpression(SyntaxKind.TrueLiteralExpression) : SyntaxFactory.LiteralExpression(SyntaxKind.FalseLiteralExpression);
+
         /// <summary>
         /// Creates a new DefaultLiteralExpression instance.
         /// </summary>
