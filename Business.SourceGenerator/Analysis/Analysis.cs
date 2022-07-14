@@ -40,13 +40,8 @@ namespace Business.SourceGenerator.Analysis
             ToUpper
         }
 
-        public static IReadOnlyDictionary<string, string> GetTypes(MetaData.AnalysisInfoModel analysisInfo, TypeKeyFormat keyFormat = TypeKeyFormat.No)
+        public static IReadOnlyDictionary<string, string> GetTypes(MetaData.AnalysisInfoModel analysisInfo)
         {
-            if (string.IsNullOrEmpty(Key))
-            {
-                throw new ArgumentException(nameof(Key));
-            }
-
             var dict = new Dictionary<string, string>();
 
             foreach (var info in analysisInfo.Attributes)
@@ -71,15 +66,6 @@ namespace Business.SourceGenerator.Analysis
                                     var args = named.TypeArguments.Select(c => Expression.GetFullName(c));
                                     var argsKey = named.TypeArguments.Select(c => Expression.GetFullName(c, new Expression.GetFullNameOpt(standardFormat: true)));
                                     var key = GetGenericTypeName(name, argsKey);
-
-                                    switch (keyFormat)
-                                    {
-                                        case TypeKeyFormat.ToLower:
-                                            key = key.ToLower(); break;
-                                        case TypeKeyFormat.ToUpper:
-                                            key = key.ToUpper(); break;
-                                        default: break;
-                                    }
 
                                     if (!dict.ContainsKey(key))
                                     {
@@ -200,17 +186,17 @@ namespace Business.SourceGenerator.Analysis
 
     public interface IGeneratorCode
     {
-        IEnumerable<Type> GeneratorGenericTypes { get; }
+        //IEnumerable<Type> GeneratorGenericTypes { get; }
 
-        Type GetGenericType(string key);
+        //Type GetGenericType(string key);
 
-        string GetGenericType(Type type, params Type[] typeArguments);
+        //string GetGenericType(Type type, params Type[] typeArguments);
 
         Type MakeGenericType(Type type, params Type[] typeArguments);
 
         object CreateGenericType(Type type, params Type[] typeArguments);
 
-        IEnumerable<string> Types { get; }
+        //IEnumerable<string> Types { get; }
 
         public bool ContainsType(Type type);
     }
@@ -327,7 +313,7 @@ namespace Business.SourceGenerator.Analysis
             var references = compilation.ReferencedAssemblyNames.Select(c => c.Name);
 
             #region AddSource
-            
+
             var businessSourceGeneratorDirectory = context.GetMSBuildProperty("Business_SourceGenerator");
             System.Diagnostics.Debug.WriteLine($"BusinessSourceGeneratorDirectory: {businessSourceGeneratorDirectory}");
 
@@ -454,6 +440,19 @@ namespace Business.SourceGenerator.Analysis
 
         static void InitSymbols(SemanticModel model, SyntaxNode syntax)
         {
+            ////model.GetSpeculativeTypeInfo(0, null, SpeculativeBindingOption.BindAsTypeOrNamespace);
+
+            //var tt = Microsoft.CodeAnalysis.CSharp.SyntaxFactory.ParseTypeName("int");
+            //var tt2 = new SeparatedSyntaxList<TypeSyntax>().Add(tt);
+            //var aa = Microsoft.CodeAnalysis.CSharp.SyntaxFactory.TypeArgumentList(tt2);
+            ////aa.Arguments.Add(tt);
+
+            //var ddd = Microsoft.CodeAnalysis.CSharp.SyntaxFactory.GenericName(Microsoft.CodeAnalysis.CSharp.SyntaxFactory.ParseToken("sss"), aa);
+
+            //var ddd2 = model.GetSpeculativeTypeInfo(0, ddd, SpeculativeBindingOption.BindAsTypeOrNamespace);
+            ////var ddd2 = model.GetSymbolInfo(ddd);
+            ///
+
             switch (syntax.RawKind)
             {
                 case (int)SyntaxKind.InterfaceDeclaration:
@@ -583,13 +582,67 @@ namespace Business.SourceGenerator.Analysis
 
                             var info = new SymbolInfo(syntax, symbol, declared, source, symbol?.DeclaringSyntaxReferences.FirstOrDefault()?.GetSyntax() ?? declared.DeclaringSyntaxReferences.FirstOrDefault()?.GetSyntax(), attrs, model.Compilation.AssemblyName);
 
+                            //switch (syntax)
+                            //{
+                            //    case AssignmentExpressionSyntax node:
+                            //        var assignment = model.GetSymbolInfo(node.Left).Symbol;
+
+                            //        var assignment2 = node.Left.GetSymbolInfo();
+
+                            //        var assignment3 = assignment2.Symbol;
+
+                            //        if (null != assignment && assignment.IsStatic)// && (assignment is IFieldSymbol || assignment is IPropertySymbol)
+                            //        {
+                            //            //AnalysisInfo.StaticAssignments.GetOrAdd(assignment.GetFullName(), c => new ConcurrentDictionary<string, AssignmentExpressionSyntax>()).AddOrUpdate(node.GetFullName(), node, (x, y) => node);
+                            //            AnalysisInfo.StaticAssignments.GetOrAdd(assignment.GetFullName(), c => new ConcurrentDictionary<string, AssignmentExpressionSyntax>()).AddOrUpdate(node.GetFullName(), node, (x, y) => node);
+                            //        }
+                            //        break;
+                            //    case InvocationExpressionSyntax node:
+                            //        if (null != info.Symbol)
+                            //        {
+                            //            //if (syntax.ToString().Contains("Help.MD5"))
+                            //            //{
+
+                            //            //}
+                            //            //if (syntax.ToString().Contains("Help.Scale((decimal)value"))
+                            //            //{
+
+                            //            //}
+                            //            AnalysisInfo.Invocations.GetOrAdd(info.Symbol.GetFullNameOrig(), c => new ConcurrentDictionary<string, SymbolInfo>()).AddOrUpdate(info.Syntax.GetFullName(), info, (x, y) => info);
+                            //        }
+                            //        //else
+                            //        //{
+                            //        //    if (syntax.ToString().Contains("Help.MD5"))
+                            //        //    {
+
+                            //        //        symbol = model.GetSymbolInfo(node.Expression).Symbol;
+                            //        //        var s2 = model.GetTypeInfo(node.Expression);
+                            //        //        var s3 = model.GetDeclaredSymbol(node.Expression);
+                            //        //    }
+                            //        //}
+                            //        break;
+                            //    case MethodDeclarationSyntax node:
+
+                            //        SetGenericType(node, declared, model);
+
+                            //        break;
+                            //    default: break;
+                            //}
+
                             if (declared is ITypeSymbol type)
                             {
                                 var key = declared.GetFullName();
 
                                 AnalysisInfo.TypeSymbols.TryAdd(key, info);
+
+                                //if (type.DeclaringSyntaxReferences.Any())
+                                //{
+                                //    //TypeSymbols.AddOrUpdate(key, type, (x, y) => type);
+                                //    AnalysisInfo.TypeSymbols.TryAdd(key, info);
+                                //}
                             }
 
+                            //DeclaredSymbols.AddOrUpdate(syntax.GetFullName(), info, (x, y) => info);
                             AnalysisInfo.DeclaredSymbols.TryAdd(syntax.GetFullName(), info);
                         }
                     }
@@ -1821,7 +1874,11 @@ namespace Business.SourceGenerator.Analysis
 
                 if (null != named && 0 < named.TypeArguments.Length)
                 {
-                    if (named.IsTupleType)
+                    if (named.IsUnboundGenericType)
+                    {
+                        args = $"<{string.Join(",", Enumerable.Repeat(string.Empty, named.TypeArguments.Length))}>";
+                    }
+                    else if (named.IsTupleType)
                     {
                         if ("System.ValueTuple".Equals($"{prefix}.{symbol.Name}") && 0 < named?.TupleElements.Length)
                         {
@@ -2491,6 +2548,19 @@ namespace Business.SourceGenerator.Analysis
 
         #region ToCode
 
+        public readonly struct ToCodeOpt
+        {
+            public ToCodeOpt(Func<SyntaxNode, string, string> replace = null, bool standardFormat = false)
+            {
+                Replace = replace;
+                StandardFormat = standardFormat;
+            }
+
+            public Func<SyntaxNode, string, string> Replace { get; }
+
+            public bool StandardFormat { get; }
+        }
+
         /// <summary>
         /// Returns the string representation of this node, not including its leading and trailing trivia.
         /// <para>
@@ -2500,13 +2570,14 @@ namespace Business.SourceGenerator.Analysis
         /// <param name="syntaxNode"></param>
         /// <param name="replace"></param>
         /// <returns></returns>
-        public static string ToCode(this SyntaxNode syntaxNode, Func<SyntaxNode, string, string> replace = null)
+        public static string ToCode(this SyntaxNode syntaxNode, ToCodeOpt opt = default)
         {
             if (syntaxNode is null)
             {
                 return null;
             }
 
+            var format = opt.StandardFormat ? Environment.NewLine : " ";
             string value = null;
 
             switch (syntaxNode)
@@ -2519,47 +2590,47 @@ namespace Business.SourceGenerator.Analysis
 
                     if (0 < node.Usings.Count)
                     {
-                        usings = $"{string.Join(" ", node.Usings.Select(c => ToCode(c, replace)))} ";
+                        usings = $"{string.Join(format, node.Usings.Select(c => ToCode(c, opt)))} ";
                     }
 
                     string members = null;
 
                     if (0 < node.Members.Count)
                     {
-                        members = string.Join(" ", node.Members.Select(c => ToCode(c, replace)));
+                        members = string.Join(format, node.Members.Select(c => ToCode(c, opt)));
                     }
 
-                    value = $"{usings}{node.NamespaceKeyword} {node.Name} {{{members}}}";
+                    value = $"{usings}{node.NamespaceKeyword} {node.Name}{format}{{{format}{members}{format}}}";
                     break;
                 case DefaultExpressionSyntax node:
-                    value = $"{node.Keyword}{node.OpenParenToken}{ToCode(node.Type, replace)}{node.CloseParenToken}"; break;
+                    value = $"{node.Keyword}{node.OpenParenToken}{ToCode(node.Type, opt)}{node.CloseParenToken}"; break;
                 case ReturnStatementSyntax node:
                     value = node.ReturnKeyword.ToString();
                     if (null != node.Expression)
                     {
-                        value = $"{value} {ToCode(node.Expression, replace)}";
+                        value = $"{value} {ToCode(node.Expression, opt)}";
                     }
                     value = $"{value}{Semicolon()}";
                     break;
                 case BaseListSyntax node:
-                    value = $"{node.ColonToken} {string.Join(", ", node.Types.Select(c => ToCode(c, replace)))}";
+                    value = $"{node.ColonToken} {string.Join(", ", node.Types.Select(c => ToCode(c, opt)))}";
                     break;
                 case ClassDeclarationSyntax node:
                     value = $"{node.Keyword} {node.Identifier}";
 
                     if (null != node.TypeParameterList)
                     {
-                        value = $"{value}{ToCode(node.TypeParameterList, replace)}";
+                        value = $"{value}{ToCode(node.TypeParameterList, opt)}";
                     }
 
                     if (null != node.BaseList)
                     {
-                        value = $"{value} {ToCode(node.BaseList, replace)}";
+                        value = $"{value} {ToCode(node.BaseList, opt)}";
                     }
 
                     if (node.ConstraintClauses.Any())
                     {
-                        value = $"{value} {string.Join(" ", node.ConstraintClauses.Select(c => ToCode(c, replace)))}";
+                        value = $"{value} {string.Join(" ", node.ConstraintClauses.Select(c => ToCode(c, opt)))}";
                     }
 
                     if (node.Modifiers.Any())
@@ -2567,14 +2638,14 @@ namespace Business.SourceGenerator.Analysis
                         value = $"{node.Modifiers} {value}";
                     }
 
-                    value = $"{value} {node.OpenBraceToken}";
+                    value = $"{value}{format}{node.OpenBraceToken}";
 
                     if (node.Members.Any())
                     {
-                        value = $"{value} {string.Join(" ", node.Members.Select(c => ToCode(c, replace)))}";
+                        value = $"{value}{format}{string.Join(format, node.Members.Select(c => ToCode(c, opt)))}";
                     }
 
-                    value = $"{value} {node.CloseBraceToken}";
+                    value = $"{value}{format}{node.CloseBraceToken}";
 
                     break;
                 case StructDeclarationSyntax node:
@@ -2582,17 +2653,17 @@ namespace Business.SourceGenerator.Analysis
 
                     if (null != node.TypeParameterList)
                     {
-                        value = $"{value}{ToCode(node.TypeParameterList, replace)}";
+                        value = $"{value}{ToCode(node.TypeParameterList, opt)}";
                     }
 
                     if (null != node.BaseList)
                     {
-                        value = $"{value} {ToCode(node.BaseList, replace)}";
+                        value = $"{value} {ToCode(node.BaseList, opt)}";
                     }
 
                     if (node.ConstraintClauses.Any())
                     {
-                        value = $"{value} {string.Join(" ", node.ConstraintClauses.Select(c => ToCode(c, replace)))}";
+                        value = $"{value} {string.Join(" ", node.ConstraintClauses.Select(c => ToCode(c, opt)))}";
                     }
 
                     if (node.Modifiers.Any())
@@ -2600,30 +2671,30 @@ namespace Business.SourceGenerator.Analysis
                         value = $"{node.Modifiers} {value}";
                     }
 
-                    value = $"{value} {node.OpenBraceToken}";
+                    value = $"{value}{format}{node.OpenBraceToken}";
 
                     if (node.Members.Any())
                     {
-                        value = $"{value} {string.Join(" ", node.Members.Select(c => ToCode(c, replace)))}";
+                        value = $"{value}{format}{string.Join(format, node.Members.Select(c => ToCode(c, opt)))}";
                     }
 
-                    value = $"{value} {node.CloseBraceToken}";
+                    value = $"{value}{format}{node.CloseBraceToken}";
 
                     break;
                 case ConstructorInitializerSyntax node:
-                    value = $"{node.ColonToken} {node.ThisOrBaseKeyword}{ToCode(node.ArgumentList, replace)}"; break;
+                    value = $"{node.ColonToken} {node.ThisOrBaseKeyword}{ToCode(node.ArgumentList, opt)}"; break;
                 case ConstructorDeclarationSyntax node:
-                    value = $"{GetSign(node, replace)} {GetBodyOrExpression(node, replace)}{Semicolon()}"; break;
+                    value = $"{GetSign(node, opt)}{GetBodyOrExpression(node, opt)}{Semicolon()}"; break;
                 case MethodDeclarationSyntax node:
-                    value = $"{GetSign(node, replace)} {GetBodyOrExpression(node, replace)}{Semicolon()}"; break;
+                    value = $"{GetSign(node, opt)}{GetBodyOrExpression(node, opt)}{Semicolon()}"; break;
                 case LocalFunctionStatementSyntax node:
-                    value = $"{GetSign(node, replace)} {GetBodyOrExpression(node, replace)}{Semicolon()}"; break;
+                    value = $"{GetSign(node, opt)}{GetBodyOrExpression(node, opt)}{Semicolon()}"; break;
                 case PropertyDeclarationSyntax node:
-                    value = $"{ToCode(node.Type, replace)} {ToCode(node.ExplicitInterfaceSpecifier, replace)}{node.Identifier} {ToCode(node.AccessorList, replace)}";
+                    value = $"{ToCode(node.Type, opt)} {ToCode(node.ExplicitInterfaceSpecifier, opt)}{node.Identifier} {ToCode(node.AccessorList, opt)}";
 
                     if (null != node.Initializer)
                     {
-                        value = $"{value} {ToCode(node.Initializer, replace)}";
+                        value = $"{value} {ToCode(node.Initializer, opt)}";
                     }
 
                     value = $"{value}{Semicolon()}";
@@ -2634,18 +2705,18 @@ namespace Business.SourceGenerator.Analysis
                     }
                     break;
                 case AccessorListSyntax node:
-                    value = $"{node.OpenBraceToken} {string.Join(" ", node.Accessors.Select(c => ToCode(c, replace)))} {node.CloseBraceToken}";
+                    value = $"{node.OpenBraceToken} {string.Join(" ", node.Accessors.Select(c => ToCode(c, opt)))} {node.CloseBraceToken}";
                     break;
                 case AccessorDeclarationSyntax node:
                     value = $"{node.Keyword}";
 
                     if (null != node.ExpressionBody)
                     {
-                        value = $"{value} {ToCode(node.ExpressionBody, replace)}";
+                        value = $"{value}{ToCode(node.ExpressionBody, opt)}";
                     }
                     else if (null != node.Body)
                     {
-                        value = $"{value} {ToCode(node.Body, replace)}";
+                        value = $"{value} {ToCode(node.Body, opt)}";
                     }
 
                     value = $"{value}{Semicolon()}";
@@ -2657,7 +2728,7 @@ namespace Business.SourceGenerator.Analysis
 
                     break;
                 case FieldDeclarationSyntax node:
-                    value = $"{ToCode(node.Declaration, replace)}{Semicolon()}";
+                    value = $"{ToCode(node.Declaration, opt)}{Semicolon()}";
 
                     if (node.Modifiers.Any())
                     {
@@ -2665,62 +2736,62 @@ namespace Business.SourceGenerator.Analysis
                     }
                     break;
                 case TryStatementSyntax node:
-                    value = $"{node.TryKeyword} {ToCode(node.Block, replace)} {string.Join(" ", node.Catches.Select(c => ToCode(c, replace)))}";
+                    value = $"{node.TryKeyword} {ToCode(node.Block, opt)} {string.Join(" ", node.Catches.Select(c => ToCode(c, opt)))}";
 
                     if (null != node.Finally)
                     {
-                        value = $"{value} {ToCode(node.Finally, replace)}";
+                        value = $"{value} {ToCode(node.Finally, opt)}";
                     }
 
                     break;
                 case ThrowExpressionSyntax node:
-                    value = $"{node.ThrowKeyword} {ToCode(node.Expression, replace)}"; break;
+                    value = $"{node.ThrowKeyword} {ToCode(node.Expression, opt)}"; break;
                 case ThrowStatementSyntax node:
-                    value = $"{node.ThrowKeyword} {ToCode(node.Expression, replace)}{node.SemicolonToken}"; break;
+                    value = $"{node.ThrowKeyword} {ToCode(node.Expression, opt)}{node.SemicolonToken}"; break;
                 case CatchClauseSyntax node:
                     value = $"{node.CatchKeyword}";
 
                     if (null != node.Declaration)
                     {
-                        value = $"{value} {ToCode(node.Declaration, replace)}";
+                        value = $"{value} {ToCode(node.Declaration, opt)}";
                     }
-                    value = $"{value} {ToCode(node.Block, replace)}";
+                    value = $"{value} {ToCode(node.Block, opt)}";
 
                     break;
                 case CatchDeclarationSyntax node:
-                    value = $"{node.OpenParenToken}{ToCode(node.Type, replace)} {node.Identifier}{node.CloseParenToken}"; break;
+                    value = $"{node.OpenParenToken}{ToCode(node.Type, opt)} {node.Identifier}{node.CloseParenToken}"; break;
                 //case CatchDeclarationSyntax node:
                 //    value = null;
                 //case CatchFilterClauseSyntax node:
                 //    value = null;
                 case FinallyClauseSyntax node:
-                    value = $"{node.FinallyKeyword} {ToCode(node.Block, replace)}"; break;
+                    value = $"{node.FinallyKeyword} {ToCode(node.Block, opt)}"; break;
                 //case InterpolatedStringTextSyntax node: value = $"{node.TextToken}";
                 case InterpolatedStringExpressionSyntax node:
-                    value = $"{node.StringStartToken}{string.Join(string.Empty, node.Contents.Select(c => ToCode(c, replace)))}{node.StringEndToken}"; break;
+                    value = $"{node.StringStartToken}{string.Join(string.Empty, node.Contents.Select(c => ToCode(c, opt)))}{node.StringEndToken}"; break;
                 case InterpolationSyntax node:
-                    string.Format("{0}{1}", "aaa", "bbb");
+                    //string.Format("{0}{1}", "aaa", "bbb");
                     //node.AlignmentClause node.FormatClause ??
                     //{expression[,alignment][:formatString]}
-                    value = $"{node.OpenBraceToken}{ToCode(node.Expression, replace)}";
+                    value = $"{node.OpenBraceToken}{ToCode(node.Expression, opt)}";
 
                     if (null != node.AlignmentClause)
                     {
-                        value = $"{value}{ToCode(node.AlignmentClause, replace)}";
+                        value = $"{value}{ToCode(node.AlignmentClause, opt)}";
                     }
                     if (null != node.FormatClause)
                     {
-                        value = $"{value}{ToCode(node.FormatClause, replace)}";
+                        value = $"{value}{ToCode(node.FormatClause, opt)}";
                     }
 
                     value = $"{value}{node.CloseBraceToken}";
                     break;
                 case InterpolationAlignmentClauseSyntax node:
-                    value = $"{node.CommaToken}{ToCode(node.Value, replace)}"; break;
+                    value = $"{node.CommaToken}{ToCode(node.Value, opt)}"; break;
                 case InterpolationFormatClauseSyntax node:
                     value = $"{node.ColonToken}{node.FormatStringToken}"; break;
                 case TupleElementSyntax node:
-                    value = ToCode(node.Type, replace);
+                    value = ToCode(node.Type, opt);
 
                     if (default != node.Identifier)
                     {
@@ -2728,87 +2799,89 @@ namespace Business.SourceGenerator.Analysis
                     }
                     break;
                 case TupleExpressionSyntax node:
-                    value = $"{node.OpenParenToken}{string.Join(", ", node.Arguments.Select(c => ToCode(c, replace)))}{node.CloseParenToken}"; break;
+                    value = $"{node.OpenParenToken}{string.Join(", ", node.Arguments.Select(c => ToCode(c, opt)))}{node.CloseParenToken}"; break;
                 case TupleTypeSyntax node:
-                    value = $"{node.OpenParenToken}{string.Join(", ", node.Elements.Select(c => ToCode(c, replace)))}{node.CloseParenToken}"; break;
+                    value = $"{node.OpenParenToken}{string.Join(", ", node.Elements.Select(c => ToCode(c, opt)))}{node.CloseParenToken}"; break;
                 case ClassOrStructConstraintSyntax node: value = $"{node.ClassOrStructKeyword}{node.QuestionToken}"; break;
-                case TypeConstraintSyntax node: value = $"{ToCode(node.Type, replace)}"; break;
+                case TypeConstraintSyntax node: value = $"{ToCode(node.Type, opt)}"; break;
                 case ConstructorConstraintSyntax node: value = $"{node.NewKeyword}{node.OpenParenToken}{node.CloseParenToken}"; break;
                 case TypeParameterConstraintClauseSyntax node:
-                    value = $"{node.WhereKeyword} {ToCode(node.Name, replace)} {node.ColonToken} {string.Join(", ", node.Constraints.Select(c => ToCode(c, replace)))}"; break;
+                    value = $"{node.WhereKeyword} {ToCode(node.Name, opt)} {node.ColonToken} {string.Join(", ", node.Constraints.Select(c => ToCode(c, opt)))}"; break;
                 case CastExpressionSyntax node:
-                    value = $"{node.OpenParenToken}{ToCode(node.Type, replace)}{node.CloseParenToken}{ToCode(node.Expression, replace)}"; break;
+                    value = $"{node.OpenParenToken}{ToCode(node.Type, opt)}{node.CloseParenToken}{ToCode(node.Expression, opt)}"; break;
                 case ParenthesizedExpressionSyntax node:
-                    value = $"{node.OpenParenToken}{ToCode(node.Expression, replace)}{node.CloseParenToken}"; break;
+                    value = $"{node.OpenParenToken}{ToCode(node.Expression, opt)}{node.CloseParenToken}"; break;
                 case CaseSwitchLabelSyntax node:
-                    value = $"{node.Keyword} {ToCode(node.Value, replace)}{node.ColonToken}"; break;
+                    value = $"{node.Keyword} {ToCode(node.Value, opt)}{node.ColonToken}"; break;
                 //case SwitchLabelSyntax node:
-                //    value = $"{node.Keyword} {ToCode(node.l, replace)}{node.ColonToken}"; break;
+                //    value = $"{node.Keyword} {ToCode(node.l, opt)}{node.ColonToken}"; break;
                 case CasePatternSwitchLabelSyntax node:
-                    value = $"{node.Keyword} {ToCode(node.Pattern, replace)}";
+                    value = $"{node.Keyword} {ToCode(node.Pattern, opt)}";
                     if (null != node.WhenClause)
                     {
-                        value = $"{value} {ToCode(node.WhenClause, replace)}";
+                        value = $"{value} {ToCode(node.WhenClause, opt)}";
                     }
                     value = $"{value}{node.ColonToken}";
                     break;
                 case SwitchSectionSyntax node:
-                    value = $"{string.Join(" ", node.Labels.Select(c => ToCode(c, replace)))} {string.Join(" ", node.Statements.Select(c => ToCode(c, replace)))}";
+                    value = $"{string.Join(" ", node.Labels.Select(c => ToCode(c, opt)))} {string.Join(format, node.Statements.Select(c => ToCode(c, opt)))}";
                     break;
                 case BreakStatementSyntax node: value = $"{node.BreakKeyword}{Semicolon()}"; break;
                 //ExpressionStatementSyntax
                 case SwitchStatementSyntax node:
-                    value = $"{node.SwitchKeyword} {node.OpenParenToken}{ToCode(node.Expression, replace)}{node.CloseParenToken} {node.OpenBraceToken} {string.Join(" ", node.Sections.Select(c => ToCode(c, replace)))} {node.CloseBraceToken}"; break;
+                    value = $"{node.SwitchKeyword} {node.OpenParenToken}{ToCode(node.Expression, opt)}{node.CloseParenToken}{format}{node.OpenBraceToken}{format}{string.Join(format, node.Sections.Select(c => ToCode(c, opt)))}{format}{node.CloseBraceToken}"; break;
                 case ForEachStatementSyntax node:
-                    value = $"{node.ForEachKeyword} {node.OpenParenToken}{ToCode(node.Type, replace)} {node.Identifier} {node.InKeyword} {ToCode(node.Expression, replace)}{node.CloseParenToken} {ToCode(node.Statement, replace)}"; break;
+                    value = $"{node.ForEachKeyword} {node.OpenParenToken}{ToCode(node.Type, opt)} {node.Identifier} {node.InKeyword} {ToCode(node.Expression, opt)}{node.CloseParenToken} {ToCode(node.Statement, opt)}"; break;
                 case ForStatementSyntax node:
-                    value = $"{node.ForKeyword} {node.OpenParenToken}{ToCode(node.Declaration, replace)}{node.FirstSemicolonToken} {ToCode(node.Condition, replace)}{node.FirstSemicolonToken} {string.Join(" ", node.Incrementors.Select(c => ToCode(c, replace)))}{node.CloseParenToken} {ToCode(node.Statement, replace)}"; break;
+                    value = $"{node.ForKeyword} {node.OpenParenToken}{ToCode(node.Declaration, opt)}{node.FirstSemicolonToken} {ToCode(node.Condition, opt)}{node.FirstSemicolonToken} {string.Join(" ", node.Incrementors.Select(c => ToCode(c, opt)))}{node.CloseParenToken} {ToCode(node.Statement, opt)}"; break;
                 case PostfixUnaryExpressionSyntax node: value = $"{node.Operand}{node.OperatorToken}"; break;
                 case PrefixUnaryExpressionSyntax node: value = $"{node.OperatorToken}{node.Operand}"; break;
                 case ConditionalAccessExpressionSyntax node:
-                    value = $"{ToCode(node.Expression, replace)}{node.OperatorToken}{ToCode(node.WhenNotNull, replace)}"; break;
+                    value = $"{ToCode(node.Expression, opt)}{node.OperatorToken}{ToCode(node.WhenNotNull, opt)}"; break;
                 case ConditionalExpressionSyntax node:
-                    value = $"{ToCode(node.Condition, replace)} {node.QuestionToken} {node.WhenTrue} {node.ColonToken} {node.WhenFalse}"; break;
+                    value = $"{ToCode(node.Condition, opt)} {node.QuestionToken} {node.WhenTrue} {node.ColonToken} {node.WhenFalse}"; break;
                 case IfStatementSyntax node:
-                    value = $"{node.IfKeyword} {node.OpenParenToken}{ToCode(node.Condition, replace)}{node.CloseParenToken} {ToCode(node.Statement, replace)}";
+                    value = $"{node.IfKeyword} {node.OpenParenToken}{ToCode(node.Condition, opt)}{node.CloseParenToken}{(node.Statement is BlockSyntax ? string.Empty : " ")}{ToCode(node.Statement, opt)}";
 
                     if (null != node.Else)
                     {
-                        value = $"{value} {ToCode(node.Else, replace)}";
+                        value = $"{value} {ToCode(node.Else, opt)}";
                     }
                     break;
                 case ElseClauseSyntax node:
-                    value = $"{node.ElseKeyword} {ToCode(node.Statement, replace)}"; break;
+                    value = $"{node.ElseKeyword}{(node.Statement is BlockSyntax ? string.Empty : " ")}{ToCode(node.Statement, opt)}";
+                    break;
                 case BinaryExpressionSyntax node:
-                    value = $"{ToCode(node.Left, replace)} {node.OperatorToken} {ToCode(node.Right, replace)}"; break;
+                    value = $"{ToCode(node.Left, opt)} {node.OperatorToken} {ToCode(node.Right, opt)}"; break;
                 case AssignmentExpressionSyntax node:
-                    value = $"{ToCode(node.Left, replace)} {node.OperatorToken} {ToCode(node.Right, replace)}"; break;
+                    value = $"{ToCode(node.Left, opt)} {node.OperatorToken} {ToCode(node.Right, opt)}"; break;
                 case QualifiedNameSyntax node:
-                    value = $"{ToCode(node.Left, replace)}{node.DotToken}{ToCode(node.Right, replace)}"; break;
+                    value = $"{ToCode(node.Left, opt)}{node.DotToken}{ToCode(node.Right, opt)}"; break;
                 case NullableTypeSyntax node:
-                    value = $"{ToCode(node.ElementType, replace)}{node.QuestionToken}"; break;
+                    value = $"{ToCode(node.ElementType, opt)}{node.QuestionToken}"; break;
                 case TypeArgumentListSyntax node:
-                    value = $"{node.LessThanToken}{string.Join(", ", node.Arguments.Select(c => ToCode(c, replace)))}{node.GreaterThanToken}"; break;
+                    value = $"{node.LessThanToken}{string.Join(", ", node.Arguments.Select(c => ToCode(c, opt)))}{node.GreaterThanToken}"; break;
                 case TypeParameterListSyntax node:
                     if (node.Parameters.Any())
                     {
-                        value = $"{node.LessThanToken}{string.Join(", ", node.Parameters.Select(c => ToCode(c, replace)))}{node.GreaterThanToken}";
+                        value = $"{node.LessThanToken}{string.Join(", ", node.Parameters.Select(c => ToCode(c, opt)))}{node.GreaterThanToken}";
                     }
                     break;
                 case ArgumentListSyntax node:
-                    value = $"{node.OpenParenToken}{string.Join(", ", node.Arguments.Select(c => ToCode(c, replace)))}{node.CloseParenToken}"; break;
+                    value = $"{node.OpenParenToken}{string.Join(", ", node.Arguments.Select(c => ToCode(c, opt)))}{node.CloseParenToken}"; break;
                 case ParenthesizedLambdaExpressionSyntax node:
                     {
-                        value = $"{ToCode(node.ParameterList, replace)} {node.ArrowToken} {ToCode(node.Body, replace)}";
+                        value = $"{ToCode(node.ParameterList, opt)} {node.ArrowToken} {ToCode(node.Body, opt)}";
 
-                        if (null != node.AsyncKeyword)
+                        if (!node.AsyncKeyword.IsKind(SyntaxKind.None))
+                        //if (null != node.AsyncKeyword)
                         {
                             value = $"{node.AsyncKeyword} {value}";
                         }
                     }
                     break;
                 case ParameterListSyntax node:
-                    value = $"{node.OpenParenToken}{string.Join(", ", node.Parameters.Select(c => ToCode(c, replace)))}{node.CloseParenToken}"; break;
+                    value = $"{node.OpenParenToken}{string.Join(", ", node.Parameters.Select(c => ToCode(c, opt)))}{node.CloseParenToken}"; break;
                 //case PredefinedTypeSyntax node:
                 case ArrayRankSpecifierSyntax node:
                     value = $"{node.OpenBracketToken}{node.Sizes}{node.CloseBracketToken}"; break;
@@ -2816,7 +2889,7 @@ namespace Business.SourceGenerator.Analysis
                     {
                         var array = node.RankSpecifiers.First();
 
-                        value = $"{ToCode(node.ElementType, replace)}{ToCode(array, replace)}";
+                        value = $"{ToCode(node.ElementType, opt)}{ToCode(array, opt)}";
                     }
                     break;
                 case ParameterSyntax node:
@@ -2825,7 +2898,7 @@ namespace Business.SourceGenerator.Analysis
 
                         if (null != node.Type)
                         {
-                            value = $"{ToCode(node.Type, replace)} {value}";
+                            value = $"{ToCode(node.Type, opt)} {value}";
                         }
 
                         if (node.Modifiers.Any())
@@ -2835,17 +2908,17 @@ namespace Business.SourceGenerator.Analysis
 
                         if (null != node.Default)
                         {
-                            value = $"{value} {ToCode(node.Default, replace)}";
+                            value = $"{value} {ToCode(node.Default, opt)}";
                         }
                     }
                     break;
                 case ArgumentSyntax node:
                     {
-                        value = $"{ToCode(node.Expression, replace)}";
+                        value = $"{ToCode(node.Expression, opt)}";
 
                         if (null != node.NameColon)
                         {
-                            value = $"{ToCode(node.NameColon, replace)} {value}";
+                            value = $"{ToCode(node.NameColon, opt)} {value}";
                         }
 
                         if (default != node.RefOrOutKeyword)
@@ -2855,30 +2928,30 @@ namespace Business.SourceGenerator.Analysis
                     }
                     break;
                 case NameColonSyntax node:
-                    value = $"{ToCode(node.Name, replace)}{node.ColonToken}"; break;
+                    value = $"{ToCode(node.Name, opt)}{node.ColonToken}"; break;
                 case ElementAccessExpressionSyntax node:
-                    value = $"{ToCode(node.Expression, replace)}{ToCode(node.ArgumentList, replace)}"; break;
+                    value = $"{ToCode(node.Expression, opt)}{ToCode(node.ArgumentList, opt)}"; break;
                 case BracketedArgumentListSyntax node:
-                    value = $"{node.OpenBracketToken}{string.Join(", ", node.Arguments.Select(c => ToCode(c, replace)))}{node.CloseBracketToken}"; break;
+                    value = $"{node.OpenBracketToken}{string.Join(", ", node.Arguments.Select(c => ToCode(c, opt)))}{node.CloseBracketToken}"; break;
                 case EqualsValueClauseSyntax node:
-                    value = $"{node.EqualsToken} {ToCode(node.Value, replace)}"; break;
+                    value = $"{node.EqualsToken} {ToCode(node.Value, opt)}"; break;
                 case MemberAccessExpressionSyntax node:
                     value = $"{node.Expression}{node.OperatorToken}{node.Name}"; break;
                 case MemberBindingExpressionSyntax node:
                     value = $"{node.OperatorToken}{node.Name}"; break;
                 case ExplicitInterfaceSpecifierSyntax node:
-                    value = $"{ToCode(node.Name, replace)}{node.DotToken}"; break;
+                    value = $"{ToCode(node.Name, opt)}{node.DotToken}"; break;
                 case InvocationExpressionSyntax node:
                     value = $"{node.Expression}{node.ArgumentList.OpenParenToken}";
                     if (0 < node.ArgumentList.Arguments.Count)
                     {
-                        value = $"{value}{string.Join(", ", node.ArgumentList.Arguments.Select(c => ToCode(c, replace)))}";
+                        value = $"{value}{string.Join(", ", node.ArgumentList.Arguments.Select(c => ToCode(c, opt)))}";
                     }
                     value = $"{value}{node.ArgumentList.CloseParenToken}";
                     break;
                 case ObjectCreationExpressionSyntax node:
                     {
-                        value = $"{node.NewKeyword} {ToCode(node.Type, replace)}";
+                        value = $"{node.NewKeyword} {ToCode(node.Type, opt)}";
 
                         if (null != node.ArgumentList)
                         {
@@ -2886,48 +2959,48 @@ namespace Business.SourceGenerator.Analysis
 
                             if (0 < node.ArgumentList.Arguments.Count)
                             {
-                                value = $"{value}{string.Join(", ", node.ArgumentList.Arguments.Select(c => ToCode(c, replace)))}";
+                                value = $"{value}{string.Join(", ", node.ArgumentList.Arguments.Select(c => ToCode(c, opt)))}";
                             }
 
                             value = $"{value}{node.ArgumentList.CloseParenToken}";
                         }
                         else if (null != node.Initializer)
                         {
-                            value = $"{value} {ToCode(node.Initializer, replace)}";
+                            value = $"{value} {ToCode(node.Initializer, opt)}";
                         }
                     }
                     break;
                 case InitializerExpressionSyntax node:
-                    value = $"{node.OpenBraceToken} {string.Join(", ", node.Expressions.Select(c => ToCode(c, replace)))} {node.CloseBraceToken}"; break;
+                    value = $"{node.OpenBraceToken} {string.Join(", ", node.Expressions.Select(c => ToCode(c, opt)))} {node.CloseBraceToken}"; break;
                 case BlockSyntax node:
-                    value = $"{node.OpenBraceToken}";
+                    value = $"{format}{node.OpenBraceToken}";
 
                     if (node.Statements.Any())
                     {
-                        value = $"{value} {string.Join(" ", node.Statements.Select(c => ToCode(c, replace)))}";
+                        value = $"{value}{format}{string.Join(format, node.Statements.Select(c => ToCode(c, opt)))}";
                     }
 
-                    value = $"{value} {node.CloseBraceToken}";
+                    value = $"{value}{format}{node.CloseBraceToken}";
 
                     break;
                 case SimpleLambdaExpressionSyntax node:
-                    value = $"{node.Parameter} {node.ArrowToken} {ToCode(node.Body, replace)}"; break;
+                    value = $"{node.Parameter} {node.ArrowToken} {ToCode(node.Body, opt)}"; break;
                 case AwaitExpressionSyntax node:
-                    value = $"{node.AwaitKeyword} {ToCode(node.Expression, replace)}"; break;
+                    value = $"{node.AwaitKeyword} {ToCode(node.Expression, opt)}"; break;
                 case ArrowExpressionClauseSyntax node:
-                    value = $"{node.ArrowToken} {ToCode(node.Expression, replace)}"; break;
+                    value = $" {node.ArrowToken} {ToCode(node.Expression, opt)}"; break;
                 case TypeOfExpressionSyntax node:
-                    value = $"{node.Keyword}{node.OpenParenToken}{ToCode(node.Type, replace)}{node.CloseParenToken}"; break;
+                    value = $"{node.Keyword}{node.OpenParenToken}{ToCode(node.Type, opt)}{node.CloseParenToken}"; break;
                 case VariableDeclaratorSyntax node:
                     value = $"{node.Identifier}";
 
                     if (null != node.Initializer)
                     {
-                        value = $"{value} {ToCode(node.Initializer, replace)}";
+                        value = $"{value} {ToCode(node.Initializer, opt)}";
                     }
                     if (null != node.ArgumentList)
                     {
-                        value = $"{value}{ToCode(node.ArgumentList, replace)}";
+                        value = $"{value}{ToCode(node.ArgumentList, opt)}";
                     }
 
                     break;
@@ -2937,7 +3010,7 @@ namespace Business.SourceGenerator.Analysis
 
                     if (node.TypeArgumentList.Arguments.Any())
                     {
-                        value = $"{value}{ToCode(node.TypeArgumentList, replace)}";
+                        value = $"{value}{ToCode(node.TypeArgumentList, opt)}";
                     }
 
                     //if (node.IsUnboundGenericName)??
@@ -2949,7 +3022,7 @@ namespace Business.SourceGenerator.Analysis
 
                 //IsPatternExpressionSyntax IsPatternExpression 
                 case IsPatternExpressionSyntax node:
-                    value = $"{ToCode(node.Expression, replace)} {node.IsKeyword} {ToCode(node.Pattern, replace)}"; break;
+                    value = $"{ToCode(node.Expression, opt)} {node.IsKeyword} {ToCode(node.Pattern, opt)}"; break;
                 #endregion
 
                 #region default
@@ -2988,7 +3061,7 @@ namespace Business.SourceGenerator.Analysis
                             default: break;
                         }
 
-                        value = $"{value}{string.Join(" ", syntaxNode.ChildNodes().Select(c => ToCode(c, replace)))}{Semicolon()}";
+                        value = $"{value}{string.Join(" ", syntaxNode.ChildNodes().Select(c => ToCode(c, opt)))}{Semicolon()}";
                     }
                     else
                     {
@@ -3000,9 +3073,9 @@ namespace Business.SourceGenerator.Analysis
                     #endregion
             }
 
-            if (null != replace)
+            if (null != opt.Replace)
             {
-                return replace(syntaxNode, value);
+                return opt.Replace(syntaxNode, value);
             }
 
             return value;
@@ -3053,7 +3126,7 @@ namespace Business.SourceGenerator.Analysis
             //}
         }
 
-        static string GetSign(CSharpSyntaxNode syntaxNode, Func<SyntaxNode, string, string> replace)
+        static string GetSign(CSharpSyntaxNode syntaxNode, ToCodeOpt opt)
         {
             if (syntaxNode is null)
             {
@@ -3064,11 +3137,11 @@ namespace Business.SourceGenerator.Analysis
             {
                 case MethodDeclarationSyntax node:
                     {
-                        var value = $"{ToCode(node.ReturnType, replace)}";
+                        var value = $"{ToCode(node.ReturnType, opt)}";
 
                         if (null != node.ExplicitInterfaceSpecifier)
                         {
-                            value = $"{value} {ToCode(node.ExplicitInterfaceSpecifier, replace)}{node.Identifier}";
+                            value = $"{value} {ToCode(node.ExplicitInterfaceSpecifier, opt)}{node.Identifier}";
                         }
                         else
                         {
@@ -3077,10 +3150,10 @@ namespace Business.SourceGenerator.Analysis
 
                         if (null != node.TypeParameterList)
                         {
-                            value = $"{value}{ToCode(node.TypeParameterList, replace)}";
+                            value = $"{value}{ToCode(node.TypeParameterList, opt)}";
                         }
 
-                        value = $"{value}{ToCode(node.ParameterList, replace)}";
+                        value = $"{value}{ToCode(node.ParameterList, opt)}";
 
                         if (node.Modifiers.Any())
                         {
@@ -3089,18 +3162,18 @@ namespace Business.SourceGenerator.Analysis
 
                         if (node.ConstraintClauses.Any())
                         {
-                            value = $"{value} {string.Join(" ", node.ConstraintClauses.Select(c => ToCode(c, replace)))}";
+                            value = $"{value} {string.Join(" ", node.ConstraintClauses.Select(c => ToCode(c, opt)))}";
                         }
 
                         return value;
                     }
                 case ConstructorDeclarationSyntax node:
                     {
-                        var value = $"{node.Identifier}{ToCode(node.ParameterList, replace)}";
+                        var value = $"{node.Identifier}{ToCode(node.ParameterList, opt)}";
 
                         if (null != node.Initializer)
                         {
-                            value = $"{value} {ToCode(node.Initializer, replace)}";
+                            value = $"{value} {ToCode(node.Initializer, opt)}";
                         }
 
                         if (node.Modifiers.Any())
@@ -3112,14 +3185,14 @@ namespace Business.SourceGenerator.Analysis
                     }
                 case LocalFunctionStatementSyntax node:
                     {
-                        var value = $"{ToCode(node.ReturnType, replace)} {node.Identifier}";
+                        var value = $"{ToCode(node.ReturnType, opt)} {node.Identifier}";
 
                         if (null != node.TypeParameterList)
                         {
-                            value = $"{value}{ToCode(node.TypeParameterList, replace)}";
+                            value = $"{value}{ToCode(node.TypeParameterList, opt)}";
                         }
 
-                        value = $"{value}{ToCode(node.ParameterList, replace)}";
+                        value = $"{value}{ToCode(node.ParameterList, opt)}";
 
                         if (node.Modifiers.Any())
                         {
@@ -3128,7 +3201,7 @@ namespace Business.SourceGenerator.Analysis
 
                         if (node.ConstraintClauses.Any())
                         {
-                            value = $"{value} {string.Join(" ", node.ConstraintClauses.Select(c => ToCode(c, replace)))}";
+                            value = $"{value} {string.Join(" ", node.ConstraintClauses.Select(c => ToCode(c, opt)))}";
                         }
 
                         return value;
@@ -3137,7 +3210,7 @@ namespace Business.SourceGenerator.Analysis
             }
         }
 
-        static string GetBodyOrExpression(SyntaxNode syntaxNode, Func<SyntaxNode, string, string> replace)
+        static string GetBodyOrExpression(SyntaxNode syntaxNode, ToCodeOpt opt)
         {
             if (syntaxNode is null)
             {
@@ -3146,8 +3219,8 @@ namespace Business.SourceGenerator.Analysis
 
             switch (syntaxNode)
             {
-                case BaseMethodDeclarationSyntax node2: return $"{(null != node2.ExpressionBody ? ToCode(node2.ExpressionBody, replace) : null != node2.Body ? ToCode(node2.Body, replace) : null)}";
-                case LocalFunctionStatementSyntax node2: return $"{(null != node2.ExpressionBody ? ToCode(node2.ExpressionBody, replace) : null != node2.Body ? ToCode(node2.Body, replace) : null)}";
+                case BaseMethodDeclarationSyntax node: return $"{(null != node.ExpressionBody ? ToCode(node.ExpressionBody, opt) : null != node.Body ? ToCode(node.Body, opt) : null)}";
+                case LocalFunctionStatementSyntax node: return $"{(null != node.ExpressionBody ? ToCode(node.ExpressionBody, opt) : null != node.Body ? ToCode(node.Body, opt) : null)}";
                 default: return null;
             }
         }
@@ -3233,7 +3306,7 @@ namespace Business.SourceGenerator.Analysis
             return symbol.GetFullName().Equals(fullName);
         }
 
-        public static IEnumerable<string> GetTypes(ConcurrentDictionary<string, MetaData.SymbolInfo> typeSymbols, GeneratorGenericType.TypeKeyFormat keyFormat = GeneratorGenericType.TypeKeyFormat.No)
+        public static IEnumerable<string> GetTypes(ConcurrentDictionary<string, MetaData.SymbolInfo> typeSymbols)
         {
             var list = new List<string>();
 
@@ -3257,15 +3330,6 @@ namespace Business.SourceGenerator.Analysis
                 //}
 
                 var name = typeSymbol.GetFullName(new Expression.GetFullNameOpt(standardFormat: true));
-
-                switch (keyFormat)
-                {
-                    case GeneratorGenericType.TypeKeyFormat.ToLower:
-                        name = name.ToLower(); break;
-                    case GeneratorGenericType.TypeKeyFormat.ToUpper:
-                        name = name.ToUpper(); break;
-                    default: break;
-                }
 
                 if (!list.Contains(name))
                 {
