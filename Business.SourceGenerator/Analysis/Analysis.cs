@@ -2577,7 +2577,8 @@ namespace Business.SourceGenerator.Analysis
                 return null;
             }
 
-            var format = opt.StandardFormat ? Environment.NewLine : " ";
+            var newLine = opt.StandardFormat ? Environment.NewLine : " ";
+            var newLine2 = opt.StandardFormat ? $"{Environment.NewLine}{Environment.NewLine}" : newLine;
             string value = null;
 
             switch (syntaxNode)
@@ -2590,17 +2591,17 @@ namespace Business.SourceGenerator.Analysis
 
                     if (0 < node.Usings.Count)
                     {
-                        usings = $"{string.Join(format, node.Usings.Select(c => ToCode(c, opt)))} ";
+                        usings = $"{string.Join(newLine, node.Usings.Select(c => ToCode(c, opt)))} ";
                     }
 
                     string members = null;
 
                     if (0 < node.Members.Count)
                     {
-                        members = string.Join(format, node.Members.Select(c => ToCode(c, opt)));
+                        members = string.Join(newLine2, node.Members.Select(c => ToCode(c, opt)));
                     }
 
-                    value = $"{usings}{node.NamespaceKeyword} {node.Name}{format}{{{format}{members}{format}}}";
+                    value = $"{usings}{node.NamespaceKeyword} {node.Name}{newLine}{{{newLine}{members}{newLine}}}";
                     break;
                 case DefaultExpressionSyntax node:
                     value = $"{node.Keyword}{node.OpenParenToken}{ToCode(node.Type, opt)}{node.CloseParenToken}"; break;
@@ -2638,14 +2639,14 @@ namespace Business.SourceGenerator.Analysis
                         value = $"{node.Modifiers} {value}";
                     }
 
-                    value = $"{value}{format}{node.OpenBraceToken}";
+                    value = $"{value}{newLine}{node.OpenBraceToken}";
 
                     if (node.Members.Any())
                     {
-                        value = $"{value}{format}{string.Join(format, node.Members.Select(c => ToCode(c, opt)))}";
+                        value = $"{value}{newLine}{string.Join(newLine2, node.Members.Select(c => ToCode(c, opt)))}";
                     }
 
-                    value = $"{value}{format}{node.CloseBraceToken}";
+                    value = $"{value}{newLine}{node.CloseBraceToken}";
 
                     break;
                 case StructDeclarationSyntax node:
@@ -2671,14 +2672,14 @@ namespace Business.SourceGenerator.Analysis
                         value = $"{node.Modifiers} {value}";
                     }
 
-                    value = $"{value}{format}{node.OpenBraceToken}";
+                    value = $"{value}{newLine}{node.OpenBraceToken}";
 
                     if (node.Members.Any())
                     {
-                        value = $"{value}{format}{string.Join(format, node.Members.Select(c => ToCode(c, opt)))}";
+                        value = $"{value}{newLine}{string.Join(newLine2, node.Members.Select(c => ToCode(c, opt)))}";
                     }
 
-                    value = $"{value}{format}{node.CloseBraceToken}";
+                    value = $"{value}{newLine}{node.CloseBraceToken}";
 
                     break;
                 case ConstructorInitializerSyntax node:
@@ -2824,12 +2825,12 @@ namespace Business.SourceGenerator.Analysis
                     value = $"{value}{node.ColonToken}";
                     break;
                 case SwitchSectionSyntax node:
-                    value = $"{string.Join(" ", node.Labels.Select(c => ToCode(c, opt)))} {string.Join(format, node.Statements.Select(c => ToCode(c, opt)))}";
+                    value = $"{string.Join(" ", node.Labels.Select(c => ToCode(c, opt)))} {string.Join(newLine, node.Statements.Select(c => ToCode(c, opt)))}";
                     break;
                 case BreakStatementSyntax node: value = $"{node.BreakKeyword}{Semicolon()}"; break;
                 //ExpressionStatementSyntax
                 case SwitchStatementSyntax node:
-                    value = $"{node.SwitchKeyword} {node.OpenParenToken}{ToCode(node.Expression, opt)}{node.CloseParenToken}{format}{node.OpenBraceToken}{format}{string.Join(format, node.Sections.Select(c => ToCode(c, opt)))}{format}{node.CloseBraceToken}"; break;
+                    value = $"{node.SwitchKeyword} {node.OpenParenToken}{ToCode(node.Expression, opt)}{node.CloseParenToken}{newLine}{node.OpenBraceToken}{newLine}{string.Join(newLine, node.Sections.Select(c => ToCode(c, opt)))}{newLine}{node.CloseBraceToken}"; break;
                 case ForEachStatementSyntax node:
                     value = $"{node.ForEachKeyword} {node.OpenParenToken}{ToCode(node.Type, opt)} {node.Identifier} {node.InKeyword} {ToCode(node.Expression, opt)}{node.CloseParenToken} {ToCode(node.Statement, opt)}"; break;
                 case ForStatementSyntax node:
@@ -2973,14 +2974,14 @@ namespace Business.SourceGenerator.Analysis
                 case InitializerExpressionSyntax node:
                     value = $"{node.OpenBraceToken} {string.Join(", ", node.Expressions.Select(c => ToCode(c, opt)))} {node.CloseBraceToken}"; break;
                 case BlockSyntax node:
-                    value = $"{format}{node.OpenBraceToken}";
+                    value = $"{newLine}{node.OpenBraceToken}";
 
                     if (node.Statements.Any())
                     {
-                        value = $"{value}{format}{string.Join(format, node.Statements.Select(c => ToCode(c, opt)))}";
+                        value = $"{value}{newLine}{string.Join(newLine2, node.Statements.Select(c => ToCode(c, opt)))}";
                     }
 
-                    value = $"{value}{format}{node.CloseBraceToken}";
+                    value = $"{value}{newLine}{node.CloseBraceToken}";
 
                     break;
                 case SimpleLambdaExpressionSyntax node:
@@ -3312,7 +3313,12 @@ namespace Business.SourceGenerator.Analysis
 
             foreach (var item in typeSymbols.Values)
             {
-                if (!(item.Syntax.IsKind(SyntaxKind.GenericName) || item.Syntax.IsKind(SyntaxKind.InterfaceDeclaration) || item.Syntax.IsKind(SyntaxKind.ClassDeclaration) || item.Syntax.IsKind(SyntaxKind.StructDeclaration)))
+                if (null == item.References)
+                {
+                    continue;
+                }
+
+                if (!(item.Syntax.IsKind(SyntaxKind.IdentifierName) || item.Syntax.IsKind(SyntaxKind.GenericName) || item.Syntax.IsKind(SyntaxKind.InterfaceDeclaration) || item.Syntax.IsKind(SyntaxKind.ClassDeclaration) || item.Syntax.IsKind(SyntaxKind.StructDeclaration)))
                 {
                     continue;
                 }
