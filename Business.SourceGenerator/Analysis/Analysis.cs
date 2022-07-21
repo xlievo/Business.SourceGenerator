@@ -52,8 +52,8 @@ namespace Business.SourceGenerator.Analysis
                     {
                         var declarationInfo = item.Key.GetSymbolInfo();
                         var declared = declarationInfo.Declared as ITypeSymbol;
-                        var declarations = GetTypeReference(analysisInfo.TypeSymbols, declared, SyntaxKind.ClassDeclaration, SyntaxKind.StructDeclaration);
-                        var references = GetTypeReference(analysisInfo.TypeSymbols, declared).Where(c => c is INamedTypeSymbol named && !named.TypeArguments.Any(c2 => c2.TypeKind == TypeKind.TypeParameter)).OrderBy(c => c.GetFullName());
+                        var declarations = GetTypeReference(analysisInfo.DeclaredSymbols, declared, SyntaxKind.ClassDeclaration, SyntaxKind.StructDeclaration);
+                        var references = GetTypeReference(analysisInfo.DeclaredSymbols, declared).Where(c => c is INamedTypeSymbol named && !named.TypeArguments.Any(c2 => c2.TypeKind == TypeKind.TypeParameter)).OrderBy(c => c.GetFullName());
 
                         foreach (var item2 in declarations)
                         {
@@ -86,7 +86,7 @@ namespace Business.SourceGenerator.Analysis
             return new ReadOnlyDictionary<string, string>(dict);
         }
 
-        static IEnumerable<ITypeSymbol> GetTypeReference(ConcurrentDictionary<string, MetaData.SymbolInfo> typeSymbols, ITypeSymbol typeSymbol, params SyntaxKind[] kinds)
+        static IEnumerable<ITypeSymbol> GetTypeReference(ConcurrentDictionary<string, MetaData.SymbolInfo> symbols, ITypeSymbol typeSymbol, params SyntaxKind[] kinds)
         {
             if (typeSymbol is null)
             {
@@ -102,14 +102,19 @@ namespace Business.SourceGenerator.Analysis
 
             var list = new List<ITypeSymbol>();
 
-            foreach (var item in typeSymbols.Values)
+            foreach (var item in symbols.Values)
             {
                 if (0 < kinds?.Length && !kinds.Any(c => item.Syntax.IsKind(c)))
                 {
                     continue;
                 }
 
-                var typeSymbol2 = item.Declared as ITypeSymbol;
+                if (!(item.Declared is ITypeSymbol typeSymbol2))
+                {
+                    continue;
+                }
+
+                //var typeSymbol2 = item.Declared as ITypeSymbol;
 
                 if (TypeKind.Interface != typeSymbol2.TypeKind && TypeKind.Class != typeSymbol2.TypeKind && TypeKind.Struct != typeSymbol2.TypeKind)
                 {
@@ -199,6 +204,15 @@ namespace Business.SourceGenerator.Analysis
         //IEnumerable<string> Types { get; }
 
         public bool ContainsType(Type type);
+    }
+
+    public interface IGeneratorAccessor
+    {
+        public IEnumerable<(string name, object value)> AccessorGet();
+
+        public bool AccessorGet(string name, out object value);
+
+        public bool AccessorSet(string name, object value);
     }
 
     //[AttributeUsage(AttributeTargets.Method, Inherited = false, AllowMultiple = true)]
@@ -633,7 +647,7 @@ namespace Business.SourceGenerator.Analysis
                             {
                                 var key = declared.GetFullName();
 
-                                AnalysisInfo.TypeSymbols.TryAdd(key, info);
+                                AnalysisInfo.TypeSymbols.AddOrUpdate(key, info, (x, y) => info.Syntax.IsKind(SyntaxKind.InterfaceDeclaration) || info.Syntax.IsKind(SyntaxKind.StructDeclaration) || info.Syntax.IsKind(SyntaxKind.ClassDeclaration) ? info : y);
 
                                 //if (type.DeclaringSyntaxReferences.Any())
                                 //{
@@ -2578,7 +2592,7 @@ namespace Business.SourceGenerator.Analysis
             }
 
             var newLine = opt.StandardFormat ? Environment.NewLine : " ";
-            var newLine2 = opt.StandardFormat ? $"{Environment.NewLine}{Environment.NewLine}" : newLine;
+            var newLine2 = opt.StandardFormat ? $"{newLine}{newLine}" : newLine;
             string value = null;
 
             switch (syntaxNode)
@@ -2888,9 +2902,9 @@ namespace Business.SourceGenerator.Analysis
                     value = $"{node.OpenBracketToken}{node.Sizes}{node.CloseBracketToken}"; break;
                 case ArrayTypeSyntax node:
                     {
-                        var array = node.RankSpecifiers.First();
+                        var array = node.RankSpecifiers.FirstOrDefault();
 
-                        value = $"{ToCode(node.ElementType, opt)}{ToCode(array, opt)}";
+                        value = $"{ToCode(node.ElementType, opt)}{(null == array ? null : ToCode(array, opt))}";
                     }
                     break;
                 case ParameterSyntax node:
@@ -3024,6 +3038,8 @@ namespace Business.SourceGenerator.Analysis
                 //IsPatternExpressionSyntax IsPatternExpression 
                 case IsPatternExpressionSyntax node:
                     value = $"{ToCode(node.Expression, opt)} {node.IsKeyword} {ToCode(node.Pattern, opt)}"; break;
+                case ArrayCreationExpressionSyntax node:
+                    value = $"{node.NewKeyword} {ToCode(node.Type, opt)} {ToCode(node.Initializer, opt)}"; break;
                 #endregion
 
                 #region default
@@ -3307,35 +3323,40 @@ namespace Business.SourceGenerator.Analysis
             return symbol.GetFullName().Equals(fullName);
         }
 
-        public static IEnumerable<string> GetTypes(ConcurrentDictionary<string, MetaData.SymbolInfo> typeSymbols)
+        public static IEnumerable<string> GetTypes(this MetaData.AnalysisInfoModel analysisInfo)
         {
             var list = new List<string>();
 
-            foreach (var item in typeSymbols.Values)
+            foreach (var item in analysisInfo.DeclaredSymbols.Values)
             {
-                if (null == item.References)
+                if (null == item.References || !item.Declared.DeclaringSyntaxReferences.Any())
                 {
                     continue;
                 }
 
-                if (!(item.Syntax.IsKind(SyntaxKind.IdentifierName) || item.Syntax.IsKind(SyntaxKind.GenericName) || item.Syntax.IsKind(SyntaxKind.InterfaceDeclaration) || item.Syntax.IsKind(SyntaxKind.ClassDeclaration) || item.Syntax.IsKind(SyntaxKind.StructDeclaration)))
+                if (!(item.Declared is ITypeSymbol))
                 {
                     continue;
                 }
 
-                var typeSymbol = item.Declared as ITypeSymbol;
+                //if (!(item.Syntax.IsKind(SyntaxKind.IdentifierName) || item.Syntax.IsKind(SyntaxKind.GenericName) || item.Syntax.IsKind(SyntaxKind.InterfaceDeclaration) || item.Syntax.IsKind(SyntaxKind.ClassDeclaration) || item.Syntax.IsKind(SyntaxKind.StructDeclaration)))
+                //{
+                //    continue;
+                //}
 
-                if ((TypeKind.Interface != typeSymbol.TypeKind && TypeKind.Class != typeSymbol.TypeKind && TypeKind.Struct != typeSymbol.TypeKind))
-                {
-                    continue;
-                }
+                //var typeSymbol = item.Declared as ITypeSymbol;
+
+                //if (TypeKind.Interface != typeSymbol.TypeKind && TypeKind.Class != typeSymbol.TypeKind && TypeKind.Struct != typeSymbol.TypeKind)
+                //{
+                //    continue;
+                //}
 
                 //if (typeSymbol2 is INamedTypeSymbol namedType && namedType.IsUnboundGenericType)
                 //{
                 //    continue;
                 //}
 
-                var name = typeSymbol.GetFullName(new Expression.GetFullNameOpt(standardFormat: true));
+                var name = item.Declared.GetFullName(new GetFullNameOpt(standardFormat: true));
 
                 if (!list.Contains(name))
                 {
@@ -3349,6 +3370,209 @@ namespace Business.SourceGenerator.Analysis
             }
 
             return Array.Empty<string>();
+        }
+
+        public static IEnumerable<MetaData.SymbolInfo> GetDeclarations(this MetaData.AnalysisInfoModel analysisInfo)
+        {
+            var list = new List<MetaData.SymbolInfo>();
+
+            foreach (var item in analysisInfo.DeclaredSymbols.Values)
+            {
+                if (null == item.References || !item.Declared.DeclaringSyntaxReferences.Any())
+                {
+                    continue;
+                }
+
+                if (!(item.Syntax.IsKind(SyntaxKind.ClassDeclaration) || item.Syntax.IsKind(SyntaxKind.StructDeclaration)))
+                {
+                    continue;
+                }
+
+                list.Add(item);
+            }
+
+            if (0 < list.Count)
+            {
+                return list;
+            }
+
+            return Array.Empty<MetaData.SymbolInfo>();
+        }
+
+        static readonly string AccessorKey = TypeNameFormatter.TypeName.GetFormattedName(typeof(IGeneratorAccessor), TypeNameFormatter.TypeNameFormatOptions.Namespaces);
+
+        static bool HasGeneratorAccessor(MetaData.SymbolInfo info)
+        {
+            const string partialKey = "partial";
+
+            if (!(info.Syntax is TypeDeclarationSyntax member))
+            {
+                return false;
+            }
+
+            if (!member.Modifiers.Any(c => partialKey.Equals(c.ValueText)))
+            {
+                return false;
+            }
+
+            var typeSymbol = info.Declared as ITypeSymbol;
+
+            if (Accessibility.Public != typeSymbol.DeclaredAccessibility || typeSymbol.AllInterfaces.Any(c => AccessorKey.Equals(c.GetFullName())))
+            {
+                return false;
+            }
+
+            return true;
+        }
+
+        static bool HasInheritType(INamedTypeSymbol typeSymbol, IEnumerable<MetaData.SymbolInfo> infos)
+        {
+            var baseType = typeSymbol.BaseType;
+            var isInherit = false;
+
+            while (null != baseType)
+            {
+                if (infos.Any(c => c.Declared.Equals(baseType)))
+                {
+                    isInherit = true;
+                    break;
+                }
+
+                baseType = baseType.BaseType;
+            }
+
+            return isInherit;
+        }
+
+        public static IEnumerable<MemberDeclarationSyntax> GeneratorAccessor(MetaData.AnalysisInfoModel analysisInfo, bool hasPrivate = false)
+        {
+            var declarations = GetDeclarations(analysisInfo);
+
+            var list = new List<MemberDeclarationSyntax>();
+
+            var generatorAccessors = declarations.Where(c => HasGeneratorAccessor(c));
+
+            foreach (var item in generatorAccessors)
+            {
+                var typeSymbol = item.Declared as INamedTypeSymbol;
+
+                //====================================================//
+
+                var nameArg = "name";
+                var nameIdName = SyntaxFactory.IdentifierName(nameArg);
+                var valueArg = "value";
+                var valueIdName = SyntaxFactory.IdentifierName(valueArg);
+
+                var get = SyntaxFactoryExt.ParseMethod(nameof(IGeneratorAccessor.AccessorGet)).AddModifiers(SyntaxKind.PublicKeyword)
+                    .WithReturnType(typeof(bool))
+                    .WithParameters(SyntaxFactoryExt.Parameter(nameArg, typeof(string)), SyntaxFactoryExt.Parameter(valueArg, typeof(object)).AddModifiers(SyntaxFactory.Token(SyntaxKind.OutKeyword)))
+                    .WithBody(SyntaxFactoryExt.AssignmentExpression(valueIdName, SyntaxFactoryExt.ParseDefaultLiteral()), SyntaxFactory.ReturnStatement(SyntaxFactoryExt.ParseDefaultLiteral()));
+
+                var set = SyntaxFactoryExt.ParseMethod(nameof(IGeneratorAccessor.AccessorSet)).AddModifiers(SyntaxKind.PublicKeyword)
+                    .WithReturnType(typeof(bool))
+                    .WithParameters(SyntaxFactoryExt.Parameter(nameArg, typeof(string)), SyntaxFactoryExt.Parameter(valueArg, typeof(object)))
+                    .WithBody(SyntaxFactory.ReturnStatement(SyntaxFactoryExt.ParseDefaultLiteral()));
+
+                var ret = SyntaxFactoryExt.QualifiedName("System.Collections.Generic", SyntaxFactory.GenericName("IEnumerable").WithTypeArgumentList(SyntaxFactoryExt.TypeArgumentList(SyntaxFactoryExt.TupleType(SyntaxFactory.TupleElement(SyntaxFactory.PredefinedType(SyntaxFactory.Token(SyntaxKind.StringKeyword))).WithIdentifier(SyntaxFactory.Identifier("name")), SyntaxFactory.TupleElement(SyntaxFactory.PredefinedType(SyntaxFactory.Token(SyntaxKind.ObjectKeyword))).WithIdentifier(SyntaxFactory.Identifier("value"))))));
+
+                var get2 = SyntaxFactoryExt.ParseMethod(nameof(IGeneratorAccessor.AccessorGet)).AddModifiers(SyntaxKind.PublicKeyword)
+                    .WithReturnType(ret)
+                    .WithParameters()
+                    .WithBody(SyntaxFactory.ReturnStatement(SyntaxFactoryExt.ParseDefaultLiteral()));
+
+                var isInherit = HasInheritType(typeSymbol, generatorAccessors);
+
+                if (!typeSymbol.IsValueType)
+                {
+                    if (isInherit)
+                    {
+                        get = get.AddModifiers(SyntaxKind.OverrideKeyword);
+                        set = set.AddModifiers(SyntaxKind.OverrideKeyword);
+                        get2 = get2.AddModifiers(SyntaxKind.OverrideKeyword);
+
+                        get = get.WithBody(SyntaxFactory.ReturnStatement(SyntaxFactoryExt.InvocationExpression(SyntaxFactoryExt.QualifiedName("base", nameof(IGeneratorAccessor.AccessorGet)), SyntaxFactory.Argument(nameIdName), SyntaxFactory.Argument(valueIdName).WithRefKindKeyword(SyntaxFactory.Token(SyntaxKind.OutKeyword)))));
+                        set = set.WithBody(SyntaxFactory.ReturnStatement(SyntaxFactoryExt.InvocationExpression(SyntaxFactoryExt.QualifiedName("base", nameof(IGeneratorAccessor.AccessorSet)), nameIdName, valueIdName)));
+                        get2 = get2.WithBody(SyntaxFactory.ReturnStatement(SyntaxFactory.InvocationExpression(SyntaxFactoryExt.QualifiedName("base", nameof(IGeneratorAccessor.AccessorGet)))));
+                    }
+                    else
+                    {
+                        get = get.AddModifiers(SyntaxKind.VirtualKeyword);
+                        set = set.AddModifiers(SyntaxKind.VirtualKeyword);
+                        get2 = get2.AddModifiers(SyntaxKind.VirtualKeyword);
+                    }
+                }
+
+                MemberDeclarationSyntax declaration = (item.Syntax as TypeDeclarationSyntax).WithMembers(new SyntaxList<MemberDeclarationSyntax>());
+
+                declaration = (declaration as TypeDeclarationSyntax).AddBaseListTypes(SyntaxFactoryExt.ParseType(typeof(IGeneratorAccessor), TypeNameFormatter.TypeNameFormatOptions.Namespaces));
+
+                var childrens = typeSymbol.GetMembers().Where(c => (SymbolKind.Field == c.Kind || SymbolKind.Property == c.Kind) && !c.IsImplicitlyDeclared && !c.IsStatic);
+
+                if (!hasPrivate)
+                {
+                    childrens = childrens.Where(c => Accessibility.Public == c.DeclaredAccessibility);
+                }
+
+                if (childrens.Any())
+                {
+                    get = get.WithBody(
+                        SyntaxFactory.IfStatement(SyntaxFactory.IsPatternExpression(nameIdName, SyntaxFactory.ConstantPattern(SyntaxFactoryExt.ParseLiteralNull())), SyntaxFactory.Block(SyntaxFactory.ThrowStatement(SyntaxFactory.ObjectCreationExpression(SyntaxFactoryExt.ArgumentNullException(), SyntaxFactory.ArgumentList().Add(SyntaxFactoryExt.NameOf(nameIdName)), null)))),
+
+                        SyntaxFactoryExt.ParseSwitch(nameArg,
+                        isInherit ? new SyntaxList<StatementSyntax>(SyntaxFactory.ReturnStatement(SyntaxFactoryExt.InvocationExpression(SyntaxFactoryExt.QualifiedName("base", nameof(IGeneratorAccessor.AccessorGet)), SyntaxFactory.Argument(nameIdName), SyntaxFactory.Argument(valueIdName).WithRefKindKeyword(SyntaxFactory.Token(SyntaxKind.OutKeyword))))) :
+                        new SyntaxList<StatementSyntax>()
+                        .Add(SyntaxFactoryExt.AssignmentExpression(valueIdName, SyntaxFactoryExt.ParseDefaultLiteral()))
+                        .Add(SyntaxFactory.ReturnStatement(SyntaxFactoryExt.ParseDefaultLiteral())),
+                        childrens.Select(c =>
+                        {
+                            return (SyntaxFactoryExt.ParseLiteral(c.Name) as ExpressionSyntax,
+                            new SyntaxList<StatementSyntax>()
+                            .Add(SyntaxFactoryExt.AssignmentExpression(valueIdName, SyntaxFactory.ParseTypeName(c.Name)))
+                            .Add(SyntaxFactory.ReturnStatement(SyntaxFactoryExt.ParseBooleanLiteral(true))));
+                        }).ToArray()));
+
+                    set = set.WithBody(
+                        SyntaxFactory.IfStatement(SyntaxFactory.IsPatternExpression(nameIdName, SyntaxFactory.ConstantPattern(SyntaxFactoryExt.ParseLiteralNull())), SyntaxFactory.Block(SyntaxFactory.ThrowStatement(SyntaxFactory.ObjectCreationExpression(SyntaxFactoryExt.ArgumentNullException(), SyntaxFactory.ArgumentList().Add(SyntaxFactoryExt.NameOf(nameIdName)), null)))),
+
+                        SyntaxFactoryExt.ParseSwitch(nameArg,
+                        isInherit ? SyntaxFactory.ReturnStatement(SyntaxFactoryExt.InvocationExpression(SyntaxFactoryExt.QualifiedName("base", nameof(IGeneratorAccessor.AccessorSet)), nameIdName, valueIdName)) :
+                        SyntaxFactory.ReturnStatement(SyntaxFactoryExt.ParseDefaultLiteral()), childrens.Where(c => !(c is IPropertySymbol property && null == property.SetMethod)).Select(c =>
+                        {
+                            var type = SymbolKind.Field == c.Kind ? (c as IFieldSymbol).Type : SymbolKind.Property == c.Kind ? (c as IPropertySymbol).Type : null;
+                            //SyntaxFactory.InvocationExpression(SyntaxFactoryExt.QualifiedName("base", nameof(IGeneratorAccessor.AccessorSet))
+                            var value = type.IsValueType ? SyntaxFactory.CastExpression(SyntaxFactory.ParseName(type.GetFullName()), valueIdName) : SyntaxFactory.BinaryExpression(SyntaxKind.AsExpression, valueIdName, SyntaxFactory.ParseName(type.GetFullName())) as ExpressionSyntax;
+
+                            return (SyntaxFactoryExt.ParseLiteral(c.Name) as ExpressionSyntax,
+                            new SyntaxList<StatementSyntax>()
+                            .Add(SyntaxFactoryExt.AssignmentExpression(SyntaxFactory.IdentifierName(c.Name), value))
+                            .Add(SyntaxFactory.ReturnStatement(SyntaxFactoryExt.ParseBooleanLiteral(true))));
+                        }).ToArray()));
+
+                    get2 = get2.WithBody(SyntaxFactory.ReturnStatement(
+                        isInherit ? SyntaxFactoryExt.InvocationExpression(SyntaxFactoryExt.MemberAccessExpression(SyntaxFactory.ArrayCreationExpression(SyntaxFactory.ArrayType(SyntaxFactoryExt.ParseType(typeof((string, object)[]))), SyntaxFactoryExt.ArrayInitializerExpression(childrens.Select(c => SyntaxFactoryExt.TupleExpression(SyntaxFactoryExt.ParseLiteral(c.Name), SyntaxFactory.IdentifierName(c.Name))).ToArray())), "Concat"), SyntaxFactory.InvocationExpression(SyntaxFactoryExt.QualifiedName("base", nameof(IGeneratorAccessor.AccessorGet)))) :
+                        SyntaxFactory.ArrayCreationExpression(SyntaxFactory.ArrayType(SyntaxFactoryExt.ParseType(typeof((string, object)[]))), SyntaxFactoryExt.ArrayInitializerExpression(childrens.Select(c => SyntaxFactoryExt.TupleExpression(SyntaxFactoryExt.ParseLiteral(c.Name), SyntaxFactory.IdentifierName(c.Name))).ToArray())) as ExpressionSyntax));
+                }
+
+                declaration = (declaration as TypeDeclarationSyntax).AddMembers(get, set, get2);
+
+                var namespaces = typeSymbol.ContainingNamespace?.ToDisplayString();
+
+                if (!string.IsNullOrEmpty(namespaces))
+                {
+                    declaration = SyntaxFactoryExt.ParseNamespace(namespaces).AddMembers(declaration);
+                }
+
+                //var code = declaration.ToCode(new ToCodeOpt(standardFormat: true));
+
+                list.Add(declaration);
+            }
+
+            if (0 < list.Count)
+            {
+                return list;
+            }
+
+            return Array.Empty<MemberDeclarationSyntax>();
         }
     }
 }

@@ -46,7 +46,7 @@ namespace Business.SourceGenerator.Analysis
         //    return new SeparatedSyntaxList<ExpressionSyntax>().Add(element);
         //}
 
-        public static TypeSyntax ParseType(this Type type) => SyntaxFactory.ParseTypeName(type.GetFormattedName());
+        public static TypeSyntax ParseType(this Type type, TypeNameFormatOptions options = TypeNameFormatOptions.Default) => SyntaxFactory.ParseTypeName(type.GetFormattedName(options));
 
         /*
         public static TypeSyntax ParseType(this string name)
@@ -159,7 +159,42 @@ namespace Business.SourceGenerator.Analysis
         {
             if (!(arg?.Any() ?? false)) { return SyntaxFactory.ArgumentList(); }
 
-            return SyntaxFactory.ArgumentList().AddArguments(arg.Select(c => SyntaxFactory.Argument(c)).ToArray());
+            return ArgumentList(arg.Select(c => SyntaxFactory.Argument(c)).ToArray());
+        }
+
+        public static ArgumentListSyntax ArgumentList(params ArgumentSyntax[] arg)
+        {
+            if (!(arg?.Any() ?? false)) { return SyntaxFactory.ArgumentList(); }
+
+            return SyntaxFactory.ArgumentList().AddArguments(arg);
+        }
+
+        public static TupleExpressionSyntax TupleExpression(params ExpressionSyntax[] arg)
+        {
+            if (!(arg?.Any() ?? false)) { return SyntaxFactory.TupleExpression(); }
+
+            return TupleExpression(arg.Select(c => SyntaxFactory.Argument(c)).ToArray());
+        }
+
+        public static TupleExpressionSyntax TupleExpression(params ArgumentSyntax[] arg)
+        {
+            if (!(arg?.Any() ?? false)) { return SyntaxFactory.TupleExpression(); }
+
+            return SyntaxFactory.TupleExpression(new SeparatedSyntaxList<ArgumentSyntax>().AddRange(arg));
+        }
+
+        //public static TupleTypeSyntax TupleType(params TypeSyntax[] arg)
+        //{
+        //    if (!(arg?.Any() ?? false)) { return SyntaxFactory.TupleType(); }
+
+        //    return TupleType(arg.Select(c => SyntaxFactory.TupleElement(c)).ToArray());
+        //}
+
+        public static TupleTypeSyntax TupleType(params TupleElementSyntax[] arg)
+        {
+            if (!(arg?.Any() ?? false)) { return SyntaxFactory.TupleType(); }
+
+            return SyntaxFactory.TupleType(new SeparatedSyntaxList<TupleElementSyntax>().AddRange(arg));
         }
 
         public static ArgumentListSyntax Add(this ArgumentListSyntax list, params ExpressionSyntax[] arg)
@@ -182,11 +217,23 @@ namespace Business.SourceGenerator.Analysis
         public static TypeOfExpressionSyntax TypeOfExpression(Type type) => SyntaxFactory.TypeOfExpression(ParseType(type));
 
         public static InvocationExpressionSyntax NameOf(ExpressionSyntax arg) => InvocationExpression(SyntaxFactory.IdentifierName("nameof"), arg);
-        public static IdentifierNameSyntax ArgumentNullException() => SyntaxFactory.IdentifierName("ArgumentNullException");
+        public static IdentifierNameSyntax ArgumentNullException() => SyntaxFactory.IdentifierName("System.ArgumentNullException");
 
         public static InitializerExpressionSyntax ArrayInitializerExpression(params ExpressionSyntax[] expressions) => SyntaxFactory.InitializerExpression(SyntaxKind.ArrayInitializerExpression, new SeparatedSyntaxList<ExpressionSyntax>().AddRange(expressions));
 
         public static ObjectCreationExpressionSyntax ObjectCreationExpression(TypeSyntax type, params ExpressionSyntax[] arg) => SyntaxFactory.ObjectCreationExpression(type, ArgumentList(arg), null);
+
+        //public static ObjectCreationExpressionSyntax ObjectCreationExpression(Type type, params ExpressionSyntax[] arg) => ObjectCreationExpression(ParseType(type), arg);
+
+        //public static ObjectCreationExpressionSyntax ObjectCreationExpression(string type, params ExpressionSyntax[] arg) => ObjectCreationExpression(SyntaxFactory.ParseTypeName(type), arg);
+
+        #region Parameter
+
+        public static ParameterSyntax Parameter(SyntaxToken identifier, Type type = null) => null == type ? SyntaxFactory.Parameter(identifier) : SyntaxFactory.Parameter(identifier).WithType(ParseType(type));
+
+        public static ParameterSyntax Parameter(string identifier, Type type = null) => Parameter(SyntaxFactory.Identifier(identifier), type);
+
+        #endregion
 
         #region ParseToken
 
@@ -247,6 +294,8 @@ namespace Business.SourceGenerator.Analysis
 
         public static InvocationExpressionSyntax InvocationExpression(ExpressionSyntax expression, params ExpressionSyntax[] arg) => SyntaxFactory.InvocationExpression(expression, ArgumentList(arg));
 
+        public static InvocationExpressionSyntax InvocationExpression(ExpressionSyntax expression, params ArgumentSyntax[] arg) => SyntaxFactory.InvocationExpression(expression, ArgumentList(arg));
+
         public static QualifiedNameSyntax QualifiedName(string left, string right) => SyntaxFactory.QualifiedName(SyntaxFactory.IdentifierName(left), SyntaxFactory.IdentifierName(right));
 
         public static QualifiedNameSyntax QualifiedName(string left, params string[] right)
@@ -283,6 +332,8 @@ namespace Business.SourceGenerator.Analysis
         public static QualifiedNameSyntax QualifiedName(string left, SimpleNameSyntax right) => SyntaxFactory.QualifiedName(SyntaxFactory.IdentifierName(left), right);
 
         public static QualifiedNameSyntax QualifiedName(NameSyntax left, SimpleNameSyntax right) => SyntaxFactory.QualifiedName(left, right);
+
+        public static StatementSyntax AssignmentExpression(ExpressionSyntax left, ExpressionSyntax right) => SyntaxFactory.ParseStatement($"{left.ToCode()} = {right.ToCode()};");
 
         public static BinaryExpressionSyntax BinaryExpression(ExpressionSyntax left, params ExpressionSyntax[] right)
         {
@@ -325,7 +376,11 @@ namespace Business.SourceGenerator.Analysis
 
         public static ClassDeclarationSyntax ParseClass(string name) => SyntaxFactory.ClassDeclaration(name);
 
-        public static ClassDeclarationSyntax AddBaseListTypes(this ClassDeclarationSyntax classd, params TypeSyntax[] types) => classd.AddBaseListTypes(types.Select(c => SyntaxFactory.SimpleBaseType(c)).ToArray());
+        //public static ClassDeclarationSyntax AddBaseListTypes(this ClassDeclarationSyntax classd, params TypeSyntax[] types) => classd.AddBaseListTypes(types.Select(c => SyntaxFactory.SimpleBaseType(c)).ToArray());
+
+        public static TypeDeclarationSyntax AddBaseListTypes(this TypeDeclarationSyntax classd, params TypeSyntax[] types) => classd.AddBaseListTypes(types.Select(c => SyntaxFactory.SimpleBaseType(c)).ToArray()) as TypeDeclarationSyntax;
+
+        public static TypeDeclarationSyntax WithBaseList(this TypeDeclarationSyntax classd, params TypeSyntax[] types) => classd.WithBaseList(SyntaxFactory.BaseList(new SeparatedSyntaxList<BaseTypeSyntax>().AddRange(types.Select(c => SyntaxFactory.SimpleBaseType(c)))));
 
         //SyntaxFactory.ClassDeclaration(null, ParseTokenList(modifiers), SyntaxFactory.Identifier(name), ParseTypeParameterList(""), null, null);
         #endregion
@@ -394,6 +449,62 @@ namespace Business.SourceGenerator.Analysis
         /// <param name="switchSections"></param>
         /// <returns></returns>
         public static SwitchStatementSyntax ParseSwitch(ExpressionSyntax key, StatementSyntax defaultSection, params (ExpressionSyntax Case, StatementSyntax Value)[] switchSections) => SyntaxFactory.SwitchStatement(key, new SyntaxList<SwitchSectionSyntax>(switchSections.Select(c => SyntaxFactory.SwitchSection(new SyntaxList<SwitchLabelSyntax>(SyntaxFactory.CaseSwitchLabel(c.Case)), new SyntaxList<StatementSyntax>(c.Value)))).Add(SyntaxFactory.SwitchSection(new SyntaxList<SwitchLabelSyntax>(SyntaxFactory.DefaultSwitchLabel()), new SyntaxList<StatementSyntax>(defaultSection))));
+
+        //==========================SyntaxList<StatementSyntax> Value===========================//
+
+        /// <summary>
+        /// Creates a new SwitchStatementSyntax instance.
+        /// </summary>
+        /// <param name="key"></param>
+        /// <param name="switchSections"></param>
+        /// <returns></returns>
+        public static SwitchStatementSyntax ParseSwitch(string key, params (SwitchLabelSyntax Case, SyntaxList<StatementSyntax> Value)[] switchSections) => SyntaxFactory.SwitchStatement(SyntaxFactory.IdentifierName(key), new SyntaxList<SwitchSectionSyntax>(switchSections.Select(c => SyntaxFactory.SwitchSection(new SyntaxList<SwitchLabelSyntax>(c.Case), c.Value))));
+
+        /// <summary>
+        /// Creates a new SwitchStatementSyntax instance.
+        /// </summary>
+        /// <param name="key"></param>
+        /// <param name="switchSections"></param>
+        /// <returns></returns>
+        public static SwitchStatementSyntax ParseSwitch(ExpressionSyntax key, params (SwitchLabelSyntax Case, SyntaxList<StatementSyntax> Value)[] switchSections) => SyntaxFactory.SwitchStatement(key, new SyntaxList<SwitchSectionSyntax>(switchSections.Select(c => SyntaxFactory.SwitchSection(new SyntaxList<SwitchLabelSyntax>(c.Case), c.Value))));
+
+        /// <summary>
+        /// Creates a new SwitchStatementSyntax instance.
+        /// </summary>
+        /// <param name="key"></param>
+        /// <param name="defaultSection"></param>
+        /// <param name="switchSections"></param>
+        /// <returns></returns>
+        public static SwitchStatementSyntax ParseSwitch(string key, StatementSyntax defaultSection, params (ExpressionSyntax Case, SyntaxList<StatementSyntax> Value)[] switchSections) => SyntaxFactory.SwitchStatement(SyntaxFactory.IdentifierName(key), new SyntaxList<SwitchSectionSyntax>(switchSections.Select(c => SyntaxFactory.SwitchSection(new SyntaxList<SwitchLabelSyntax>(SyntaxFactory.CaseSwitchLabel(c.Case)), c.Value))).Add(SyntaxFactory.SwitchSection(new SyntaxList<SwitchLabelSyntax>(SyntaxFactory.DefaultSwitchLabel()), new SyntaxList<StatementSyntax>(defaultSection))));
+
+        /// <summary>
+        /// Creates a new SwitchStatementSyntax instance.
+        /// </summary>
+        /// <param name="key"></param>
+        /// <param name="defaultSection"></param>
+        /// <param name="switchSections"></param>
+        /// <returns></returns>
+        public static SwitchStatementSyntax ParseSwitch(ExpressionSyntax key, StatementSyntax defaultSection, params (ExpressionSyntax Case, SyntaxList<StatementSyntax> Value)[] switchSections) => SyntaxFactory.SwitchStatement(key, new SyntaxList<SwitchSectionSyntax>(switchSections.Select(c => SyntaxFactory.SwitchSection(new SyntaxList<SwitchLabelSyntax>(SyntaxFactory.CaseSwitchLabel(c.Case)), c.Value))).Add(SyntaxFactory.SwitchSection(new SyntaxList<SwitchLabelSyntax>(SyntaxFactory.DefaultSwitchLabel()), new SyntaxList<StatementSyntax>(defaultSection))));
+
+        //==========================SyntaxList<StatementSyntax> defaultSection===========================//
+
+        /// <summary>
+        /// Creates a new SwitchStatementSyntax instance.
+        /// </summary>
+        /// <param name="key"></param>
+        /// <param name="defaultSection"></param>
+        /// <param name="switchSections"></param>
+        /// <returns></returns>
+        public static SwitchStatementSyntax ParseSwitch(string key, SyntaxList<StatementSyntax> defaultSection, params (ExpressionSyntax Case, SyntaxList<StatementSyntax> Value)[] switchSections) => SyntaxFactory.SwitchStatement(SyntaxFactory.IdentifierName(key), new SyntaxList<SwitchSectionSyntax>(switchSections.Select(c => SyntaxFactory.SwitchSection(new SyntaxList<SwitchLabelSyntax>(SyntaxFactory.CaseSwitchLabel(c.Case)), c.Value))).Add(SyntaxFactory.SwitchSection(new SyntaxList<SwitchLabelSyntax>(SyntaxFactory.DefaultSwitchLabel()), defaultSection)));
+
+        /// <summary>
+        /// Creates a new SwitchStatementSyntax instance.
+        /// </summary>
+        /// <param name="key"></param>
+        /// <param name="defaultSection"></param>
+        /// <param name="switchSections"></param>
+        /// <returns></returns>
+        public static SwitchStatementSyntax ParseSwitch(ExpressionSyntax key, SyntaxList<StatementSyntax> defaultSection, params (ExpressionSyntax Case, SyntaxList<StatementSyntax> Value)[] switchSections) => SyntaxFactory.SwitchStatement(key, new SyntaxList<SwitchSectionSyntax>(switchSections.Select(c => SyntaxFactory.SwitchSection(new SyntaxList<SwitchLabelSyntax>(SyntaxFactory.CaseSwitchLabel(c.Case)), c.Value))).Add(SyntaxFactory.SwitchSection(new SyntaxList<SwitchLabelSyntax>(SyntaxFactory.DefaultSwitchLabel()), defaultSection)));
 
         #endregion
 
