@@ -16,6 +16,7 @@
 
 namespace Business.SourceGenerator.Analysis
 {
+    using Business.SourceGenerator.Analysis.Meta;
     using Microsoft.CodeAnalysis;
     using Microsoft.CodeAnalysis.CSharp;
     using Microsoft.CodeAnalysis.CSharp.Syntax;
@@ -53,7 +54,7 @@ namespace Business.SourceGenerator.Analysis
                         var declarationInfo = item.Key.GetSymbolInfo();
                         var declared = declarationInfo.Declared as ITypeSymbol;
                         var declarations = GetTypeReference(analysisInfo.DeclaredSymbols, declared, SyntaxKind.ClassDeclaration, SyntaxKind.StructDeclaration);
-                        var references = GetTypeReference(analysisInfo.DeclaredSymbols, declared).Where(c => c is INamedTypeSymbol named && !named.TypeArguments.Any(c2 => c2.TypeKind == TypeKind.TypeParameter)).OrderBy(c => c.GetFullName());
+                        var references = GetTypeReference(analysisInfo.DeclaredSymbols, declared).Where(c => c is INamedTypeSymbol named && !named.TypeArguments.Any(c2 => c2.TypeKind == Microsoft.CodeAnalysis.TypeKind.TypeParameter)).OrderBy(c => c.GetFullName());
 
                         foreach (var item2 in declarations)
                         {
@@ -93,7 +94,7 @@ namespace Business.SourceGenerator.Analysis
                 throw new ArgumentNullException(nameof(typeSymbol));
             }
 
-            if (TypeKind.Interface != typeSymbol.TypeKind && TypeKind.Class != typeSymbol.TypeKind)
+            if (Microsoft.CodeAnalysis.TypeKind.Interface != typeSymbol.TypeKind && Microsoft.CodeAnalysis.TypeKind.Class != typeSymbol.TypeKind)
             {
                 return Array.Empty<ITypeSymbol>();
             }
@@ -116,7 +117,7 @@ namespace Business.SourceGenerator.Analysis
 
                 //var typeSymbol2 = item.Declared as ITypeSymbol;
 
-                if (TypeKind.Interface != typeSymbol2.TypeKind && TypeKind.Class != typeSymbol2.TypeKind && TypeKind.Struct != typeSymbol2.TypeKind)
+                if (Microsoft.CodeAnalysis.TypeKind.Interface != typeSymbol2.TypeKind && Microsoft.CodeAnalysis.TypeKind.Class != typeSymbol2.TypeKind && Microsoft.CodeAnalysis.TypeKind.Struct != typeSymbol2.TypeKind)
                 {
                     continue;
                 }
@@ -128,7 +129,7 @@ namespace Business.SourceGenerator.Analysis
 
                 switch (typeSymbol.TypeKind)
                 {
-                    case TypeKind.Class:
+                    case Microsoft.CodeAnalysis.TypeKind.Class:
                         var baseType = typeSymbol2.BaseType;
 
                         while (null != baseType)
@@ -142,7 +143,7 @@ namespace Business.SourceGenerator.Analysis
                             baseType = baseType.BaseType;
                         }
                         break;
-                    case TypeKind.Interface:
+                    case Microsoft.CodeAnalysis.TypeKind.Interface:
                         //if (typeSymbol2.OriginalDefinition.Equals(typeSymbol.OriginalDefinition) || typeSymbol2.AllInterfaces.Any(c => typeSymbol.OriginalDefinition.Equals(c.OriginalDefinition, SymbolEqualityComparer.Default)))
                         if (Expression.Equals(typeSymbol2.OriginalDefinition, typeSymbolName) || typeSymbol2.AllInterfaces.Any(c => Expression.Equals(c.OriginalDefinition, typeSymbolName)))
                         {
@@ -214,6 +215,44 @@ namespace Business.SourceGenerator.Analysis
 
         public bool AccessorSet(string name, object value);
     }
+    /*
+    public partial class AccessorType
+    {
+        bool IsReferenceType { get; }
+
+        bool IsReadOnly { get; }
+
+        bool IsUnmanagedType { get; }
+
+        bool IsRefLikeType { get; }
+
+        SpecialType SpecialType { get; }
+
+        ITypeSymbol OriginalDefinition { get; }
+
+        bool IsNativeIntegerType { get; }
+
+        bool IsTupleType { get; }
+
+        bool IsAnonymousType { get; }
+
+        bool IsValueType { get; }
+
+        NullableAnnotation NullableAnnotation { get; }
+
+        ImmutableArray<INamedTypeSymbol> AllInterfaces { get; }
+
+        ImmutableArray<INamedTypeSymbol> Interfaces { get; }
+
+        INamedTypeSymbol? BaseType { get; }
+
+        TypeKind TypeKind { get; }
+
+        bool IsRecord { get; }
+    }
+    */
+
+    // var type = SymbolKind.Field == c.Kind ? (c as IFieldSymbol).Type : SymbolKind.Property == c.Kind ? (c as IPropertySymbol).Type : null;
 
     //[AttributeUsage(AttributeTargets.Method, Inherited = false, AllowMultiple = true)]
     //public sealed class SetGenericType : Attribute
@@ -1697,9 +1736,9 @@ namespace Business.SourceGenerator.Analysis
                             {
                                 switch (arg2.DeclaringType.TypeKind)
                                 {
-                                    case TypeKind.Class:
-                                    case TypeKind.Interface:
-                                    case TypeKind.Struct:
+                                    case Microsoft.CodeAnalysis.TypeKind.Class:
+                                    case Microsoft.CodeAnalysis.TypeKind.Interface:
+                                    case Microsoft.CodeAnalysis.TypeKind.Struct:
                                         return GetTypeParameterToArgument(node.ReceiverType, arg);
                                     default: break;
                                 }
@@ -1713,9 +1752,9 @@ namespace Business.SourceGenerator.Analysis
                     {
                         switch (node.TypeKind)
                         {
-                            case TypeKind.Class:
-                            case TypeKind.Interface:
-                            case TypeKind.Struct:
+                            case Microsoft.CodeAnalysis.TypeKind.Class:
+                            case Microsoft.CodeAnalysis.TypeKind.Interface:
+                            case Microsoft.CodeAnalysis.TypeKind.Struct:
                                 var parameter = node.TypeParameters.FirstOrDefault(c => c.Equals(other));
 
                                 if (null != parameter)
@@ -1836,11 +1875,12 @@ namespace Business.SourceGenerator.Analysis
 
         public readonly struct GetFullNameOpt
         {
-            public GetFullNameOpt(bool noArgs = false, bool standardFormat = false)
+            public GetFullNameOpt(bool noArgs = false, bool standardFormat = false, bool unboundGenericType = false)
             //bool isExplicitlyNamedTupleElement = true, bool dynamic2Object = false, bool noNullable = false, 
             {
                 NoArgs = noArgs;
                 StandardFormat = standardFormat;
+                UnboundGenericType = unboundGenericType;
                 //IsExplicitlyNamedTupleElement = isExplicitlyNamedTupleElement;
                 //Dynamic2Object = dynamic2Object;
                 //NoNullable = noNullable;
@@ -1849,6 +1889,8 @@ namespace Business.SourceGenerator.Analysis
             public bool NoArgs { get; }
 
             public bool StandardFormat { get; }
+
+            public bool UnboundGenericType { get; }
 
             //public bool IsExplicitlyNamedTupleElement { get; }
 
@@ -1874,7 +1916,7 @@ namespace Business.SourceGenerator.Analysis
 
                 string nullable = null;
 
-                if (symbol is ITypeSymbol type && NullableAnnotation.Annotated == type.NullableAnnotation)
+                if (symbol is ITypeSymbol type && Microsoft.CodeAnalysis.NullableAnnotation.Annotated == type.NullableAnnotation)
                 {
                     nullable = opt.StandardFormat ? string.Empty : "?";
 
@@ -1896,12 +1938,12 @@ namespace Business.SourceGenerator.Analysis
                     {
                         if ("System.ValueTuple".Equals($"{prefix}.{symbol.Name}") && 0 < named?.TupleElements.Length)
                         {
-                            return $"({string.Join(", ", named.TupleElements.Select(c => (c.IsExplicitlyNamedTupleElement && !opt.StandardFormat) ? $"{(TypeKind.Dynamic == c.Type.TypeKind && opt.StandardFormat ? objectName : GetFullName(c.Type, opt))} {c.Name}" : (TypeKind.Dynamic == c.Type.TypeKind && opt.StandardFormat ? objectName : GetFullName(c.Type, opt))))})";
+                            return $"({string.Join(", ", named.TupleElements.Select(c => (c.IsExplicitlyNamedTupleElement && !opt.StandardFormat) ? $"{(Microsoft.CodeAnalysis.TypeKind.Dynamic == c.Type.TypeKind && opt.StandardFormat ? objectName : GetFullName(c.Type, opt))} {c.Name}" : (Microsoft.CodeAnalysis.TypeKind.Dynamic == c.Type.TypeKind && opt.StandardFormat ? objectName : GetFullName(c.Type, opt))))})";
                         }
                     }
                     else
                     {
-                        args = $"<{string.Join(", ", named.TypeArguments.Select(c => (TypeKind.Dynamic == c.TypeKind && opt.StandardFormat ? objectName : GetFullName(c, opt))))}>";
+                        args = opt.UnboundGenericType ? $"<{string.Join(",", Enumerable.Repeat(string.Empty, named.TypeArguments.Length))}>" : $"<{string.Join(", ", named.TypeArguments.Select(c => (Microsoft.CodeAnalysis.TypeKind.Dynamic == c.TypeKind && opt.StandardFormat ? objectName : GetFullName(c, opt))))}>";
                     }
                 }
 
@@ -1911,10 +1953,10 @@ namespace Business.SourceGenerator.Analysis
                 {
                     if (0 < method.TypeArguments.Length)
                     {
-                        args = $"<{string.Join(", ", method.TypeArguments.Select(c => (TypeKind.Dynamic == c.TypeKind && opt.StandardFormat ? objectName : GetFullName(c, opt))))}>";
+                        args = opt.UnboundGenericType ? $"<{string.Join(",", Enumerable.Repeat(string.Empty, named.TypeArguments.Length))}>" : $"<{string.Join(", ", method.TypeArguments.Select(c => (Microsoft.CodeAnalysis.TypeKind.Dynamic == c.TypeKind && opt.StandardFormat ? objectName : GetFullName(c, opt))))}>";
                     }
 
-                    parameters = $"({string.Join(", ", method.Parameters.Select(c => (TypeKind.Dynamic == c.Type.TypeKind && opt.StandardFormat ? objectName : GetFullName(c.Type, opt))))})";
+                    parameters = $"({string.Join(", ", method.Parameters.Select(c => (Microsoft.CodeAnalysis.TypeKind.Dynamic == c.Type.TypeKind && opt.StandardFormat ? objectName : GetFullName(c.Type, opt))))})";
                 }
 
                 if (opt.NoArgs)
@@ -1931,7 +1973,7 @@ namespace Business.SourceGenerator.Analysis
                 {
                     var parameters = c.Parameters.Select(c2 =>
                     {
-                        var type = TypeKind.Dynamic == c2.Type.TypeKind && opt.StandardFormat ? objectName : GetFullName(c2.Type, opt);
+                        var type = Microsoft.CodeAnalysis.TypeKind.Dynamic == c2.Type.TypeKind && opt.StandardFormat ? objectName : GetFullName(c2.Type, opt);
 
                         return opt.StandardFormat ? type : $"{type} {c2.Name}";
                     });
@@ -3443,6 +3485,152 @@ namespace Business.SourceGenerator.Analysis
 
             return isInherit;
         }
+        /*
+        static AccessorMember.AccessorTypeName GetAccessorTypeName(ISymbol symbol)
+        {
+            if (symbol is null)
+            {
+                throw new ArgumentNullException(nameof(symbol));
+            }
+
+            string returnName = symbol.Name, returnFullName = symbol.GetFullName();
+            
+            if (!(symbol is INamedTypeSymbol named && named.IsGenericType))
+            {
+                return new AccessorMember.AccessorTypeName(returnName, returnFullName, null);
+            }
+
+            var returnNames = new List<string>();
+
+            while (null != symbol)
+            {
+                if (symbol is INamedTypeSymbol named2 && named2.IsGenericType)
+                {
+                    returnNames.Add(named2.GetFullName(new GetFullNameOpt(unboundGenericType: true)));
+
+                    symbol = named2.TypeArguments.FirstOrDefault();
+                }
+                else
+                {
+                    returnNames.Add(symbol.GetFullName(new GetFullNameOpt(unboundGenericType: true)));
+
+                    symbol = null;
+                }
+            }
+
+            return new AccessorMember.AccessorTypeName(returnName, returnFullName, returnNames);
+        }
+        */
+        /*
+        static AccessorMember GetAccessorMember(ISymbol symbol)
+        {
+            if (symbol.IsImplicitlyDeclared || symbol.IsStatic)
+            {
+                return default;
+            }
+
+            bool isAsync = false, isGeneric = false, isValueType = false, returnsVoid = false, canSet = false, isNamespace = false, isType = false;
+            IEnumerable<string> typeParameters = default;
+            string returnsType = default;
+            string type = default;
+
+            var kind = (Kind)symbol.Kind;
+
+            switch (symbol)
+            {
+                case IMethodSymbol method:
+                    if (MethodKind.PropertyGet == method.MethodKind || MethodKind.PropertySet == method.MethodKind || MethodKind.Constructor == method.MethodKind || MethodKind.StaticConstructor == method.MethodKind || MethodKind.SharedConstructor == method.MethodKind)
+                    {
+                        return default;
+                    }
+
+                    isAsync = method.IsAsync;
+                    isGeneric = method.IsGenericMethod;
+                    typeParameters = method.TypeArguments.Select(c => c.GetFullName());
+
+                    returnsVoid = method.ReturnsVoid;
+                    returnsType = method.ReturnType.GetFullName();
+                    break;
+                case IFieldSymbol fieldSymbol:
+                    type = fieldSymbol.Type.GetFullName();
+                    isValueType = fieldSymbol.Type.IsValueType;
+                    canSet = !fieldSymbol.IsReadOnly;
+                    break;
+                case IPropertySymbol propertySymbol:
+                    type = propertySymbol.Type.GetFullName();
+                    isValueType = propertySymbol.Type.IsValueType;
+                    canSet = null != propertySymbol.SetMethod;
+                    break;
+                case IEventSymbol eventSymbol:
+                    break;
+                case INamedTypeSymbol namedTypeSymbol:
+                    isGeneric = namedTypeSymbol.IsGenericType;
+                    if (isGeneric)
+                    {
+                        typeParameters = namedTypeSymbol.TypeArguments.Select(c => c.GetFullName());
+                    }
+                    break;
+                default: break;
+            }
+
+            IEnumerable<string> members = null;
+
+            if (symbol is ITypeSymbol typeSymbol)
+            {
+                kind = AccessorMember.MemberKind.NamedType;
+                isNamespace = typeSymbol.IsNamespace;
+                isType = typeSymbol.IsType;
+
+                isValueType = typeSymbol.IsValueType;
+
+                members = typeSymbol.GetMembers().Where(c => (SymbolKind.Field == c.Kind || SymbolKind.Property == c.Kind) && !c.IsImplicitlyDeclared && !c.IsStatic).Select(c => c.GetFullName());
+            }
+
+            return new AccessorMember(symbol.Name, symbol.GetFullName(), kind, (AccessorMember.MemberAccessibility)symbol.DeclaredAccessibility, symbol.IsStatic, isValueType, isGeneric, typeParameters, (members?.Any() ?? false) ? members : null, isNamespace, isType, returnsVoid, returnsType, isAsync, type, canSet);
+        }
+        */
+
+        static IAccessorMeta GetAccessorMeta(ISymbol symbol)
+        {
+            if (symbol.IsImplicitlyDeclared || symbol.IsStatic)
+            {
+                return default;
+            }
+
+            IAccessorMeta meta = default;
+            //AccessorMember accessorMember = default;
+            //IAccessorType accessorType = default;
+
+            switch (symbol)
+            {
+                case IMethodSymbol symbol2:
+                    if (MethodKind.PropertyGet == symbol2.MethodKind || MethodKind.PropertySet == symbol2.MethodKind || MethodKind.Constructor == symbol2.MethodKind || MethodKind.StaticConstructor == symbol2.MethodKind || MethodKind.SharedConstructor == symbol2.MethodKind)
+                    {
+                        return default;
+                    }
+
+                    meta = AccessorMethod.Create(symbol2);
+                    break;
+                case IFieldSymbol symbol2:
+                    meta = AccessorField.Create(symbol2);
+                    break;
+                case IPropertySymbol symbol2:
+                    meta = AccessorProperty.Create(symbol2);
+                    break;
+                //case IEventSymbol eventSymbol:
+                //    break;
+                case INamedTypeSymbol symbol2:
+                    //meta = AccessorType.Create(symbol2, members: symbol2.GetMembers().Where(c => (SymbolKind.Field == c.Kind || SymbolKind.Property == c.Kind) && !c.IsImplicitlyDeclared && !c.IsStatic).Select(c => c.GetFullName()));
+                    meta = AccessorType.Create(symbol2);
+                    break;
+                case ITypeSymbol symbol2:
+                    meta = AccessorType.Create(symbol2);
+                    break;
+                default: break;
+            }
+
+            return meta;
+        }
 
         public static IEnumerable<MemberDeclarationSyntax> GeneratorAccessor(MetaData.AnalysisInfoModel analysisInfo, bool hasPrivate = false)
         {
@@ -3506,14 +3694,16 @@ namespace Business.SourceGenerator.Analysis
 
                 declaration = (declaration as TypeDeclarationSyntax).AddBaseListTypes(SyntaxFactoryExt.ParseType(typeof(IGeneratorAccessor), TypeNameFormatter.TypeNameFormatOptions.Namespaces));
 
-                var childrens = typeSymbol.GetMembers().Where(c => (SymbolKind.Field == c.Kind || SymbolKind.Property == c.Kind) && !c.IsImplicitlyDeclared && !c.IsStatic);
+                var accessorMeta = GetAccessorMeta(typeSymbol) as IAccessorType;
+
+                var childrens = accessorMeta.Members.Where(c => c is IAccessorFieldOrProperty && !c.IsImplicitlyDeclared && !c.IsStatic).Cast<IAccessorFieldOrProperty>();
 
                 if (!hasPrivate)
                 {
-                    childrens = childrens.Where(c => Accessibility.Public == c.DeclaredAccessibility);
+                    childrens = childrens?.Where(c => MemberAccessibility.Public == c.Accessibility);
                 }
 
-                if (childrens.Any())
+                if (childrens?.Any() ?? false)
                 {
                     get = get.WithBody(
                         SyntaxFactory.IfStatement(SyntaxFactory.IsPatternExpression(nameIdName, SyntaxFactory.ConstantPattern(SyntaxFactoryExt.ParseLiteralNull())), SyntaxFactory.Block(SyntaxFactory.ThrowStatement(SyntaxFactory.ObjectCreationExpression(SyntaxFactoryExt.ArgumentNullException(), SyntaxFactory.ArgumentList().Add(SyntaxFactoryExt.NameOf(nameIdName)), null)))),
@@ -3536,11 +3726,13 @@ namespace Business.SourceGenerator.Analysis
 
                         SyntaxFactoryExt.ParseSwitch(nameArg,
                         isInherit ? SyntaxFactory.ReturnStatement(SyntaxFactoryExt.InvocationExpression(SyntaxFactoryExt.QualifiedName("base", nameof(IGeneratorAccessor.AccessorSet)), nameIdName, valueIdName)) :
-                        SyntaxFactory.ReturnStatement(SyntaxFactoryExt.ParseDefaultLiteral()), childrens.Where(c => !(c is IPropertySymbol property && null == property.SetMethod)).Select(c =>
+                        SyntaxFactory.ReturnStatement(SyntaxFactoryExt.ParseDefaultLiteral()), childrens.Where(c => c.CanSet).Select(c =>
                         {
-                            var type = SymbolKind.Field == c.Kind ? (c as IFieldSymbol).Type : SymbolKind.Property == c.Kind ? (c as IPropertySymbol).Type : null;
+                            //var type = SymbolKind.Field == c.Kind ? (c as IFieldSymbol).Type : SymbolKind.Property == c.Kind ? (c as IPropertySymbol).Type : null;
+                            //var type = AccessorMember.MemberAccessorType.Field == c.Type ? (c as IFieldSymbol).Type : SymbolKind.Property == c.Kind ? (c as IPropertySymbol).Type : null;
+
                             //SyntaxFactory.InvocationExpression(SyntaxFactoryExt.QualifiedName("base", nameof(IGeneratorAccessor.AccessorSet))
-                            var value = type.IsValueType ? SyntaxFactory.CastExpression(SyntaxFactory.ParseName(type.GetFullName()), valueIdName) : SyntaxFactory.BinaryExpression(SyntaxKind.AsExpression, valueIdName, SyntaxFactory.ParseName(type.GetFullName())) as ExpressionSyntax;
+                            var value = c.Type.IsValueType ? SyntaxFactory.CastExpression(SyntaxFactory.ParseName(c.Type.FullName), valueIdName) : SyntaxFactory.BinaryExpression(SyntaxKind.AsExpression, valueIdName, SyntaxFactory.ParseName(c.Type.FullName)) as ExpressionSyntax;
 
                             return (SyntaxFactoryExt.ParseLiteral(c.Name) as ExpressionSyntax,
                             new SyntaxList<StatementSyntax>()

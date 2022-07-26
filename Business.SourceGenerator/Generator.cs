@@ -30,7 +30,9 @@ namespace Business.SourceGenerator
     {
         public void Execute(GeneratorExecutionContext context)
         {
-            //System.Diagnostics.Debugger.Launch();
+#if DEBUG
+            System.Diagnostics.Debugger.Launch();
+#endif
 
             try
             {
