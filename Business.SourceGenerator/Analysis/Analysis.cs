@@ -3459,7 +3459,7 @@ namespace Business.SourceGenerator.Analysis
 
             var typeSymbol = info.Declared as ITypeSymbol;
 
-            if (Accessibility.Public != typeSymbol.DeclaredAccessibility || typeSymbol.AllInterfaces.Any(c => AccessorKey.Equals(c.GetFullName())))
+            if (Microsoft.CodeAnalysis.Accessibility.Public != typeSymbol.DeclaredAccessibility || typeSymbol.AllInterfaces.Any(c => AccessorKey.Equals(c.GetFullName())))
             {
                 return false;
             }
@@ -3604,7 +3604,7 @@ namespace Business.SourceGenerator.Analysis
             switch (symbol)
             {
                 case IMethodSymbol symbol2:
-                    if (MethodKind.PropertyGet == symbol2.MethodKind || MethodKind.PropertySet == symbol2.MethodKind || MethodKind.Constructor == symbol2.MethodKind || MethodKind.StaticConstructor == symbol2.MethodKind || MethodKind.SharedConstructor == symbol2.MethodKind)
+                    if (Microsoft.CodeAnalysis.MethodKind.PropertyGet == symbol2.MethodKind || Microsoft.CodeAnalysis.MethodKind.PropertySet == symbol2.MethodKind || Microsoft.CodeAnalysis.MethodKind.Constructor == symbol2.MethodKind || Microsoft.CodeAnalysis.MethodKind.StaticConstructor == symbol2.MethodKind || Microsoft.CodeAnalysis.MethodKind.SharedConstructor == symbol2.MethodKind)
                     {
                         return default;
                     }
@@ -3695,12 +3695,12 @@ namespace Business.SourceGenerator.Analysis
                 declaration = (declaration as TypeDeclarationSyntax).AddBaseListTypes(SyntaxFactoryExt.ParseType(typeof(IGeneratorAccessor), TypeNameFormatter.TypeNameFormatOptions.Namespaces));
 
                 var accessorMeta = GetAccessorMeta(typeSymbol) as IAccessorType;
-
+                
                 var childrens = accessorMeta.Members.Where(c => c is IAccessorFieldOrProperty && !c.IsImplicitlyDeclared && !c.IsStatic).Cast<IAccessorFieldOrProperty>();
 
                 if (!hasPrivate)
                 {
-                    childrens = childrens?.Where(c => MemberAccessibility.Public == c.Accessibility);
+                    childrens = childrens?.Where(c => Meta.Accessibility.Public == c.DeclaredAccessibility);
                 }
 
                 if (childrens?.Any() ?? false)
@@ -3726,7 +3726,7 @@ namespace Business.SourceGenerator.Analysis
 
                         SyntaxFactoryExt.ParseSwitch(nameArg,
                         isInherit ? SyntaxFactory.ReturnStatement(SyntaxFactoryExt.InvocationExpression(SyntaxFactoryExt.QualifiedName("base", nameof(IGeneratorAccessor.AccessorSet)), nameIdName, valueIdName)) :
-                        SyntaxFactory.ReturnStatement(SyntaxFactoryExt.ParseDefaultLiteral()), childrens.Where(c => c.CanSet).Select(c =>
+                        SyntaxFactory.ReturnStatement(SyntaxFactoryExt.ParseDefaultLiteral()), childrens.Where(c => !c.IsReadOnly).Select(c =>
                         {
                             //var type = SymbolKind.Field == c.Kind ? (c as IFieldSymbol).Type : SymbolKind.Property == c.Kind ? (c as IPropertySymbol).Type : null;
                             //var type = AccessorMember.MemberAccessorType.Field == c.Type ? (c as IFieldSymbol).Type : SymbolKind.Property == c.Kind ? (c as IPropertySymbol).Type : null;
