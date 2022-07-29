@@ -1943,7 +1943,7 @@ namespace Business.SourceGenerator.Analysis
                     }
                     else
                     {
-                        args = opt.UnboundGenericType ? $"<{string.Join(",", Enumerable.Repeat(string.Empty, named.TypeArguments.Length))}>" : $"<{string.Join(", ", named.TypeArguments.Select(c => (Microsoft.CodeAnalysis.TypeKind.Dynamic == c.TypeKind && opt.StandardFormat ? objectName : GetFullName(c, opt))))}>";
+                        args = opt.UnboundGenericType ? $"<{string.Join(",", Enumerable.Repeat(string.Empty, named.TypeArguments.Length))}>" : $"<{string.Join(", ", named.TypeArguments.Select(c => (Microsoft.CodeAnalysis.TypeKind.Dynamic == c.TypeKind && opt.StandardFormat ? objectName : Microsoft.CodeAnalysis.TypeKind.TypeParameter == c.TypeKind ? c.Name : GetFullName(c, opt))))}>";
                     }
                 }
 
@@ -1953,7 +1953,7 @@ namespace Business.SourceGenerator.Analysis
                 {
                     if (0 < method.TypeArguments.Length)
                     {
-                        args = opt.UnboundGenericType ? $"<{string.Join(",", Enumerable.Repeat(string.Empty, named.TypeArguments.Length))}>" : $"<{string.Join(", ", method.TypeArguments.Select(c => (Microsoft.CodeAnalysis.TypeKind.Dynamic == c.TypeKind && opt.StandardFormat ? objectName : GetFullName(c, opt))))}>";
+                        args = opt.UnboundGenericType ? $"<{string.Join(",", Enumerable.Repeat(string.Empty, named.TypeArguments.Length))}>" : $"<{string.Join(", ", method.TypeArguments.Select(c => (Microsoft.CodeAnalysis.TypeKind.Dynamic == c.TypeKind && opt.StandardFormat ? objectName : Microsoft.CodeAnalysis.TypeKind.TypeParameter == c.TypeKind ? c.Name : GetFullName(c, opt))))}>";
                     }
 
                     parameters = $"({string.Join(", ", method.Parameters.Select(c => (Microsoft.CodeAnalysis.TypeKind.Dynamic == c.Type.TypeKind && opt.StandardFormat ? objectName : GetFullName(c.Type, opt))))})";
@@ -3590,48 +3590,6 @@ namespace Business.SourceGenerator.Analysis
         }
         */
 
-        static IAccessorMeta GetAccessorMeta(ISymbol symbol)
-        {
-            if (symbol.IsImplicitlyDeclared || symbol.IsStatic)
-            {
-                return default;
-            }
-
-            IAccessorMeta meta = default;
-            //AccessorMember accessorMember = default;
-            //IAccessorType accessorType = default;
-
-            switch (symbol)
-            {
-                case IMethodSymbol symbol2:
-                    if (Microsoft.CodeAnalysis.MethodKind.PropertyGet == symbol2.MethodKind || Microsoft.CodeAnalysis.MethodKind.PropertySet == symbol2.MethodKind || Microsoft.CodeAnalysis.MethodKind.Constructor == symbol2.MethodKind || Microsoft.CodeAnalysis.MethodKind.StaticConstructor == symbol2.MethodKind || Microsoft.CodeAnalysis.MethodKind.SharedConstructor == symbol2.MethodKind)
-                    {
-                        return default;
-                    }
-
-                    meta = AccessorMethod.Create(symbol2);
-                    break;
-                case IFieldSymbol symbol2:
-                    meta = AccessorField.Create(symbol2);
-                    break;
-                case IPropertySymbol symbol2:
-                    meta = AccessorProperty.Create(symbol2);
-                    break;
-                //case IEventSymbol eventSymbol:
-                //    break;
-                case INamedTypeSymbol symbol2:
-                    //meta = AccessorType.Create(symbol2, members: symbol2.GetMembers().Where(c => (SymbolKind.Field == c.Kind || SymbolKind.Property == c.Kind) && !c.IsImplicitlyDeclared && !c.IsStatic).Select(c => c.GetFullName()));
-                    meta = AccessorType.Create(symbol2);
-                    break;
-                case ITypeSymbol symbol2:
-                    meta = AccessorType.Create(symbol2);
-                    break;
-                default: break;
-            }
-
-            return meta;
-        }
-
         public static IEnumerable<MemberDeclarationSyntax> GeneratorAccessor(MetaData.AnalysisInfoModel analysisInfo, bool hasPrivate = false)
         {
             var declarations = GetDeclarations(analysisInfo);
@@ -3695,8 +3653,8 @@ namespace Business.SourceGenerator.Analysis
                 declaration = (declaration as TypeDeclarationSyntax).AddBaseListTypes(SyntaxFactoryExt.ParseType(typeof(IGeneratorAccessor), TypeNameFormatter.TypeNameFormatOptions.Namespaces));
 
                 var accessorMeta = GetAccessorMeta(typeSymbol) as IAccessorType;
-                
-                var childrens = accessorMeta.Members.Where(c => c is IAccessorFieldOrProperty && !c.IsImplicitlyDeclared && !c.IsStatic).Cast<IAccessorFieldOrProperty>();
+
+                var childrens = accessorMeta.Members?.Where(c => c is IAccessorFieldOrProperty && !c.IsImplicitlyDeclared && !c.IsStatic).Cast<IAccessorFieldOrProperty>();
 
                 if (!hasPrivate)
                 {
@@ -3732,6 +3690,12 @@ namespace Business.SourceGenerator.Analysis
                             //var type = AccessorMember.MemberAccessorType.Field == c.Type ? (c as IFieldSymbol).Type : SymbolKind.Property == c.Kind ? (c as IPropertySymbol).Type : null;
 
                             //SyntaxFactory.InvocationExpression(SyntaxFactoryExt.QualifiedName("base", nameof(IGeneratorAccessor.AccessorSet))
+
+                            //if (c.Type.FullName.Contains("Action<Business.Core.BusinessBase"))
+                            //{
+
+                            //}
+
                             var value = c.Type.IsValueType ? SyntaxFactory.CastExpression(SyntaxFactory.ParseName(c.Type.FullName), valueIdName) : SyntaxFactory.BinaryExpression(SyntaxKind.AsExpression, valueIdName, SyntaxFactory.ParseName(c.Type.FullName)) as ExpressionSyntax;
 
                             return (SyntaxFactoryExt.ParseLiteral(c.Name) as ExpressionSyntax,
@@ -3766,5 +3730,320 @@ namespace Business.SourceGenerator.Analysis
 
             return Array.Empty<MemberDeclarationSyntax>();
         }
+
+        #region Analysis.Meta
+
+        static IAccessorMeta GetAccessorMeta(ISymbol symbol)
+        {
+            switch (symbol)
+            {
+                case ITypeParameterSymbol symbol2:
+                    return AccessorTypeParameterCreate(symbol2);
+                case INamedTypeSymbol symbol2:
+                    return AccessorNamedTypeCreate(symbol2);
+                case ITypeSymbol symbol2:
+                    return AccessorTypeCreate(symbol2);
+                case IParameterSymbol symbol2:
+                    return AccessorParameterCreate(symbol2);
+                case IMethodSymbol symbol2:
+                    //if (Microsoft.CodeAnalysis.MethodKind.PropertyGet == symbol2.MethodKind || Microsoft.CodeAnalysis.MethodKind.PropertySet == symbol2.MethodKind || Microsoft.CodeAnalysis.MethodKind.Constructor == symbol2.MethodKind || Microsoft.CodeAnalysis.MethodKind.StaticConstructor == symbol2.MethodKind || Microsoft.CodeAnalysis.MethodKind.SharedConstructor == symbol2.MethodKind)
+                    if (Microsoft.CodeAnalysis.MethodKind.Ordinary != symbol2.MethodKind)
+                    {
+                        return default;
+                    }
+
+                    return AccessorMethodCreate(symbol2);
+                case IFieldSymbol symbol2:
+                    return AccessorFieldCreate(symbol2);
+                case IPropertySymbol symbol2:
+                    return AccessorPropertyCreate(symbol2);
+                default: return default;
+            }
+        }
+
+        static IAccessorType AccessorTypeCreate(ITypeSymbol symbol, bool notMembers = false)
+        {
+            if (symbol is INamedTypeSymbol namedType)
+            {
+                return AccessorNamedTypeCreate(namedType, notMembers);
+            }
+
+            return new AccessorType(
+            //======Meta======//
+            (Meta.Accessibility)symbol.DeclaredAccessibility,
+            symbol.CanBeReferencedByName,
+            symbol.IsImplicitlyDeclared,
+            symbol.IsExtern,
+            symbol.IsSealed,
+            symbol.IsAbstract,
+            symbol.IsOverride,
+            symbol.IsVirtual,
+            symbol.IsStatic,
+            symbol.IsDefinition,
+            symbol.Name,
+            symbol.GetFullName(),
+            (Kind)symbol.Kind,
+
+            //======ITypeSymbol======//
+            symbol.IsNamespace,
+            symbol.IsType,
+            notMembers ? default : symbol.GetMembers().Where(c => c is IFieldSymbol || c is IPropertySymbol || c is IMethodSymbol).Select(c =>
+            {
+                switch (c)
+                {
+                    case IFieldSymbol symbol: return AccessorFieldCreate(symbol, true);
+                    case IPropertySymbol symbol: return AccessorPropertyCreate(symbol, true);
+                    case IMethodSymbol symbol: return AccessorMethodCreate(symbol, true);
+                    default: return default(IAccessorMeta);
+                }
+            }),
+            symbol.IsReferenceType,
+            symbol.IsReadOnly,
+            symbol.IsUnmanagedType,
+            symbol.IsRefLikeType,
+            (Meta.SpecialType)symbol.SpecialType,
+            symbol.IsNativeIntegerType,
+            symbol.IsTupleType,
+            symbol.IsAnonymousType,
+            symbol.IsValueType,
+            (Meta.NullableAnnotation)symbol.NullableAnnotation,
+            symbol.AllInterfaces.Any() ? symbol.AllInterfaces.Select(c => AccessorNamedTypeCreate(c, true)) : default,
+            null == symbol.BaseType ? default : AccessorNamedTypeCreate(symbol.BaseType, true),
+            (Meta.TypeKind)symbol.TypeKind,
+            symbol.IsRecord
+            );
+        }
+
+        static IAccessorNamedType AccessorNamedTypeCreate(INamedTypeSymbol symbol, bool notMembers = false) => new AccessorNamedType(
+            //======Meta======//
+            (Meta.Accessibility)symbol.DeclaredAccessibility,
+            symbol.CanBeReferencedByName,
+            symbol.IsImplicitlyDeclared,
+            symbol.IsExtern,
+            symbol.IsSealed,
+            symbol.IsAbstract,
+            symbol.IsOverride,
+            symbol.IsVirtual,
+            symbol.IsStatic,
+            symbol.IsDefinition,
+            symbol.Name,
+            symbol.GetFullName(),
+            (Kind)symbol.Kind,
+
+            //======ITypeSymbol======//
+            symbol.IsNamespace,
+            symbol.IsType,
+            notMembers ? default : symbol.GetMembers().Where(c => c is IFieldSymbol || c is IPropertySymbol || c is IMethodSymbol).Select(c =>
+            {
+                switch (c)
+                {
+                    case IFieldSymbol symbol: return AccessorFieldCreate(symbol, true);
+                    case IPropertySymbol symbol: return AccessorPropertyCreate(symbol, true);
+                    case IMethodSymbol symbol: return AccessorMethodCreate(symbol, true);
+                    default: return default(IAccessorMeta);
+                }
+            }),
+            symbol.IsReferenceType,
+            symbol.IsReadOnly,
+            symbol.IsUnmanagedType,
+            symbol.IsRefLikeType,
+            (Meta.SpecialType)symbol.SpecialType,
+            symbol.IsNativeIntegerType,
+            symbol.IsTupleType,
+            symbol.IsAnonymousType,
+            symbol.IsValueType,
+            (Meta.NullableAnnotation)symbol.NullableAnnotation,
+            symbol.AllInterfaces.Any() ? symbol.AllInterfaces.Select(c => AccessorNamedTypeCreate(c, true)) : default,
+            null == symbol.BaseType ? default : AccessorNamedTypeCreate(symbol.BaseType, true),
+            (Meta.TypeKind)symbol.TypeKind,
+            symbol.IsRecord,
+
+            //======INamedTypeSymbol======//
+            symbol.TypeArgumentNullableAnnotations.Select(c => (Meta.NullableAnnotation)c),
+            null == symbol.TupleElements ? default : symbol.TupleElements.Select(c => AccessorFieldCreate(c, true)),
+            null == symbol.TupleUnderlyingType ? default : AccessorNamedTypeCreate(symbol.TupleUnderlyingType, true),
+            symbol.MightContainExtensionMethods,
+            symbol.Constructors.Select(c => AccessorMethodCreate(c, true)),
+            symbol.StaticConstructors.Select(c => AccessorMethodCreate(c, true)),
+            symbol.InstanceConstructors.Select(c => AccessorMethodCreate(c, true)),
+            //null == symbol.ConstructedFrom || symbol.ConstructedFrom.Equals(symbol) ? default : Create(symbol.ConstructedFrom),
+            null == symbol.EnumUnderlyingType ? default : AccessorNamedTypeCreate(symbol.EnumUnderlyingType, true),
+            null == symbol.DelegateInvokeMethod ? default : AccessorMethodCreate(symbol.DelegateInvokeMethod, true),
+            symbol.IsSerializable,
+            null == symbol.NativeIntegerUnderlyingType ? default : AccessorNamedTypeCreate(symbol.NativeIntegerUnderlyingType, true),
+            symbol.TypeParameters.Select(c => AccessorTypeParameterCreate(c, true)),
+            symbol.MemberNames,
+            symbol.IsComImport,
+            symbol.IsImplicitClass,
+            symbol.IsScriptClass,
+            symbol.IsUnboundGenericType,
+            symbol.IsGenericType,
+            symbol.Arity
+            );
+
+        static IAccessorTypeParameter AccessorTypeParameterCreate(ITypeParameterSymbol symbol, bool notMembers = false) => new AccessorTypeParameter(
+            //======Meta======//
+            (Meta.Accessibility)symbol.DeclaredAccessibility,
+            symbol.CanBeReferencedByName,
+            symbol.IsImplicitlyDeclared,
+            symbol.IsExtern,
+            symbol.IsSealed,
+            symbol.IsAbstract,
+            symbol.IsOverride,
+            symbol.IsVirtual,
+            symbol.IsStatic,
+            symbol.IsDefinition,
+            symbol.Name,
+            symbol.GetFullName(),
+            (Kind)symbol.Kind,
+
+            //======ITypeParameterSymbol======//
+            symbol.Ordinal,
+            (Meta.VarianceKind)symbol.Variance,
+            (Meta.TypeParameterKind)symbol.TypeParameterKind,
+            AccessorMethodCreate(symbol.DeclaringMethod, notMembers),
+            AccessorNamedTypeCreate(symbol.DeclaringType, notMembers),
+            symbol.HasReferenceTypeConstraint,
+            (Meta.NullableAnnotation)symbol.ReferenceTypeConstraintNullableAnnotation,
+            symbol.HasValueTypeConstraint,
+            symbol.HasUnmanagedTypeConstraint,
+            symbol.HasNotNullConstraint,
+            symbol.HasConstructorConstraint,
+            symbol.ConstraintTypes.Select(c => AccessorTypeCreate(c, notMembers)),
+            symbol.ConstraintNullableAnnotations.Select(c => (Meta.NullableAnnotation)c),
+            AccessorTypeParameterCreate(symbol.ReducedFrom, notMembers)
+            );
+
+        static IAccessorParameter AccessorParameterCreate(IParameterSymbol symbol, bool notMembers = false) => new AccessorParameter(
+         //======Meta======//
+         (Meta.Accessibility)symbol.DeclaredAccessibility,
+         symbol.CanBeReferencedByName,
+         symbol.IsImplicitlyDeclared,
+         symbol.IsExtern,
+         symbol.IsSealed,
+         symbol.IsAbstract,
+         symbol.IsOverride,
+         symbol.IsVirtual,
+         symbol.IsStatic,
+         symbol.IsDefinition,
+         symbol.Name,
+         symbol.GetFullName(),
+         (Kind)symbol.Kind,
+
+         //======IParameterSymbol======//
+         (Meta.RefKind)symbol.RefKind,
+         symbol.IsParams,
+         symbol.IsOptional,
+         symbol.IsThis,
+         symbol.IsDiscard,
+         AccessorTypeCreate(symbol.Type, notMembers),
+         (Meta.NullableAnnotation)symbol.NullableAnnotation,
+         symbol.Ordinal,
+         symbol.HasExplicitDefaultValue,
+         symbol.HasExplicitDefaultValue ? symbol.ExplicitDefaultValue : default
+         );
+
+        static IAccessorMethod AccessorMethodCreate(IMethodSymbol symbol, bool notMembers = false) => new AccessorMethod(
+           //======Meta======//
+           (Meta.Accessibility)symbol.DeclaredAccessibility,
+           symbol.CanBeReferencedByName,
+           symbol.IsImplicitlyDeclared,
+           symbol.IsExtern,
+           symbol.IsSealed,
+           symbol.IsAbstract,
+           symbol.IsOverride,
+           symbol.IsVirtual,
+           symbol.IsStatic,
+           symbol.IsDefinition,
+           symbol.Name,
+           symbol.GetFullName(),
+           (Kind)symbol.Kind,
+
+           //======IMethodSymbol======//
+           symbol.IsReadOnly,
+           symbol.IsInitOnly,
+           symbol.Parameters.Select(c => AccessorParameterCreate(c, notMembers)),
+           symbol.IsPartialDefinition,
+           symbol.TypeParameters.Select(c => AccessorTypeParameterCreate(c, notMembers)),
+           symbol.IsConditional,
+           (Meta.MethodKind)symbol.MethodKind,
+           symbol.Arity,
+           symbol.IsGenericMethod,
+           symbol.IsExtensionMethod,
+           symbol.IsVararg,
+           symbol.IsCheckedBuiltin,
+           symbol.IsAsync,
+           symbol.ReturnsVoid,
+           symbol.ReturnsByRef,
+           symbol.ReturnsByRefReadonly,
+           (Meta.RefKind)symbol.RefKind,
+           AccessorTypeCreate(symbol.ReturnType, notMembers),
+           (Meta.NullableAnnotation)symbol.ReturnNullableAnnotation,
+           symbol.HidesBaseMethodsByName
+           );
+
+        static IAccessorField AccessorFieldCreate(IFieldSymbol symbol, bool notMembers = false) => new AccessorField(
+            //======Meta======//
+            (Meta.Accessibility)symbol.DeclaredAccessibility,
+            symbol.CanBeReferencedByName,
+            symbol.IsImplicitlyDeclared,
+            symbol.IsExtern,
+            symbol.IsSealed,
+            symbol.IsAbstract,
+            symbol.IsOverride,
+            symbol.IsVirtual,
+            symbol.IsStatic,
+            symbol.IsDefinition,
+            symbol.Name,
+            symbol.GetFullName(),
+            (Kind)symbol.Kind,
+
+            //======Meta======//
+            symbol.IsReadOnly,
+            AccessorTypeCreate(symbol.Type, notMembers),
+
+            //======IFieldSymbol======//
+            symbol.IsConst,
+            symbol.IsVolatile,
+            symbol.IsFixedSizeBuffer,
+            symbol.FixedSize,
+            (Meta.NullableAnnotation)symbol.NullableAnnotation,
+            symbol.HasConstantValue,
+            symbol.ConstantValue,
+            symbol.IsExplicitlyNamedTupleElement
+            );
+
+        static IAccessorProperty AccessorPropertyCreate(IPropertySymbol symbol, bool notMembers = false) => new AccessorProperty(
+            //======Meta======//
+            (Meta.Accessibility)symbol.DeclaredAccessibility,
+            symbol.CanBeReferencedByName,
+            symbol.IsImplicitlyDeclared,
+            symbol.IsExtern,
+            symbol.IsSealed,
+            symbol.IsAbstract,
+            symbol.IsOverride,
+            symbol.IsVirtual,
+            symbol.IsStatic,
+            symbol.IsDefinition,
+            symbol.Name,
+            symbol.GetFullName(),
+            (Kind)symbol.Kind,
+
+            //======Meta======//
+            symbol.IsReadOnly,
+            AccessorTypeCreate(symbol.Type, notMembers),
+
+            //======IPropertySymbol======//
+            symbol.IsIndexer,
+            symbol.Parameters.Select(c => AccessorParameterCreate(c, notMembers)),
+            (Meta.NullableAnnotation)symbol.NullableAnnotation,
+            (Meta.RefKind)symbol.RefKind,
+            symbol.ReturnsByRefReadonly,
+            symbol.ReturnsByRef,
+            symbol.IsWithEvents,
+            symbol.IsWriteOnly
+            );
+
+        #endregion
     }
 }

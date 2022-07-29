@@ -17,7 +17,6 @@
 namespace Business.SourceGenerator.Analysis.Meta
 {
     using System.Collections.Generic;
-    using System.Linq;
 
     /// <summary>
     /// Represents the nullability of values that can be assigned to an expression used
@@ -1174,6 +1173,73 @@ namespace Business.SourceGenerator.Analysis.Meta
     }
 
     /// <summary>
+    /// Represents a parameter of a method or property.
+    /// </summary>
+    /// <remarks>
+    /// This interface is reserved for implementation by its associated APIs. We reserve
+    /// the right to change it in the future.
+    /// </remarks>
+    public interface IAccessorParameter : IAccessorMeta//, System.IEquatable<IAccessorMeta>
+    {
+        /// <summary>
+        /// Whether the parameter passed by value or by reference.
+        /// </summary>
+        public RefKind RefKind { get; }
+
+        /// <summary>
+        /// Returns true if the parameter was declared as a parameter array.
+        /// </summary>
+        public bool IsParams { get; }
+
+        /// <summary>
+        /// Returns true if the parameter is optional.
+        /// </summary>
+        public bool IsOptional { get; }
+
+        /// <summary>
+        /// Returns true if the parameter is the hidden 'this' ('Me' in Visual Basic) parameter.
+        /// </summary>
+        public bool IsThis { get; }
+
+        /// <summary>
+        /// Returns true if the parameter is a discard parameter.
+        /// </summary>
+        public bool IsDiscard { get; }
+
+        /// <summary>
+        /// Gets the type of the parameter.
+        /// </summary>
+        public IAccessorType Type { get; }
+
+        /// <summary>
+        /// Gets the top-level nullability of the parameter.
+        /// </summary>
+        public NullableAnnotation NullableAnnotation { get; }
+
+        /// <summary>
+        /// Gets the ordinal position of the parameter. The first parameter has ordinal zero.
+        /// The 'this' parameter ('Me' in Visual Basic) has ordinal -1.
+        /// </summary>
+        public int Ordinal { get; }
+
+        /// <summary>
+        /// Returns true if the parameter specifies a default value to be passed when no
+        /// value is provided as an argument to a call. The default value can be obtained
+        /// with the Microsoft.CodeAnalysis.IParameterSymbol.ExplicitDefaultValue property.
+        /// </summary>
+        public bool HasExplicitDefaultValue { get; }
+
+        /// <summary>
+        /// Returns the default value of the parameter.
+        /// </summary>
+        /// <remarks>
+        /// Returns null if the parameter type is a struct and the default value of the parameter
+        /// is the default value of the struct type.
+        /// </remarks>
+        public object ExplicitDefaultValue { get; }
+    }
+
+    /// <summary>
     /// Represents a method or method-like symbol (including constructor, destructor,
     /// operator, or property/event accessor).
     /// </summary>
@@ -1297,73 +1363,6 @@ namespace Business.SourceGenerator.Analysis.Meta
         /// imported from metadata. The equivalent of the "hidebyname" flag in metadata.
         /// </summary>
         public bool HidesBaseMethodsByName { get; }
-    }
-
-    /// <summary>
-    /// Represents a parameter of a method or property.
-    /// </summary>
-    /// <remarks>
-    /// This interface is reserved for implementation by its associated APIs. We reserve
-    /// the right to change it in the future.
-    /// </remarks>
-    public interface IAccessorParameter : IAccessorMeta//, System.IEquatable<IAccessorMeta>
-    {
-        /// <summary>
-        /// Whether the parameter passed by value or by reference.
-        /// </summary>
-        public RefKind RefKind { get; }
-
-        /// <summary>
-        /// Returns true if the parameter was declared as a parameter array.
-        /// </summary>
-        public bool IsParams { get; }
-
-        /// <summary>
-        /// Returns true if the parameter is optional.
-        /// </summary>
-        public bool IsOptional { get; }
-
-        /// <summary>
-        /// Returns true if the parameter is the hidden 'this' ('Me' in Visual Basic) parameter.
-        /// </summary>
-        public bool IsThis { get; }
-
-        /// <summary>
-        /// Returns true if the parameter is a discard parameter.
-        /// </summary>
-        public bool IsDiscard { get; }
-
-        /// <summary>
-        /// Gets the type of the parameter.
-        /// </summary>
-        public IAccessorType Type { get; }
-
-        /// <summary>
-        /// Gets the top-level nullability of the parameter.
-        /// </summary>
-        public NullableAnnotation NullableAnnotation { get; }
-
-        /// <summary>
-        /// Gets the ordinal position of the parameter. The first parameter has ordinal zero.
-        /// The 'this' parameter ('Me' in Visual Basic) has ordinal -1.
-        /// </summary>
-        public int Ordinal { get; }
-
-        /// <summary>
-        /// Returns true if the parameter specifies a default value to be passed when no
-        /// value is provided as an argument to a call. The default value can be obtained
-        /// with the Microsoft.CodeAnalysis.IParameterSymbol.ExplicitDefaultValue property.
-        /// </summary>
-        public bool HasExplicitDefaultValue { get; }
-
-        /// <summary>
-        /// Returns the default value of the parameter.
-        /// </summary>
-        /// <remarks>
-        /// Returns null if the parameter type is a struct and the default value of the parameter
-        /// is the default value of the struct type.
-        /// </remarks>
-        public object ExplicitDefaultValue { get; }
     }
 
     /// <summary>
@@ -1496,6 +1495,13 @@ namespace Business.SourceGenerator.Analysis.Meta
         public bool IsWriteOnly { get; }
     }
 
+    /// <summary>
+    /// Represents a type.
+    /// </summary>
+    /// <remarks>
+    /// This interface is reserved for implementation by its associated APIs. We reserve
+    /// the right to change it in the future.
+    /// </remarks>
     public readonly struct AccessorType : IAccessorType
     {
         public AccessorType(Accessibility declaredAccessibility, bool canBeReferencedByName, bool isImplicitlyDeclared, bool isExtern, bool isSealed, bool isAbstract, bool isOverride, bool isVirtual, bool isStatic, bool isDefinition, string name, string fullName, Kind kind, bool isNamespace, bool isType, IEnumerable<IAccessorMeta> members, bool isReferenceType, bool isReadOnly, bool isUnmanagedType, bool isRefLikeType, SpecialType specialType, bool isNativeIntegerType, bool isTupleType, bool isAnonymousType, bool isValueType, NullableAnnotation nullableAnnotation, IEnumerable<IAccessorNamedType> allInterfaces, IAccessorNamedType baseType, TypeKind typeKind, bool isRecord)
@@ -1531,51 +1537,6 @@ namespace Business.SourceGenerator.Analysis.Meta
             TypeKind = typeKind;
             IsRecord = isRecord;
         }
-
-        public static IAccessorType Create(Microsoft.CodeAnalysis.ITypeSymbol symbol) => new AccessorType(
-            //======Meta======//
-            (Accessibility)symbol.DeclaredAccessibility,
-            symbol.CanBeReferencedByName,
-            symbol.IsImplicitlyDeclared,
-            symbol.IsExtern,
-            symbol.IsSealed,
-            symbol.IsAbstract,
-            symbol.IsOverride,
-            symbol.IsVirtual,
-            symbol.IsStatic,
-            symbol.IsDefinition,
-            symbol.Name,
-            symbol.GetFullName(),
-            (Kind)symbol.Kind,
-
-            //======ITypeSymbol======//
-            symbol.IsNamespace,
-            symbol.IsType,
-            symbol.GetMembers().Where(c => c is Microsoft.CodeAnalysis.IFieldSymbol || c is Microsoft.CodeAnalysis.IPropertySymbol || c is Microsoft.CodeAnalysis.IMethodSymbol).Select(c =>
-            {
-                switch (c)
-                {
-                    case Microsoft.CodeAnalysis.IFieldSymbol symbol: return AccessorField.Create(symbol);
-                    case Microsoft.CodeAnalysis.IPropertySymbol symbol: return AccessorProperty.Create(symbol);
-                    case Microsoft.CodeAnalysis.IMethodSymbol symbol: return AccessorMethod.Create(symbol);
-                    default: return default(IAccessorMeta);
-                }
-            }),
-            symbol.IsReferenceType,
-            symbol.IsReadOnly,
-            symbol.IsUnmanagedType,
-            symbol.IsRefLikeType,
-            (SpecialType)symbol.SpecialType,
-            symbol.IsNativeIntegerType,
-            symbol.IsTupleType,
-            symbol.IsAnonymousType,
-            symbol.IsValueType,
-            (NullableAnnotation)symbol.NullableAnnotation,
-            symbol.AllInterfaces.Any() ? symbol.AllInterfaces.Select(c => AccessorNamedType.Create(c)) : default,
-            null == symbol.BaseType ? default : AccessorNamedType.Create(symbol.BaseType),
-            (TypeKind)symbol.TypeKind,
-            symbol.IsRecord
-            );
 
         public override string ToString() => $"{Kind} {FullName}";
 
@@ -1793,6 +1754,13 @@ namespace Business.SourceGenerator.Analysis.Meta
         #endregion
     }
 
+    /// <summary>
+    /// Represents a type other than an array, a pointer, a type parameter.
+    /// </summary>
+    /// <remarks>
+    /// This interface is reserved for implementation by its associated APIs. We reserve
+    /// the right to change it in the future.
+    /// </remarks>
     public readonly struct AccessorNamedType : IAccessorNamedType
     {
         public AccessorNamedType(Accessibility declaredAccessibility, bool canBeReferencedByName, bool isImplicitlyDeclared, bool isExtern, bool isSealed, bool isAbstract, bool isOverride, bool isVirtual, bool isStatic, bool isDefinition, string name, string fullName, Kind kind, bool isNamespace, bool isType, IEnumerable<IAccessorMeta> members, bool isReferenceType, bool isReadOnly, bool isUnmanagedType, bool isRefLikeType, SpecialType specialType, bool isNativeIntegerType, bool isTupleType, bool isAnonymousType, bool isValueType, NullableAnnotation nullableAnnotation, IEnumerable<IAccessorNamedType> allInterfaces, IAccessorNamedType baseType, TypeKind typeKind, bool isRecord, IEnumerable<NullableAnnotation> typeArgumentNullableAnnotations, IEnumerable<IAccessorField> tupleElements, IAccessorNamedType tupleUnderlyingType, bool mightContainExtensionMethods, IEnumerable<IAccessorMethod> constructors, IEnumerable<IAccessorMethod> staticConstructors, IEnumerable<IAccessorMethod> instanceConstructors, IAccessorNamedType enumUnderlyingType, IAccessorMethod delegateInvokeMethod, bool isSerializable, IAccessorNamedType nativeIntegerUnderlyingType, IEnumerable<IAccessorTypeParameter> typeParameters, IEnumerable<string> memberNames, bool isComImport, bool isImplicitClass, bool isScriptClass, bool isUnboundGenericType, bool isGeneric, int arity)
@@ -1847,73 +1815,6 @@ namespace Business.SourceGenerator.Analysis.Meta
             IsGeneric = isGeneric;
             Arity = arity;
         }
-
-        public static IAccessorNamedType Create(Microsoft.CodeAnalysis.INamedTypeSymbol symbol) => new AccessorNamedType(
-            //======Meta======//
-            (Accessibility)symbol.DeclaredAccessibility,
-            symbol.CanBeReferencedByName,
-            symbol.IsImplicitlyDeclared,
-            symbol.IsExtern,
-            symbol.IsSealed,
-            symbol.IsAbstract,
-            symbol.IsOverride,
-            symbol.IsVirtual,
-            symbol.IsStatic,
-            symbol.IsDefinition,
-            symbol.Name,
-            symbol.GetFullName(),
-            (Kind)symbol.Kind,
-
-            //======ITypeSymbol======//
-            symbol.IsNamespace,
-            symbol.IsType,
-            symbol.GetMembers().Where(c => c is Microsoft.CodeAnalysis.IFieldSymbol || c is Microsoft.CodeAnalysis.IPropertySymbol || c is Microsoft.CodeAnalysis.IMethodSymbol).Select(c =>
-            {
-                switch (c)
-                {
-                    case Microsoft.CodeAnalysis.IFieldSymbol symbol: return AccessorField.Create(symbol);
-                    case Microsoft.CodeAnalysis.IPropertySymbol symbol: return AccessorProperty.Create(symbol);
-                    case Microsoft.CodeAnalysis.IMethodSymbol symbol: return AccessorMethod.Create(symbol);
-                    default: return default(IAccessorMeta);
-                }
-            }),
-            symbol.IsReferenceType,
-            symbol.IsReadOnly,
-            symbol.IsUnmanagedType,
-            symbol.IsRefLikeType,
-            (SpecialType)symbol.SpecialType,
-            symbol.IsNativeIntegerType,
-            symbol.IsTupleType,
-            symbol.IsAnonymousType,
-            symbol.IsValueType,
-            (NullableAnnotation)symbol.NullableAnnotation,
-            symbol.AllInterfaces.Any() ? symbol.AllInterfaces.Select(c => Create(c)) : default,
-            null == symbol.BaseType ? default : Create(symbol.BaseType),
-            (TypeKind)symbol.TypeKind,
-            symbol.IsRecord,
-
-            //======INamedTypeSymbol======//
-            symbol.TypeArgumentNullableAnnotations.Select(c => (NullableAnnotation)c),
-            null == symbol.TupleElements ? default : symbol.TupleElements.Select(c => AccessorField.Create(c)),
-            null == symbol.TupleUnderlyingType ? default : Create(symbol.TupleUnderlyingType),
-            symbol.MightContainExtensionMethods,
-            symbol.Constructors.Select(c => AccessorMethod.Create(c)),
-            symbol.StaticConstructors.Select(c => AccessorMethod.Create(c)),
-            symbol.InstanceConstructors.Select(c => AccessorMethod.Create(c)),
-            //null == symbol.ConstructedFrom || symbol.ConstructedFrom.Equals(symbol) ? default : Create(symbol.ConstructedFrom),
-            null == symbol.EnumUnderlyingType ? default : Create(symbol.EnumUnderlyingType),
-            null == symbol.DelegateInvokeMethod ? default : AccessorMethod.Create(symbol.DelegateInvokeMethod),
-            symbol.IsSerializable,
-            null == symbol.NativeIntegerUnderlyingType ? default : Create(symbol.NativeIntegerUnderlyingType),
-            symbol.TypeParameters.Select(c => AccessorTypeParameter.Create(c)),
-            symbol.MemberNames,
-            symbol.IsComImport,
-            symbol.IsImplicitClass,
-            symbol.IsScriptClass,
-            symbol.IsUnboundGenericType,
-            symbol.IsGenericType,
-            symbol.Arity
-            );
 
         public override string ToString() => $"{Kind} {FullName}";
 
@@ -2262,6 +2163,13 @@ namespace Business.SourceGenerator.Analysis.Meta
         #endregion
     }
 
+    /// <summary>
+    /// Represents a type parameter in a generic type or generic method.
+    /// </summary>
+    /// <remarks>
+    /// This interface is reserved for implementation by its associated APIs. We reserve
+    /// the right to change it in the future.
+    /// </remarks>
     public readonly struct AccessorTypeParameter : IAccessorTypeParameter
     {
         public AccessorTypeParameter(Accessibility declaredAccessibility, bool canBeReferencedByName, bool isImplicitlyDeclared, bool isExtern, bool isSealed, bool isAbstract, bool isOverride, bool isVirtual, bool isStatic, bool isDefinition, string name, string fullName, Kind kind, int ordinal, VarianceKind variance, TypeParameterKind typeParameterKind, IAccessorMethod declaringMethod, IAccessorNamedType declaringType, bool hasReferenceTypeConstraint, NullableAnnotation referenceTypeConstraintNullableAnnotation, bool hasValueTypeConstraint, bool hasUnmanagedTypeConstraint, bool hasNotNullConstraint, bool hasConstructorConstraint, IEnumerable<IAccessorType> constraintTypes, IEnumerable<NullableAnnotation> constraintNullableAnnotations, IAccessorTypeParameter reducedFrom)
@@ -2294,39 +2202,6 @@ namespace Business.SourceGenerator.Analysis.Meta
             ConstraintNullableAnnotations = constraintNullableAnnotations;
             ReducedFrom = reducedFrom;
         }
-
-        public static IAccessorTypeParameter Create(Microsoft.CodeAnalysis.ITypeParameterSymbol symbol) => new AccessorTypeParameter(
-            //======Meta======//
-            (Accessibility)symbol.DeclaredAccessibility,
-            symbol.CanBeReferencedByName,
-            symbol.IsImplicitlyDeclared,
-            symbol.IsExtern,
-            symbol.IsSealed,
-            symbol.IsAbstract,
-            symbol.IsOverride,
-            symbol.IsVirtual,
-            symbol.IsStatic,
-            symbol.IsDefinition,
-            symbol.Name,
-            symbol.GetFullName(),
-            (Kind)symbol.Kind,
-
-            //======ITypeParameterSymbol======//
-            symbol.Ordinal,
-            (VarianceKind)symbol.Variance,
-            (TypeParameterKind)symbol.TypeParameterKind,
-            AccessorMethod.Create(symbol.DeclaringMethod),
-            AccessorNamedType.Create(symbol.DeclaringType),
-            symbol.HasReferenceTypeConstraint,
-            (NullableAnnotation)symbol.ReferenceTypeConstraintNullableAnnotation,
-            symbol.HasValueTypeConstraint,
-            symbol.HasUnmanagedTypeConstraint,
-            symbol.HasNotNullConstraint,
-            symbol.HasConstructorConstraint,
-            symbol.ConstraintTypes.Select(c => AccessorType.Create(c)),
-            symbol.ConstraintNullableAnnotations.Select(c => (NullableAnnotation)c),
-            Create(symbol.ReducedFrom)
-            );
 
         public override string ToString() => $"{Kind} {FullName}";
 
@@ -2501,6 +2376,203 @@ namespace Business.SourceGenerator.Analysis.Meta
         #endregion
     }
 
+    /// <summary>
+    /// Represents a parameter of a method or property.
+    /// </summary>
+    /// <remarks>
+    /// This interface is reserved for implementation by its associated APIs. We reserve
+    /// the right to change it in the future.
+    /// </remarks>
+    public readonly struct AccessorParameter : IAccessorParameter
+    {
+        public AccessorParameter(Accessibility declaredAccessibility, bool canBeReferencedByName, bool isImplicitlyDeclared, bool isExtern, bool isSealed, bool isAbstract, bool isOverride, bool isVirtual, bool isStatic, bool isDefinition, string name, string fullName, Kind kind, RefKind refKind, bool isParams, bool isOptional, bool isThis, bool isDiscard, IAccessorType type, NullableAnnotation nullableAnnotation, int ordinal, bool hasExplicitDefaultValue, object explicitDefaultValue)
+        {
+            DeclaredAccessibility = declaredAccessibility;
+            CanBeReferencedByName = canBeReferencedByName;
+            IsImplicitlyDeclared = isImplicitlyDeclared;
+            IsExtern = isExtern;
+            IsSealed = isSealed;
+            IsAbstract = isAbstract;
+            IsOverride = isOverride;
+            IsVirtual = isVirtual;
+            IsStatic = isStatic;
+            IsDefinition = isDefinition;
+            Name = name;
+            FullName = fullName;
+            Kind = kind;
+            RefKind = refKind;
+            IsParams = isParams;
+            IsOptional = isOptional;
+            IsThis = isThis;
+            IsDiscard = isDiscard;
+            Type = type;
+            NullableAnnotation = nullableAnnotation;
+            Ordinal = ordinal;
+            HasExplicitDefaultValue = hasExplicitDefaultValue;
+            ExplicitDefaultValue = explicitDefaultValue;
+        }
+
+        public override string ToString() => $"{Kind} {FullName}";
+
+        #region Meta
+
+        /// <summary>
+        /// Gets a Microsoft.CodeAnalysis.Accessibility indicating the declared accessibility
+        /// for the symbol. Returns NotApplicable if no accessibility is declared.
+        /// </summary>
+        public Accessibility DeclaredAccessibility { get; }
+
+        /// <summary>
+        /// Returns true if this symbol can be referenced by its name in code.
+        /// </summary>
+        public bool CanBeReferencedByName { get; }
+
+        /// <summary>
+        /// Returns true if this symbol was automatically created by the compiler, and does
+        /// not have an explicit corresponding source code declaration.
+        /// </summary>
+        /// <remarks>
+        /// This is intended for symbols that are ordinary symbols in the language sense,
+        /// and may be used by code, but that are simply declared implicitly rather than
+        /// with explicit language syntax.
+        /// Examples include (this list is not exhaustive):
+        /// • The default constructor for a class or struct that is created if one is not
+        /// provided.
+        /// • The BeginInvoke/Invoke/EndInvoke methods for a delegate.
+        /// • The generated backing field for an auto property or a field-like event.
+        /// • The "this" parameter for non-static methods.
+        /// • The "value" parameter for a property setter.
+        /// • The parameters on indexer accessor methods (not on the indexer itself).
+        /// • Methods in anonymous types.
+        /// The class and entry point method for top-level statements are not considered
+        /// as implicitly declared.
+        /// </remarks>
+        public bool IsImplicitlyDeclared { get; }
+
+        /// <summary>
+        /// Gets a value indicating whether the symbol is defined externally.
+        /// </summary>
+        public bool IsExtern { get; }
+
+        /// <summary>
+        /// Gets a value indicating whether the symbol is sealed.
+        /// </summary>
+        public bool IsSealed { get; }
+
+        /// <summary>
+        /// Gets a value indicating whether the symbol is abstract.
+        /// </summary>
+        public bool IsAbstract { get; }
+
+        /// <summary>
+        /// Gets a value indicating whether the symbol is an override of a base class symbol.
+        /// </summary>
+        public bool IsOverride { get; }
+
+        /// <summary>
+        /// Gets a value indicating whether the symbol is virtual.
+        /// </summary>
+        public bool IsVirtual { get; }
+
+        /// <summary>
+        /// Gets a value indicating whether the symbol is static.
+        /// </summary>
+        public bool IsStatic { get; }
+
+        /// <summary>
+        /// Gets a value indicating whether the symbol is the original definition. Returns
+        /// false if the symbol is derived from another symbol, by type substitution for
+        /// instance.
+        /// </summary>
+        public bool IsDefinition { get; }
+
+        /// <summary>
+        /// Gets the symbol name. Returns the empty string if unnamed.
+        /// </summary>
+        public string Name { get; }
+
+        /// <summary>
+        /// Gets the symbol full name. Returns the empty string if unnamed.
+        /// </summary>
+        public string FullName { get; }
+
+        /// <summary>
+        /// Gets the Microsoft.CodeAnalysis.SymbolKind indicating what kind of symbol it is.
+        /// </summary>
+        public Kind Kind { get; }
+
+        #endregion
+
+        #region IAccessorParameter
+
+        /// <summary>
+        /// Whether the parameter passed by value or by reference.
+        /// </summary>
+        public RefKind RefKind { get; }
+
+        /// <summary>
+        /// Returns true if the parameter was declared as a parameter array.
+        /// </summary>
+        public bool IsParams { get; }
+
+        /// <summary>
+        /// Returns true if the parameter is optional.
+        /// </summary>
+        public bool IsOptional { get; }
+
+        /// <summary>
+        /// Returns true if the parameter is the hidden 'this' ('Me' in Visual Basic) parameter.
+        /// </summary>
+        public bool IsThis { get; }
+
+        /// <summary>
+        /// Returns true if the parameter is a discard parameter.
+        /// </summary>
+        public bool IsDiscard { get; }
+
+        /// <summary>
+        /// Gets the type of the parameter.
+        /// </summary>
+        public IAccessorType Type { get; }
+
+        /// <summary>
+        /// Gets the top-level nullability of the parameter.
+        /// </summary>
+        public NullableAnnotation NullableAnnotation { get; }
+
+        /// <summary>
+        /// Gets the ordinal position of the parameter. The first parameter has ordinal zero.
+        /// The 'this' parameter ('Me' in Visual Basic) has ordinal -1.
+        /// </summary>
+        public int Ordinal { get; }
+
+        /// <summary>
+        /// Returns true if the parameter specifies a default value to be passed when no
+        /// value is provided as an argument to a call. The default value can be obtained
+        /// with the Microsoft.CodeAnalysis.IParameterSymbol.ExplicitDefaultValue property.
+        /// </summary>
+        public bool HasExplicitDefaultValue { get; }
+
+        /// <summary>
+        /// Returns the default value of the parameter.
+        /// </summary>
+        /// <remarks>
+        /// Returns null if the parameter type is a struct and the default value of the parameter
+        /// is the default value of the struct type.
+        /// </remarks>
+        public object ExplicitDefaultValue { get; }
+
+        #endregion
+    }
+
+    /// <summary>
+    /// Represents a method or method-like symbol (including constructor, destructor,
+    /// operator, or property/event accessor).
+    /// </summary>
+    /// <remarks>
+    /// This interface is reserved for implementation by its associated APIs. We reserve
+    /// the right to change it in the future.
+    /// </remarks>
     public readonly struct AccessorMethod : IAccessorMethod
     {
         public AccessorMethod(Accessibility declaredAccessibility, bool canBeReferencedByName, bool isImplicitlyDeclared, bool isExtern, bool isSealed, bool isAbstract, bool isOverride, bool isVirtual, bool isStatic, bool isDefinition, string name, string fullName, Kind kind, bool isReadOnly, bool isInitOnly, IEnumerable<IAccessorParameter> parameters, bool isPartialDefinition, IEnumerable<IAccessorTypeParameter> typeParameters, bool isConditional, MethodKind methodKind, int arity, bool isGeneric, bool isExtension, bool isVararg, bool isCheckedBuiltin, bool isAsync, bool returnsVoid, bool returnsByRef, bool returnsByRefReadonly, RefKind refKind, IAccessorType returnType, NullableAnnotation returnNullableAnnotation, bool hidesBaseMethodsByName)
@@ -2539,45 +2611,6 @@ namespace Business.SourceGenerator.Analysis.Meta
             ReturnNullableAnnotation = returnNullableAnnotation;
             HidesBaseMethodsByName = hidesBaseMethodsByName;
         }
-
-        public static IAccessorMethod Create(Microsoft.CodeAnalysis.IMethodSymbol symbol) => new AccessorMethod(
-            //======Meta======//
-            (Accessibility)symbol.DeclaredAccessibility,
-            symbol.CanBeReferencedByName,
-            symbol.IsImplicitlyDeclared,
-            symbol.IsExtern,
-            symbol.IsSealed,
-            symbol.IsAbstract,
-            symbol.IsOverride,
-            symbol.IsVirtual,
-            symbol.IsStatic,
-            symbol.IsDefinition,
-            symbol.Name,
-            symbol.GetFullName(),
-            (Kind)symbol.Kind,
-
-            //======IMethodSymbol======//
-            symbol.IsReadOnly,
-            symbol.IsInitOnly,
-            symbol.Parameters.Select(c => AccessorParameter.Create(c)),
-            symbol.IsPartialDefinition,
-            symbol.TypeParameters.Select(c => AccessorTypeParameter.Create(c)),
-            symbol.IsConditional,
-            (MethodKind)symbol.MethodKind,
-            symbol.Arity,
-            symbol.IsGenericMethod,
-            symbol.IsExtensionMethod,
-            symbol.IsVararg,
-            symbol.IsCheckedBuiltin,
-            symbol.IsAsync,
-            symbol.ReturnsVoid,
-            symbol.ReturnsByRef,
-            symbol.ReturnsByRefReadonly,
-            (RefKind)symbol.RefKind,
-            AccessorType.Create(symbol.ReturnType),
-            (NullableAnnotation)symbol.ReturnNullableAnnotation,
-            symbol.HidesBaseMethodsByName
-            );
 
         public override string ToString() => $"{Kind} {FullName}";
 
@@ -2790,217 +2823,13 @@ namespace Business.SourceGenerator.Analysis.Meta
         #endregion
     }
 
-    public readonly struct AccessorParameter : IAccessorParameter
-    {
-        public AccessorParameter(Accessibility declaredAccessibility, bool canBeReferencedByName, bool isImplicitlyDeclared, bool isExtern, bool isSealed, bool isAbstract, bool isOverride, bool isVirtual, bool isStatic, bool isDefinition, string name, string fullName, Kind kind, RefKind refKind, bool isParams, bool isOptional, bool isThis, bool isDiscard, IAccessorType type, NullableAnnotation nullableAnnotation, int ordinal, bool hasExplicitDefaultValue, object explicitDefaultValue)
-        {
-            DeclaredAccessibility = declaredAccessibility;
-            CanBeReferencedByName = canBeReferencedByName;
-            IsImplicitlyDeclared = isImplicitlyDeclared;
-            IsExtern = isExtern;
-            IsSealed = isSealed;
-            IsAbstract = isAbstract;
-            IsOverride = isOverride;
-            IsVirtual = isVirtual;
-            IsStatic = isStatic;
-            IsDefinition = isDefinition;
-            Name = name;
-            FullName = fullName;
-            Kind = kind;
-            RefKind = refKind;
-            IsParams = isParams;
-            IsOptional = isOptional;
-            IsThis = isThis;
-            IsDiscard = isDiscard;
-            Type = type;
-            NullableAnnotation = nullableAnnotation;
-            Ordinal = ordinal;
-            HasExplicitDefaultValue = hasExplicitDefaultValue;
-            ExplicitDefaultValue = explicitDefaultValue;
-        }
-
-        public static IAccessorParameter Create(Microsoft.CodeAnalysis.IParameterSymbol symbol) => new AccessorParameter(
-            //======Meta======//
-            (Accessibility)symbol.DeclaredAccessibility,
-            symbol.CanBeReferencedByName,
-            symbol.IsImplicitlyDeclared,
-            symbol.IsExtern,
-            symbol.IsSealed,
-            symbol.IsAbstract,
-            symbol.IsOverride,
-            symbol.IsVirtual,
-            symbol.IsStatic,
-            symbol.IsDefinition,
-            symbol.Name,
-            symbol.GetFullName(),
-            (Kind)symbol.Kind,
-
-            //======IParameterSymbol======//
-            (RefKind)symbol.RefKind,
-            symbol.IsParams,
-            symbol.IsOptional,
-            symbol.IsThis,
-            symbol.IsDiscard,
-            AccessorType.Create(symbol.Type),
-            (NullableAnnotation)symbol.NullableAnnotation,
-            symbol.Ordinal,
-            symbol.HasExplicitDefaultValue,
-            symbol.HasExplicitDefaultValue ? symbol.ExplicitDefaultValue : default
-            );
-
-        public override string ToString() => $"{Kind} {FullName}";
-
-        #region Meta
-
-        /// <summary>
-        /// Gets a Microsoft.CodeAnalysis.Accessibility indicating the declared accessibility
-        /// for the symbol. Returns NotApplicable if no accessibility is declared.
-        /// </summary>
-        public Accessibility DeclaredAccessibility { get; }
-
-        /// <summary>
-        /// Returns true if this symbol can be referenced by its name in code.
-        /// </summary>
-        public bool CanBeReferencedByName { get; }
-
-        /// <summary>
-        /// Returns true if this symbol was automatically created by the compiler, and does
-        /// not have an explicit corresponding source code declaration.
-        /// </summary>
-        /// <remarks>
-        /// This is intended for symbols that are ordinary symbols in the language sense,
-        /// and may be used by code, but that are simply declared implicitly rather than
-        /// with explicit language syntax.
-        /// Examples include (this list is not exhaustive):
-        /// • The default constructor for a class or struct that is created if one is not
-        /// provided.
-        /// • The BeginInvoke/Invoke/EndInvoke methods for a delegate.
-        /// • The generated backing field for an auto property or a field-like event.
-        /// • The "this" parameter for non-static methods.
-        /// • The "value" parameter for a property setter.
-        /// • The parameters on indexer accessor methods (not on the indexer itself).
-        /// • Methods in anonymous types.
-        /// The class and entry point method for top-level statements are not considered
-        /// as implicitly declared.
-        /// </remarks>
-        public bool IsImplicitlyDeclared { get; }
-
-        /// <summary>
-        /// Gets a value indicating whether the symbol is defined externally.
-        /// </summary>
-        public bool IsExtern { get; }
-
-        /// <summary>
-        /// Gets a value indicating whether the symbol is sealed.
-        /// </summary>
-        public bool IsSealed { get; }
-
-        /// <summary>
-        /// Gets a value indicating whether the symbol is abstract.
-        /// </summary>
-        public bool IsAbstract { get; }
-
-        /// <summary>
-        /// Gets a value indicating whether the symbol is an override of a base class symbol.
-        /// </summary>
-        public bool IsOverride { get; }
-
-        /// <summary>
-        /// Gets a value indicating whether the symbol is virtual.
-        /// </summary>
-        public bool IsVirtual { get; }
-
-        /// <summary>
-        /// Gets a value indicating whether the symbol is static.
-        /// </summary>
-        public bool IsStatic { get; }
-
-        /// <summary>
-        /// Gets a value indicating whether the symbol is the original definition. Returns
-        /// false if the symbol is derived from another symbol, by type substitution for
-        /// instance.
-        /// </summary>
-        public bool IsDefinition { get; }
-
-        /// <summary>
-        /// Gets the symbol name. Returns the empty string if unnamed.
-        /// </summary>
-        public string Name { get; }
-
-        /// <summary>
-        /// Gets the symbol full name. Returns the empty string if unnamed.
-        /// </summary>
-        public string FullName { get; }
-
-        /// <summary>
-        /// Gets the Microsoft.CodeAnalysis.SymbolKind indicating what kind of symbol it is.
-        /// </summary>
-        public Kind Kind { get; }
-
-        #endregion
-
-        #region IAccessorParameter
-
-        /// <summary>
-        /// Whether the parameter passed by value or by reference.
-        /// </summary>
-        public RefKind RefKind { get; }
-
-        /// <summary>
-        /// Returns true if the parameter was declared as a parameter array.
-        /// </summary>
-        public bool IsParams { get; }
-
-        /// <summary>
-        /// Returns true if the parameter is optional.
-        /// </summary>
-        public bool IsOptional { get; }
-
-        /// <summary>
-        /// Returns true if the parameter is the hidden 'this' ('Me' in Visual Basic) parameter.
-        /// </summary>
-        public bool IsThis { get; }
-
-        /// <summary>
-        /// Returns true if the parameter is a discard parameter.
-        /// </summary>
-        public bool IsDiscard { get; }
-
-        /// <summary>
-        /// Gets the type of the parameter.
-        /// </summary>
-        public IAccessorType Type { get; }
-
-        /// <summary>
-        /// Gets the top-level nullability of the parameter.
-        /// </summary>
-        public NullableAnnotation NullableAnnotation { get; }
-
-        /// <summary>
-        /// Gets the ordinal position of the parameter. The first parameter has ordinal zero.
-        /// The 'this' parameter ('Me' in Visual Basic) has ordinal -1.
-        /// </summary>
-        public int Ordinal { get; }
-
-        /// <summary>
-        /// Returns true if the parameter specifies a default value to be passed when no
-        /// value is provided as an argument to a call. The default value can be obtained
-        /// with the Microsoft.CodeAnalysis.IParameterSymbol.ExplicitDefaultValue property.
-        /// </summary>
-        public bool HasExplicitDefaultValue { get; }
-
-        /// <summary>
-        /// Returns the default value of the parameter.
-        /// </summary>
-        /// <remarks>
-        /// Returns null if the parameter type is a struct and the default value of the parameter
-        /// is the default value of the struct type.
-        /// </remarks>
-        public object ExplicitDefaultValue { get; }
-
-        #endregion
-    }
-
+    /// <summary>
+    /// Represents a field in a class, struct or enum.
+    /// </summary>
+    /// <remarks>
+    /// This interface is reserved for implementation by its associated APIs. We reserve
+    /// the right to change it in the future.
+    /// </remarks>
     public readonly struct AccessorField : IAccessorField
     {
         public AccessorField(Accessibility declaredAccessibility, bool canBeReferencedByName, bool isImplicitlyDeclared, bool isExtern, bool isSealed, bool isAbstract, bool isOverride, bool isVirtual, bool isStatic, bool isDefinition, string name, string fullName, Kind kind, bool isReadOnly, IAccessorType type, bool isConst, bool isVolatile, bool isFixedSizeBuffer, int fixedSize, NullableAnnotation nullableAnnotation, bool hasConstantValue, object constantValue, bool isExplicitlyNamedTupleElement)
@@ -3029,37 +2858,6 @@ namespace Business.SourceGenerator.Analysis.Meta
             ConstantValue = constantValue;
             IsExplicitlyNamedTupleElement = isExplicitlyNamedTupleElement;
         }
-
-        public static IAccessorField Create(Microsoft.CodeAnalysis.IFieldSymbol symbol) => new AccessorField(
-            //======Meta======//
-            (Accessibility)symbol.DeclaredAccessibility,
-            symbol.CanBeReferencedByName,
-            symbol.IsImplicitlyDeclared,
-            symbol.IsExtern,
-            symbol.IsSealed,
-            symbol.IsAbstract,
-            symbol.IsOverride,
-            symbol.IsVirtual,
-            symbol.IsStatic,
-            symbol.IsDefinition,
-            symbol.Name,
-            symbol.GetFullName(),
-            (Kind)symbol.Kind,
-
-            //======Meta======//
-            symbol.IsReadOnly,
-            AccessorType.Create(symbol.Type),
-
-            //======IFieldSymbol======//
-            symbol.IsConst,
-            symbol.IsVolatile,
-            symbol.IsFixedSizeBuffer,
-            symbol.FixedSize,
-            (NullableAnnotation)symbol.NullableAnnotation,
-            symbol.HasConstantValue,
-            symbol.ConstantValue,
-            symbol.IsExplicitlyNamedTupleElement
-            );
 
         public override string ToString() => $"{Kind} {FullName}";
 
@@ -3221,6 +3019,13 @@ namespace Business.SourceGenerator.Analysis.Meta
         #endregion
     }
 
+    /// <summary>
+    /// Represents a property or indexer.
+    /// </summary>
+    /// <remarks>
+    /// This interface is reserved for implementation by its associated APIs. We reserve
+    /// the right to change it in the future.
+    /// </remarks>
     public readonly struct AccessorProperty : IAccessorProperty
     {
         public AccessorProperty(Accessibility declaredAccessibility, bool canBeReferencedByName, bool isImplicitlyDeclared, bool isExtern, bool isSealed, bool isAbstract, bool isOverride, bool isVirtual, bool isStatic, bool isDefinition, string name, string fullName, Kind kind, bool isReadOnly, IAccessorType type, bool isIndexer, IEnumerable<IAccessorParameter> parameters, NullableAnnotation nullableAnnotation, RefKind refKind, bool returnsByRefReadonly, bool returnsByRef, bool isWithEvents, bool isWriteOnly)
@@ -3249,37 +3054,6 @@ namespace Business.SourceGenerator.Analysis.Meta
             IsWithEvents = isWithEvents;
             IsWriteOnly = isWriteOnly;
         }
-
-        public static IAccessorProperty Create(Microsoft.CodeAnalysis.IPropertySymbol symbol) => new AccessorProperty(
-            //======Meta======//
-            (Accessibility)symbol.DeclaredAccessibility,
-            symbol.CanBeReferencedByName,
-            symbol.IsImplicitlyDeclared,
-            symbol.IsExtern,
-            symbol.IsSealed,
-            symbol.IsAbstract,
-            symbol.IsOverride,
-            symbol.IsVirtual,
-            symbol.IsStatic,
-            symbol.IsDefinition,
-            symbol.Name,
-            symbol.GetFullName(),
-            (Kind)symbol.Kind,
-
-            //======Meta======//
-            symbol.IsReadOnly,
-            AccessorType.Create(symbol.Type),
-
-            //======IPropertySymbol======//
-            symbol.IsIndexer,
-            symbol.Parameters.Select(c => AccessorParameter.Create(c)),
-            (NullableAnnotation)symbol.NullableAnnotation,
-            (RefKind)symbol.RefKind,
-            symbol.ReturnsByRefReadonly,
-            symbol.ReturnsByRef,
-            symbol.IsWithEvents,
-            symbol.IsWriteOnly
-            );
 
         public override string ToString() => $"{Kind} {FullName}";
 
