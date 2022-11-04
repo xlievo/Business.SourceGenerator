@@ -31,25 +31,25 @@ Because AOT mode cannot dynamically generate code and types at run time, it requ
 2. package.props <Your project name, replace dots with underscores "_"->".">
 ```C#
 <Project>
-	<PropertyGroup>
-		<Your_project_name>$(MSBuildThisFileDirectory)../</Your_project_name>
-	</PropertyGroup>
-	<ItemGroup>
-		<CompilerVisibleProperty Include="Your_project_name" />
-	</ItemGroup>
-	<ItemGroup>
-		<PackageReference Include="Microsoft.Net.Compilers.Toolset" Version="4.3.1" />
-	</ItemGroup>
+    <PropertyGroup>
+        <Your_project_name>$(MSBuildThisFileDirectory)../</Your_project_name>
+    </PropertyGroup>
+    <ItemGroup>
+        <CompilerVisibleProperty Include="Your_project_name" />
+    </ItemGroup>
+    <ItemGroup>
+        <PackageReference Include="Microsoft.Net.Compilers.Toolset" Version="4.3.1" />
+    </ItemGroup>
 </Project>
 ```
 
 3. Edit your .csproj file and add the following attributes
 ```C#
 <Target Name="IncludeAllDependencies" BeforeTargets="_GetPackageFiles">
-	<ItemGroup>
-		<None Include="Assets\build\package.props" Pack="True" PackagePath="build\$(PackageId).props" />
-		<None Include="Assets\src\**" Pack="True" PackagePath="src" />
-	</ItemGroup>
+    <ItemGroup>
+        <None Include="Assets\build\package.props" Pack="True" PackagePath="build\$(PackageId).props" />
+        <None Include="Assets\src\**" Pack="True" PackagePath="src" />
+    </ItemGroup>
 </Target>
 <ItemGroup>
     <Compile Remove="Assets\src\IResult.cs" />
