@@ -1,8 +1,0 @@
-{
-  "profiles": {
-    "Business.SourceGenerator": {
-      "commandName": "Project",
-      "nativeDebugging": false
-    }
-  }
-}

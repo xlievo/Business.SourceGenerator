@@ -3,14 +3,16 @@
   <PropertyGroup>
     <TargetFramework>netstandard2.0</TargetFramework>
     <LangVersion>8.0</LangVersion>
-    <!--<GeneratePackageOnBuild>true</GeneratePackageOnBuild>-->
-    <!--<IncludeSymbols>true</IncludeSymbols>-->
-    <Version>0.0.3</Version>
-    <AssemblyVersion>0.0.3</AssemblyVersion>
-    <FileVersion>0.0.3</FileVersion>
-    <Authors>xlievo</Authors>
+    <GeneratePackageOnBuild>true</GeneratePackageOnBuild>
+    <IncludeSymbols>true</IncludeSymbols>
+    <Version>0.0.5-pre.4</Version>
     <PackageRequireLicenseAcceptance>false</PackageRequireLicenseAcceptance>
     <PackageLicenseExpression>MIT</PackageLicenseExpression>
+    <Authors>xlievo</Authors>
+    <AppendTargetFrameworkToOutputPath>false</AppendTargetFrameworkToOutputPath>
+    <IncludeBuildOutput>false</IncludeBuildOutput>
+    <NoPackageAnalysis>true</NoPackageAnalysis>
+    <!--<developmentDependency>true</developmentDependency>-->
   </PropertyGroup>
 
   <PropertyGroup Condition="'$(ReleaseTrackingOptOut)' == 'true'">
@@ -18,37 +20,26 @@
     <NoWarn>$(NoWarn);RS2008</NoWarn>
   </PropertyGroup>
 
-  <PropertyGroup Condition="'$(Configuration)|$(Platform)'=='Debug|AnyCPU'">
-    <DocumentationFile></DocumentationFile>
+  <PropertyGroup Condition="'$(Configuration)|$(Platform)'=='Release|AnyCPU'">
+    <DocumentationFile>$(OutputPath)\$(AssemblyName).xml</DocumentationFile>
   </PropertyGroup>
 
   <Target Name="IncludeAllDependencies" BeforeTargets="_GetPackageFiles">
     <ItemGroup>
-      <None Include="Assets\build\package.props" Pack="True" PackagePath="build\$(PackageId).props" />
-      <None Include="Assets\build\package.targets" Pack="True" PackagePath="build\$(PackageId).targets" />
+      <None Include="Assets\build\package.props" Pack="true" PackagePath="build\$(PackageId).props" />
+      <!--<None Include="Assets\build\package.targets" Pack="true" PackagePath="build\$(PackageId).targets" />-->
       <!--<None Include="Assets\src\**" Pack="True" PackagePath="src" />-->
     </ItemGroup>
   </Target>
 
   <ItemGroup>
-    <Compile Remove="Assets\src\code.cs" />
-  </ItemGroup>
-
-  <ItemGroup>
-    <None Remove="Assets\src\code.txt" />
-  </ItemGroup>
-
-  <ItemGroup>
+    <PackageReference Include="Microsoft.CodeAnalysis.Analyzers" Version="3.3.3" PrivateAssets="all" />
+    <PackageReference Include="Microsoft.CodeAnalysis.CSharp.Workspaces" Version="4.3.1" PrivateAssets="all" />
+    <PackageReference Update="NETStandard.Library" PrivateAssets="all" />
     <None Include="$(OutputPath)\$(AssemblyName).dll" Pack="true" PackagePath="analyzers/dotnet/cs" Visible="false" />
-    <None Include="Assets\src\code.cs" />
-  </ItemGroup>
-
-  <ItemGroup>
-    <PackageReference Include="Microsoft.CodeAnalysis.Analyzers" Version="3.3.3">
-      <PrivateAssets>all</PrivateAssets>
-      <IncludeAssets>runtime; build; native; contentfiles; analyzers; buildtransitive</IncludeAssets>
-    </PackageReference>
-    <PackageReference Include="Microsoft.CodeAnalysis.CSharp.Workspaces" Version="4.2.0" PrivateAssets="all" />
+    
+    <PackageReference Include="Business.SourceGenerator.Meta" Version="0.0.0.3" />
+    <PackageReference Include="System.Threading.Tasks.Extensions" Version="4.5.4" />
   </ItemGroup>
 
 </Project>

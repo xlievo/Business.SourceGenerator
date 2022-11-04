@@ -22,11 +22,10 @@ namespace Business.SourceGenerator.Analysis
     using System;
     using System.Collections.Generic;
     using System.Linq;
-    using TypeNameFormatter;
 
-    public static class SyntaxFactoryExt
+    internal static class SyntaxFactoryExt
     {
-        public static ObjectCreationExpressionSyntax ParseObjectCreation(TypeSyntax type, ArgumentListSyntax? argumentList, InitializerExpressionSyntax? initializer)
+        public static ObjectCreationExpressionSyntax ParseObjectCreation(TypeSyntax type, ArgumentListSyntax argumentList, InitializerExpressionSyntax initializer)
         {
             return SyntaxFactory.ObjectCreationExpression(type, argumentList, initializer);
         }
@@ -35,104 +34,17 @@ namespace Business.SourceGenerator.Analysis
         {
             return SyntaxFactory.InitializerExpression(SyntaxKind.ComplexElementInitializerExpression, new SeparatedSyntaxList<ExpressionSyntax>().AddRange(new ExpressionSyntax[] { key, value }));
         }
+
         public static InitializerExpressionSyntax ParseElementInitializer(params (ExpressionSyntax key, ExpressionSyntax value)[] value)
         {
             return SyntaxFactory.InitializerExpression(SyntaxKind.ComplexElementInitializerExpression, new SeparatedSyntaxList<ExpressionSyntax>().AddRange(value.Select(c => ParseElementInitializer(c.key, c.value))));
         }
 
-        //public static SeparatedSyntaxList<ExpressionSyntax> ParseElementInitializer(ExpressionSyntax key, ExpressionSyntax value)
-        //{
-        //    var element = SyntaxFactory.InitializerExpression(SyntaxKind.ComplexElementInitializerExpression, new SeparatedSyntaxList<ExpressionSyntax>().AddRange(new ExpressionSyntax[] { key, value }));
-        //    return new SeparatedSyntaxList<ExpressionSyntax>().Add(element);
-        //}
+        //public static TypeSyntax ParseType(this Type type, TypeNameFormatOptions options = TypeNameFormatOptions.Default, params string[] skip) => SyntaxFactory.ParseTypeName(Substring(type.GetFormattedName(options), skip));
 
-        public static TypeSyntax ParseType(this Type type, TypeNameFormatOptions options = TypeNameFormatOptions.Default) => SyntaxFactory.ParseTypeName(type.GetFormattedName(options));
+        public static TypeSyntax ParseType(this Type type) => SyntaxFactory.ParseTypeName(type.Name);
 
-        /*
-        public static TypeSyntax ParseType(this string name)
-        {
-            var spKey = '.';
-            var genericKey = '<';
-            var genericIdx = name.IndexOf(genericKey);
-            var isGeneric = -1 < genericIdx;
-            var name2 = isGeneric ? name.Substring(0, genericIdx) : name;
-            var sp = new ReadOnlySpan<string>(name2.Split(spKey));
-            var isQualified = 1 < sp.Length;
-            var leftStr = sp.Slice(0, sp.Length - 1).ToString(spKey);
-            var rightStr = sp.Slice(sp.Length - 1).ToString(spKey);
-            var genericStr = isGeneric ? name.Substring(genericIdx + 1, name.Length - genericIdx - 2) : string.Empty;
-
-            if (isGeneric)
-            {
-                var generics = GetGenerics(genericStr);
-
-                var args = new SeparatedSyntaxList<TypeSyntax>();
-
-                foreach (var item in generics)
-                {
-                    args = args.Add(ParseType(item));
-                }
-
-                if (string.IsNullOrEmpty(leftStr))
-                {
-                    return SyntaxFactory.GenericName(SyntaxFactory.ParseToken(rightStr), SyntaxFactory.TypeArgumentList(args));
-                }
-
-                return SyntaxFactory.QualifiedName(SyntaxFactory.ParseName(leftStr), SyntaxFactory.GenericName(SyntaxFactory.ParseToken(rightStr), SyntaxFactory.TypeArgumentList(args)));
-            }
-            else if (isQualified)
-            {
-                if (string.IsNullOrEmpty(leftStr))
-                {
-                    return SyntaxFactory.IdentifierName(rightStr);
-                }
-
-                return SyntaxFactory.QualifiedName(SyntaxFactory.ParseName(leftStr), SyntaxFactory.IdentifierName(rightStr));
-            }
-            else
-            {
-                return SyntaxFactory.IdentifierName(SyntaxFactory.Identifier(SyntaxTriviaList.Empty, SyntaxKind.TypeKeyword, name2, name2, SyntaxTriviaList.Empty));
-            }
-
-            IEnumerable<string> GetGenerics(string genericStr)
-            {
-                var result = new List<string>();
-
-                var sp = new ReadOnlySpan<char>(genericStr.ToArray());
-
-                var index = 0;
-                var l = 0;
-                for (int i = 0; i < sp.Length; i++)
-                {
-                    var c = sp[i];
-
-                    switch (c)
-                    {
-                        case ',':
-                            if (0 < l) { break; }
-                            result.Add(new string(sp.Slice(index, i).ToArray()).Trim());
-                            index = i + 1;
-                            break;
-                        case '<': l++; break;
-                        case '>': l--; break;
-                        default: break;
-                    }
-
-                    if (0 < index && i == sp.Length - 1)
-                    {
-                        result.Add(new string(sp.Slice(index).ToArray()).Trim());
-                    }
-                }
-
-                if (0 < result.Count)
-                {
-                    return result;
-                }
-
-                return Enumerable.Empty<string>();
-            }
-        }
-        */
+        public static NameSyntax ParseName(string text, params string[] skip) => SyntaxFactory.ParseName(Substring(text, skip));
 
         public static ArgumentSyntax ParseElementArgument(TypeSyntax type, params (ExpressionSyntax key, ExpressionSyntax value)[] value) => SyntaxFactory.Argument(ParseObjectCreation(type, null, ParseElementInitializer(value)));
 
@@ -159,7 +71,7 @@ namespace Business.SourceGenerator.Analysis
         {
             if (!(arg?.Any() ?? false)) { return SyntaxFactory.ArgumentList(); }
 
-            return ArgumentList(arg.Select(c => SyntaxFactory.Argument(c)).ToArray());
+            return ArgumentList(arg.Select(c => SyntaxFactory.Argument(null == c ? ParseDefaultLiteral() : c)).ToArray());
         }
 
         public static ArgumentListSyntax ArgumentList(params ArgumentSyntax[] arg)
@@ -167,6 +79,20 @@ namespace Business.SourceGenerator.Analysis
             if (!(arg?.Any() ?? false)) { return SyntaxFactory.ArgumentList(); }
 
             return SyntaxFactory.ArgumentList().AddArguments(arg);
+        }
+
+        public static BracketedArgumentListSyntax BracketedArgumentList(params ExpressionSyntax[] arg)
+        {
+            if (!(arg?.Any() ?? false)) { return SyntaxFactory.BracketedArgumentList(); }
+
+            return BracketedArgumentList(arg.Select(c => SyntaxFactory.Argument(null == c ? ParseDefaultLiteral() : c)).ToArray());
+        }
+
+        public static BracketedArgumentListSyntax BracketedArgumentList(params ArgumentSyntax[] arg)
+        {
+            if (!(arg?.Any() ?? false)) { return SyntaxFactory.BracketedArgumentList(); }
+
+            return SyntaxFactory.BracketedArgumentList().AddArguments(arg);
         }
 
         public static TupleExpressionSyntax TupleExpression(params ExpressionSyntax[] arg)
@@ -182,13 +108,6 @@ namespace Business.SourceGenerator.Analysis
 
             return SyntaxFactory.TupleExpression(new SeparatedSyntaxList<ArgumentSyntax>().AddRange(arg));
         }
-
-        //public static TupleTypeSyntax TupleType(params TypeSyntax[] arg)
-        //{
-        //    if (!(arg?.Any() ?? false)) { return SyntaxFactory.TupleType(); }
-
-        //    return TupleType(arg.Select(c => SyntaxFactory.TupleElement(c)).ToArray());
-        //}
 
         public static TupleTypeSyntax TupleType(params TupleElementSyntax[] arg)
         {
@@ -217,15 +136,12 @@ namespace Business.SourceGenerator.Analysis
         public static TypeOfExpressionSyntax TypeOfExpression(Type type) => SyntaxFactory.TypeOfExpression(ParseType(type));
 
         public static InvocationExpressionSyntax NameOf(ExpressionSyntax arg) => InvocationExpression(SyntaxFactory.IdentifierName("nameof"), arg);
-        public static IdentifierNameSyntax ArgumentNullException() => SyntaxFactory.IdentifierName("System.ArgumentNullException");
+
+        public static IdentifierNameSyntax ArgumentNullException() => SyntaxFactory.IdentifierName("ArgumentNullException");
 
         public static InitializerExpressionSyntax ArrayInitializerExpression(params ExpressionSyntax[] expressions) => SyntaxFactory.InitializerExpression(SyntaxKind.ArrayInitializerExpression, new SeparatedSyntaxList<ExpressionSyntax>().AddRange(expressions));
 
         public static ObjectCreationExpressionSyntax ObjectCreationExpression(TypeSyntax type, params ExpressionSyntax[] arg) => SyntaxFactory.ObjectCreationExpression(type, ArgumentList(arg), null);
-
-        //public static ObjectCreationExpressionSyntax ObjectCreationExpression(Type type, params ExpressionSyntax[] arg) => ObjectCreationExpression(ParseType(type), arg);
-
-        //public static ObjectCreationExpressionSyntax ObjectCreationExpression(string type, params ExpressionSyntax[] arg) => ObjectCreationExpression(SyntaxFactory.ParseTypeName(type), arg);
 
         #region Parameter
 
@@ -255,8 +171,10 @@ namespace Business.SourceGenerator.Analysis
         public static SyntaxToken Token(SyntaxKind kind, string text, string valueText) => SyntaxFactory.Token(SyntaxTriviaList.Empty, kind, text, valueText, SyntaxTriviaList.Empty);
 
         public static MemberAccessExpressionSyntax MemberAccessExpression(string left, string right) => MemberAccessExpression(SyntaxFactory.IdentifierName(left), SyntaxFactory.IdentifierName(right));
+
         public static MemberAccessExpressionSyntax MemberAccessExpression(ExpressionSyntax left, string right) => MemberAccessExpression(left, SyntaxFactory.IdentifierName(right));
         public static MemberAccessExpressionSyntax MemberAccessExpression(string left, SimpleNameSyntax right) => MemberAccessExpression(SyntaxFactory.IdentifierName(left), right);
+
         public static MemberAccessExpressionSyntax MemberAccessExpression(ExpressionSyntax left, SimpleNameSyntax right) => SyntaxFactory.MemberAccessExpression(SyntaxKind.SimpleMemberAccessExpression, left, right);
 
         public static MemberAccessExpressionSyntax MemberAccessExpression(string left, params string[] right)
@@ -296,40 +214,28 @@ namespace Business.SourceGenerator.Analysis
 
         public static InvocationExpressionSyntax InvocationExpression(ExpressionSyntax expression, params ArgumentSyntax[] arg) => SyntaxFactory.InvocationExpression(expression, ArgumentList(arg));
 
-        public static QualifiedNameSyntax QualifiedName(string left, string right) => SyntaxFactory.QualifiedName(SyntaxFactory.IdentifierName(left), SyntaxFactory.IdentifierName(right));
-
-        public static QualifiedNameSyntax QualifiedName(string left, params string[] right)
+        public static string Substring(string value, params string[] skip)
         {
-            if (left is null)
+            if (skip?.Any() ?? false)
             {
-                throw new ArgumentNullException(nameof(left));
-            }
-
-            if (right is null)
-            {
-                throw new ArgumentNullException(nameof(right));
-            }
-
-            QualifiedNameSyntax qualifiedName = null;
-
-            foreach (var item in right)
-            {
-                if (null == qualifiedName)
+                foreach (var item in skip)
                 {
-                    qualifiedName = SyntaxFactory.QualifiedName(SyntaxFactory.IdentifierName(left), SyntaxFactory.IdentifierName(item));
-                }
-                else
-                {
-                    qualifiedName = SyntaxFactory.QualifiedName(qualifiedName, SyntaxFactory.IdentifierName(item));
+                    if (value.StartsWith(item))
+                    {
+                        value = value.Substring(item.Length);
+                        break;
+                    }
                 }
             }
 
-            return qualifiedName;
+            return value;
         }
+
+        public static QualifiedNameSyntax QualifiedName(string left, string right, params string[] skip) => SyntaxFactory.QualifiedName(SyntaxFactory.IdentifierName(Substring(left, skip)), SyntaxFactory.IdentifierName(right));
 
         public static QualifiedNameSyntax QualifiedName(NameSyntax left, string right) => SyntaxFactory.QualifiedName(left, SyntaxFactory.IdentifierName(right));
 
-        public static QualifiedNameSyntax QualifiedName(string left, SimpleNameSyntax right) => SyntaxFactory.QualifiedName(SyntaxFactory.IdentifierName(left), right);
+        public static QualifiedNameSyntax QualifiedName(string left, SimpleNameSyntax right, params string[] skip) => SyntaxFactory.QualifiedName(SyntaxFactory.IdentifierName(Substring(left, skip)), right);
 
         public static QualifiedNameSyntax QualifiedName(NameSyntax left, SimpleNameSyntax right) => SyntaxFactory.QualifiedName(left, right);
 
@@ -372,9 +278,11 @@ namespace Business.SourceGenerator.Analysis
 
         #endregion
 
-        #region ParseClass
+        #region ParseClassOrStruct
 
         public static ClassDeclarationSyntax ParseClass(string name) => SyntaxFactory.ClassDeclaration(name);
+
+        public static StructDeclarationSyntax ParseStruct(string name) => SyntaxFactory.StructDeclaration(name);
 
         //public static ClassDeclarationSyntax AddBaseListTypes(this ClassDeclarationSyntax classd, params TypeSyntax[] types) => classd.AddBaseListTypes(types.Select(c => SyntaxFactory.SimpleBaseType(c)).ToArray());
 
@@ -383,6 +291,9 @@ namespace Business.SourceGenerator.Analysis
         public static TypeDeclarationSyntax WithBaseList(this TypeDeclarationSyntax classd, params TypeSyntax[] types) => classd.WithBaseList(SyntaxFactory.BaseList(new SeparatedSyntaxList<BaseTypeSyntax>().AddRange(types.Select(c => SyntaxFactory.SimpleBaseType(c)))));
 
         //SyntaxFactory.ClassDeclaration(null, ParseTokenList(modifiers), SyntaxFactory.Identifier(name), ParseTypeParameterList(""), null, null);
+
+        public static TypeDeclarationSyntax WithMembers(this TypeDeclarationSyntax classd, params MemberDeclarationSyntax[] members) => classd.WithMembers(new SyntaxList<MemberDeclarationSyntax>()).AddMembers(members);
+
         #endregion
 
         #region Method
@@ -415,6 +326,21 @@ namespace Business.SourceGenerator.Analysis
         #endregion
 
         #region ParseSwitch
+
+        public static StatementSyntax ParseSwitch(string key, string cases, string defaultSection = "default: return default;")
+        {
+            var sb = new System.Text.StringBuilder(null);
+            sb.AppendFormat("switch ({0})", key);
+            sb.AppendLine();
+            sb.Append("{");
+            sb.AppendLine();
+            sb.Append(cases);
+            sb.AppendLine();
+            sb.Append(defaultSection);
+            sb.AppendLine();
+            sb.Append("}");
+            return SyntaxFactory.ParseStatement(sb.ToString());
+        }
 
         /// <summary>
         /// Creates a new SwitchStatementSyntax instance.
@@ -506,6 +432,15 @@ namespace Business.SourceGenerator.Analysis
         /// <returns></returns>
         public static SwitchStatementSyntax ParseSwitch(ExpressionSyntax key, SyntaxList<StatementSyntax> defaultSection, params (ExpressionSyntax Case, SyntaxList<StatementSyntax> Value)[] switchSections) => SyntaxFactory.SwitchStatement(key, new SyntaxList<SwitchSectionSyntax>(switchSections.Select(c => SyntaxFactory.SwitchSection(new SyntaxList<SwitchLabelSyntax>(SyntaxFactory.CaseSwitchLabel(c.Case)), c.Value))).Add(SyntaxFactory.SwitchSection(new SyntaxList<SwitchLabelSyntax>(SyntaxFactory.DefaultSwitchLabel()), defaultSection)));
 
+        /// <summary>
+        /// Creates a new SwitchStatementSyntax instance.
+        /// </summary>
+        /// <param name="key"></param>
+        /// <param name="defaultSection"></param>
+        /// <param name="switchSections"></param>
+        /// <returns></returns>
+        public static SwitchStatementSyntax ParseSwitch(ExpressionSyntax key, SyntaxList<StatementSyntax> defaultSection, params (PatternSyntax Case, SyntaxList<StatementSyntax> Value)[] switchSections) => SyntaxFactory.SwitchStatement(key, new SyntaxList<SwitchSectionSyntax>(switchSections.Select(c => SyntaxFactory.SwitchSection(new SyntaxList<SwitchLabelSyntax>(SyntaxFactory.CasePatternSwitchLabel(c.Case, SyntaxFactory.Token(SyntaxKind.ColonToken))), c.Value))).Add(SyntaxFactory.SwitchSection(new SyntaxList<SwitchLabelSyntax>(SyntaxFactory.DefaultSwitchLabel()), defaultSection)));
+
         #endregion
 
         #region ParseLiteral
@@ -594,15 +529,5 @@ namespace Business.SourceGenerator.Analysis
         public static FieldDeclarationSyntax Initializer(this FieldDeclarationSyntax field, TypeSyntax type, ArgumentSyntax argument = null, InitializerExpressionSyntax initializer = null) => Initializer(field, ParseObjectCreation(type, SyntaxFactory.ArgumentList(null != argument ? new SeparatedSyntaxList<ArgumentSyntax>().Add(argument) : default), initializer));
 
         #endregion
-
-        //public static FieldDeclarationSyntax ParseArgumentList(TypeSyntax type, InitializerExpressionSyntax? initializer)
-        //{
-        //    return ParseObjectCreation(type, SyntaxFactory.ArgumentList(new SeparatedSyntaxList<ArgumentSyntax>().Add(SyntaxFactory.Argument(arg))), initializer);
-        //}
-
-        //public static FieldDeclarationSyntax ObjectCreationElement(this FieldDeclarationSyntax field, TypeSyntax type, ExpressionSyntax arg, InitializerExpressionSyntax? initializer)
-        //{
-        //    return Initializer(field, ParseObjectCreation(type, SyntaxFactory.ArgumentList(new SeparatedSyntaxList<ArgumentSyntax>().Add(SyntaxFactory.Argument(arg))), initializer));
-        //}
     }
 }

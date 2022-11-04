@@ -9,14 +9,14 @@ Because AOT mode cannot dynamically generate code and types at run time, it requ
 [![](https://img.shields.io/badge/License-MIT-blue?style=flat-square)](https://github.com/xlievo/Business.SourceGenerator/blob/master/LICENSE)
 ***
 
-## [MakeGenericType]
+## MakeGenericType & CreateInstance
 **Replace System.Type.MakeGenericType(typeArguments) by generating generic type code in advance.**
 
-1. Declare [SourceGenerator.Analysis.GeneratorGenericType] features on struct or class or interface that need to be generated in advance.
-2. Call Business.SourceGenerator.Utils.GeneratorCode.MakeGenericType(type, typeArguments) to get the specified type.
-3. Call Business.SourceGenerator.Utils.GeneratorCode.CreateGenericType(type, typeArguments) to get an instance of the specified type.
+1. Declare [Business.SourceGenerator.Meta.GeneratorType] features on struct or class or interface that need to be generated in advance.
+2. Call typeof(MyClass<>).MakeGenericType<int>(); to get the specified type.
+3. Call typeof(MyClass<>).MakeGenericType<int>().CreateInstance(params object[] args) to get an instance of the specified type.
 
-## [About distributing nuget packages]
+## About the secondary distribution of nuget packages [direct reference without watching]
 1. Please create the following directory in the project root directory
 ```C#
 ----Assets
@@ -32,10 +32,13 @@ Because AOT mode cannot dynamically generate code and types at run time, it requ
 ```C#
 <Project>
 	<PropertyGroup>
-		<Your project name>$(MSBuildThisFileDirectory)../</Your project name>
+		<Your_project_name>$(MSBuildThisFileDirectory)../</Your_project_name>
 	</PropertyGroup>
 	<ItemGroup>
-		<CompilerVisibleProperty Include="Your project name" />
+		<CompilerVisibleProperty Include="Your_project_name" />
+	</ItemGroup>
+	<ItemGroup>
+		<PackageReference Include="Microsoft.Net.Compilers.Toolset" Version="4.3.1" />
 	</ItemGroup>
 </Project>
 ```
@@ -44,8 +47,15 @@ Because AOT mode cannot dynamically generate code and types at run time, it requ
 ```C#
 <Target Name="IncludeAllDependencies" BeforeTargets="_GetPackageFiles">
 	<ItemGroup>
-	  <None Include="Assets\build\package.props" Pack="True" PackagePath="build\$(PackageId).props" />
-	  <None Include="Assets\src\**" Pack="True" PackagePath="src" />
+		<None Include="Assets\build\package.props" Pack="True" PackagePath="build\$(PackageId).props" />
+		<None Include="Assets\src\**" Pack="True" PackagePath="src" />
 	</ItemGroup>
 </Target>
+<ItemGroup>
+    <Compile Remove="Assets\src\IResult.cs" />
+    <None Include="Assets\src\IResult.cs" />
+</ItemGroup>
+<ItemGroup>
+    <PackageReference Include="Business.SourceGenerator" Version="0.0.5-pre.4" />
+</ItemGroup>
 ```

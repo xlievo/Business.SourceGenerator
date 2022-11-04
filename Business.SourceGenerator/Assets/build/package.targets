@@ -1,5 +1,5 @@
 ﻿<Project xmlns="http://schemas.microsoft.com/developer/msbuild/2003">
   <ItemGroup>
-    <PackageReference Update="Business.SourceGenerator" PrivateAssets="analyzers"/>
+    <!--<PackageReference Update="Business.SourceGenerator" PrivateAssets="analyzers" IncludeAssets="build;buildMultitargeting;buildTransitive" />-->
   </ItemGroup>
 </Project>
