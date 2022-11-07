@@ -4,6 +4,7 @@
   </PropertyGroup>
   <ItemGroup>
     <CompilerVisibleProperty Include="Business_SourceGenerator" />
+    <!--<CompilerVisibleProperty Include="Business_EnableLogging" />-->
   </ItemGroup>
   <ItemGroup>
     <PackageReference Include="Microsoft.Net.Compilers.Toolset" Version="4.3.1" />

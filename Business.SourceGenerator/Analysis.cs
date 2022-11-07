@@ -569,7 +569,7 @@ namespace Business.SourceGenerator.Analysis
 
                                 AnalysisInfo.TypeSymbols.AddOrUpdate(key, info, (x, y) =>
                                 {
-                                    if(info.Syntax.IsKind(SyntaxKind.InterfaceDeclaration) || info.Syntax.IsKind(SyntaxKind.StructDeclaration) || info.Syntax.IsKind(SyntaxKind.ClassDeclaration))
+                                    if (info.Syntax.IsKind(SyntaxKind.InterfaceDeclaration) || info.Syntax.IsKind(SyntaxKind.StructDeclaration) || info.Syntax.IsKind(SyntaxKind.ClassDeclaration))
                                     {
                                         syntaxKey = y.Syntax.GetFullName();
                                         return info;
@@ -603,6 +603,8 @@ namespace Business.SourceGenerator.Analysis
             ValueTaskGeneric,
             Other,
         }
+
+        public static void Log(this GeneratorExecutionContext context, string message, DiagnosticSeverity diagnostic = DiagnosticSeverity.Warning) => context.ReportDiagnostic(Diagnostic.Create(new DiagnosticDescriptor("Business.SourceGenerator", string.Empty, message, string.Empty, diagnostic, true), Location.None));
 
         public static string GetMSBuildProperty(this GeneratorExecutionContext context, string name, string defaultValue = "")
         {
@@ -1762,7 +1764,7 @@ namespace Business.SourceGenerator.Analysis
         }
 
         public static string GetName(this Enum value) => null == value ? null : Enum.GetName(value.GetType(), value);
-        
+
         public static bool Equals(this ISymbol symbol, string fullName)
         {
             if (symbol is null)
@@ -2183,7 +2185,7 @@ namespace Business.SourceGenerator.Analysis
 
             return GetMethodSign(symbol, key, typeParameters, parameters, default, false, argName, typeClean, typeArgument);
         }
-        
+
         static string GetValueCode(IMethodSymbol method, string receiverType, IDictionary<string, ITypeParameterSymbol> typeParameters, bool asTask, Func<string, string> typeClean)
         {
             var sign = GetMethodSign(method, method.Parameters, "args", typeClean).methodSign;
@@ -2233,7 +2235,7 @@ namespace Business.SourceGenerator.Analysis
 
             return result;
         }
-        
+
         public static string GeneratorAccessor(MetaData.AnalysisInfoModel analysisInfo, string assemblyName, ToCodeOpt opt)
         {
             var format = opt.StandardFormat ? Environment.NewLine : " ";
@@ -2722,7 +2724,7 @@ namespace Business.SourceGenerator.Analysis
         }
 
         const int accessorDepth = 4;
-        
+
         #region ToCode
 
         public static string ToMeta(this ISymbol symbol, int depth = default, string receiverType = default, bool isClone = default, StringCollection types = default, Func<string, string> typeClean = default)

@@ -38,17 +38,20 @@ namespace Business.SourceGenerator
             try
             {
                 MetaData.Init(context);
+                context.Log("step 1 [Init] complete!");
 
                 string generatorTypeCode = null;
 
                 if (null != context.Compilation.GetEntryPoint(context.CancellationToken))
                 {
                     generatorTypeCode = $"{format2}{Expression.GeneratorCode(MetaData.AnalysisInfo, context.Compilation.AssemblyName, opt)}";
+                    context.Log("step 2 [GeneratorCode] complete!");
                 }
 
                 #region AddSource
 
                 var accessors = Expression.GeneratorAccessor(MetaData.AnalysisInfo, context.Compilation.AssemblyName, opt);
+                context.Log("step 3 [GeneratorAccessor] complete!");
 
                 if (!string.IsNullOrEmpty(generatorTypeCode) || !string.IsNullOrEmpty(accessors))
                 {
@@ -61,15 +64,15 @@ using System.Linq;";
                     var code = $"{usings}{generatorTypeCode}{accessorsCode}";
 
                     context.AddSource(GeneratorCodeName, Microsoft.CodeAnalysis.Text.SourceText.From(code, System.Text.Encoding.UTF8));
+
+                    context.Log("step 4 Source generator complete!");
                 }
 
                 #endregion
             }
             catch (Exception ex)
             {
-                System.Diagnostics.Debug.WriteLine(ex);
-
-                context.AddSource("Business.SourceGenerator.Logs", Microsoft.CodeAnalysis.Text.SourceText.From($"/*{Environment.NewLine}{ex}{Environment.NewLine}*/", System.Text.Encoding.UTF8));
+                context.Log($"{Environment.NewLine}{ex}{Environment.NewLine}", DiagnosticSeverity.Error);
             }
         }
 
