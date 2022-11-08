@@ -43,7 +43,7 @@ namespace Business.SourceGenerator
                 watch.Restart();
                 MetaData.Init(context);
                 watch.Stop();
-                context.Log($"step 1 Init complete! [{watch.Elapsed.TotalSeconds.Scale()}ms]");
+                context.Log($"step 1 Init complete! [{watch.Elapsed.TotalMilliseconds.Scale(0)}ms]");
 
                 string generatorTypeCode = null;
 
@@ -52,7 +52,7 @@ namespace Business.SourceGenerator
                     watch.Restart();
                     generatorTypeCode = $"{format2}{Expression.GeneratorCode(MetaData.AnalysisInfo, context.Compilation.AssemblyName, opt)}";
                     watch.Stop();
-                    context.Log($"step 2 GeneratorCode complete! [{watch.Elapsed.TotalSeconds.Scale()}ms]");
+                    context.Log($"step 2 GeneratorCode complete! [{watch.Elapsed.TotalMilliseconds.Scale(0)}ms]");
                 }
 
                 #region AddSource
@@ -60,7 +60,7 @@ namespace Business.SourceGenerator
                 watch.Restart();
                 var accessors = Expression.GeneratorAccessor(MetaData.AnalysisInfo, context.Compilation.AssemblyName, opt);
                 watch.Stop();
-                context.Log($"step 3 GeneratorAccessor complete! [{watch.Elapsed.TotalSeconds.Scale()}ms]");
+                context.Log($"step 3 GeneratorAccessor complete! [{watch.Elapsed.TotalMilliseconds.Scale(0)}ms]");
 
                 if (!string.IsNullOrEmpty(generatorTypeCode) || !string.IsNullOrEmpty(accessors))
                 {
@@ -85,7 +85,7 @@ using System.Linq;";
             {
                 watch.Stop();
                 watchCount.Stop();
-                context.Log($"step 4 Source generator complete! [{watchCount.Elapsed.TotalSeconds.Scale()}ms]");
+                context.Log($"step 4 Source generator complete! [{watchCount.Elapsed.TotalMilliseconds.Scale(0)}ms]");
             }
         }
 
