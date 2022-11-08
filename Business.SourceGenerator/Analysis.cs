@@ -1763,6 +1763,18 @@ namespace Business.SourceGenerator.Analysis
             }
         }
 
+        /// <summary>
+        /// Scale
+        /// </summary>
+        /// <param name="value"></param>
+        /// <param name="size"></param>
+        /// <returns></returns>
+        public static double Scale(this double value, int size = 2)
+        {
+            var p = Math.Pow(10, size);
+            return (int)(value * (int)p) / p;
+        }
+
         public static string GetName(this Enum value) => null == value ? null : Enum.GetName(value.GetType(), value);
 
         public static bool Equals(this ISymbol symbol, string fullName)

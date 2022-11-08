@@ -31,27 +31,36 @@ namespace Business.SourceGenerator
 
         public void Execute(GeneratorExecutionContext context)
         {
+            var watchCount = new System.Diagnostics.Stopwatch();
+            watchCount.Restart();
+            var watch = new System.Diagnostics.Stopwatch();
             var opt = new Expression.ToCodeOpt(standardFormat: true);
             var format = opt.StandardFormat ? Environment.NewLine : " ";
             var format2 = opt.StandardFormat ? $"{format}{format}" : format;
 
             try
             {
+                watch.Restart();
                 MetaData.Init(context);
-                context.Log("step 1 [Init] complete!");
+                watch.Stop();
+                context.Log($"step 1 Init complete! [{watch.Elapsed.TotalSeconds.Scale()}ms]");
 
                 string generatorTypeCode = null;
 
                 if (null != context.Compilation.GetEntryPoint(context.CancellationToken))
                 {
+                    watch.Restart();
                     generatorTypeCode = $"{format2}{Expression.GeneratorCode(MetaData.AnalysisInfo, context.Compilation.AssemblyName, opt)}";
-                    context.Log("step 2 [GeneratorCode] complete!");
+                    watch.Stop();
+                    context.Log($"step 2 GeneratorCode complete! [{watch.Elapsed.TotalSeconds.Scale()}ms]");
                 }
 
                 #region AddSource
 
+                watch.Restart();
                 var accessors = Expression.GeneratorAccessor(MetaData.AnalysisInfo, context.Compilation.AssemblyName, opt);
-                context.Log("step 3 [GeneratorAccessor] complete!");
+                watch.Stop();
+                context.Log($"step 3 GeneratorAccessor complete! [{watch.Elapsed.TotalSeconds.Scale()}ms]");
 
                 if (!string.IsNullOrEmpty(generatorTypeCode) || !string.IsNullOrEmpty(accessors))
                 {
@@ -64,8 +73,6 @@ using System.Linq;";
                     var code = $"{usings}{generatorTypeCode}{accessorsCode}";
 
                     context.AddSource(GeneratorCodeName, Microsoft.CodeAnalysis.Text.SourceText.From(code, System.Text.Encoding.UTF8));
-
-                    context.Log("step 4 Source generator complete!");
                 }
 
                 #endregion
@@ -73,6 +80,12 @@ using System.Linq;";
             catch (Exception ex)
             {
                 context.Log($"{Environment.NewLine}{ex}{Environment.NewLine}", DiagnosticSeverity.Error);
+            }
+            finally
+            {
+                watch.Stop();
+                watchCount.Stop();
+                context.Log($"step 4 Source generator complete! [{watchCount.Elapsed.TotalSeconds.Scale()}ms]");
             }
         }
 
