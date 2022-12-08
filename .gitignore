@@ -4,3 +4,6 @@
 /Business.SourceGenerator/obj
 /Business.SourceGenerator/.vs
 /Business.SourceGenerator/Properties
+/Business.SourceGenerator.Test/bin/Debug/net7.0
+/Business.SourceGenerator.Test/obj/Debug/net7.0
+/Business.SourceGenerator.Test/obj
