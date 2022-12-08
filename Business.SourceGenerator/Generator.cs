@@ -22,7 +22,7 @@ namespace Business.SourceGenerator
     using System.Collections.Generic;
 
     [Generator(LanguageNames.CSharp)]
-    internal class Generator : ISourceGenerator
+    public class Generator : ISourceGenerator
     {
         /// <summary>
         /// "BusinessSourceGenerator"
@@ -87,7 +87,7 @@ using System.Linq;";
             finally
             {
                 //watch.Stop();
-                watchCount.Stop(); context.Log($"step 4 Source generator complete! [{watchCount.Elapsed.TotalMilliseconds.Scale(0)}ms]");
+                watchCount.Stop(); context.Log($"generator complete! [{watchCount.Elapsed.TotalMilliseconds.Scale(0)}ms]");
             }
         }
 

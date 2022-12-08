@@ -606,11 +606,7 @@ namespace Business.SourceGenerator.Analysis
 
         public static void Log(this GeneratorExecutionContext context, string message, DiagnosticSeverity diagnostic = DiagnosticSeverity.Warning) => context.ReportDiagnostic(Diagnostic.Create(new DiagnosticDescriptor("Business.SourceGenerator", string.Empty, message, string.Empty, diagnostic, true), Location.None));
 
-        public static string GetMSBuildProperty(this GeneratorExecutionContext context, string name, string defaultValue = "")
-        {
-            context.AnalyzerConfigOptions.GlobalOptions.TryGetValue($"build_property.{name}", out var value);
-            return value ?? defaultValue;
-        }
+        public static string GetMSBuildProperty(this GeneratorExecutionContext context, string name, string defaultValue = "") => context.AnalyzerConfigOptions.GlobalOptions.TryGetValue($"build_property.{name}", out var value) ? value : defaultValue;
 
         #region GetFullName GetSymbolInfo GetDefinition
 
