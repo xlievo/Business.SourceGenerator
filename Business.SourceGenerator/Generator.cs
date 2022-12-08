@@ -33,21 +33,15 @@ namespace Business.SourceGenerator
         {
             var watchCount = new System.Diagnostics.Stopwatch();
             watchCount.Start();
-            //var watch = new System.Diagnostics.Stopwatch();
             var opt = new Expression.ToCodeOpt(standardFormat: true);
             var format = opt.StandardFormat ? Environment.NewLine : " ";
             var format2 = opt.StandardFormat ? $"{format}{format}" : format;
 
             try
             {
-                //watch.Restart();
                 MetaData.Init(context);
-                //watch.Stop(); context.Log($"step 1 Init complete! [{watch.Elapsed.TotalMilliseconds.Scale(0)}ms]");
 
-                //watch.Restart();
                 var generatorTypeCode = $"{format2}{Expression.GeneratorCode(MetaData.AnalysisInfo, context.Compilation.AssemblyName, opt)}";
-                //watch.Stop(); context.Log($"step 2 GeneratorCode complete! [{watch.Elapsed.TotalMilliseconds.Scale(0)}ms]");
-
                 /*
                 string generatorTypeCode = null;
 
@@ -61,9 +55,7 @@ namespace Business.SourceGenerator
                 */
                 #region AddSource
 
-                //watch.Restart();
                 var accessors = Expression.GeneratorAccessor(MetaData.AnalysisInfo, context.Compilation.AssemblyName, opt);
-                //watch.Stop(); context.Log($"step 3 GeneratorAccessor complete! [{watch.Elapsed.TotalMilliseconds.Scale(0)}ms]");
 
                 if (!string.IsNullOrEmpty(generatorTypeCode) || !string.IsNullOrEmpty(accessors))
                 {
@@ -73,7 +65,7 @@ using System;
 using System.Collections.Generic;
 using System.Threading.Tasks;
 using System.Linq;";
-                    var code = $"{usings}{generatorTypeCode}{accessorsCode}";
+                    var code = $"{generatorTypeCode}{accessorsCode}";
 
                     context.AddSource(GeneratorCodeName, Microsoft.CodeAnalysis.Text.SourceText.From(code, System.Text.Encoding.UTF8));
                 }
@@ -87,7 +79,8 @@ using System.Linq;";
             finally
             {
                 //watch.Stop();
-                watchCount.Stop(); context.Log($"generator complete! [{watchCount.Elapsed.TotalMilliseconds.Scale(0)}ms]");
+                watchCount.Stop(); 
+                //context.Log($"generator complete! [{watchCount.Elapsed.TotalMilliseconds.Scale(0)}ms]");
             }
         }
 

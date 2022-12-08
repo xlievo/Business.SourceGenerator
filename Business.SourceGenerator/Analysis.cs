@@ -2170,9 +2170,9 @@ namespace Business.SourceGenerator.Analysis
                 }
             }
 
-            var constructors = string.Join(", ", parameterList2.Select(c => $"new Parameter({c})"));
+            var constructors = string.Join(", ", parameterList2.Select(c => $"new global::Business.SourceGenerator.Meta.Parameter({c})"));
 
-            constructors = $"new Constructor({(hasConstructorKey ? $"\"{symbol.GetFullNameStandardFormat()}\"" : "default")}, {sign}, {length}, {(0 < parameterList2.Count ? $"new Parameter[] {{ {constructors} }}" : "Array.Empty<Parameter>()")})";
+            constructors = $"new global::Business.SourceGenerator.Meta.Constructor({(hasConstructorKey ? $"\"{symbol.GetFullNameStandardFormat()}\"" : "default")}, {sign}, {length}, {(0 < parameterList2.Count ? $"new global::Business.SourceGenerator.Meta.Parameter[] {{ {constructors} }}" : "global::System.Array.Empty<global::Business.SourceGenerator.Meta.Parameter>()")})";
 
             return ($"{key}({string.Join(", ", parameterList)})", constructors);
         }
@@ -2289,7 +2289,7 @@ namespace Business.SourceGenerator.Analysis
                 }
 
                 sb.AppendFormat("public partial {1} {2} : IGeneratorAccessor{0}{{{0}", format, type, typeSymbol.GetFullName(new GetFullNameOpt(noPrefix: true)));
-                sb.AppendFormat("static readonly Lazy<IAccessorNamedType> generatorAccessorType = new Lazy<IAccessorNamedType>(() => {1});{0}", format, typeSymbol.ToMeta(typeClean: typeClean));
+                sb.AppendFormat("static readonly global::System.Lazy<IAccessorNamedType> generatorAccessorType = new global::System.Lazy<IAccessorNamedType>(() => {1});{0}", format, typeSymbol.ToMeta(typeClean: typeClean));
 
                 sb.AppendLine("public static IAccessorNamedType GeneratorAccessorType { get => generatorAccessorType.Value; }");
                 sb.AppendLine("public IAccessorNamedType AccessorType() => GeneratorAccessorType;");
@@ -2306,9 +2306,9 @@ namespace Business.SourceGenerator.Analysis
 
         #region Temp
 
-        const string makeGenericTypeTemp = @"case GeneratorTypeOpt.MakeGenericType:
+        const string makeGenericTypeTemp = @"case global::Business.SourceGenerator.Meta.GeneratorTypeOpt.MakeGenericType:
                 {{ 
-                    if (arg.makeType is null) {{ throw new ArgumentNullException(nameof(arg.makeType)); }} 
+                    if (arg.makeType is null) {{ throw new global::System.ArgumentNullException(nameof(arg.makeType)); }} 
                     switch (arg.makeType) 
                     {{ 
                         {0} 
@@ -2317,7 +2317,7 @@ namespace Business.SourceGenerator.Analysis
                 }}
                 ";
 
-        const string createGenericTypeTemp = @"case GeneratorTypeOpt.CreateGenericType:
+        const string createGenericTypeTemp = @"case global::Business.SourceGenerator.Meta.GeneratorTypeOpt.CreateGenericType:
                 {{
                     switch (arg.createType)
                     {{ 
@@ -2327,9 +2327,9 @@ namespace Business.SourceGenerator.Analysis
                 }}
                 ";
 
-        const string constructorsTemp = @"case GeneratorTypeOpt.Constructors:
+        const string constructorsTemp = @"case global::Business.SourceGenerator.Meta.GeneratorTypeOpt.Constructors:
                 {{ 
-                    if (arg.makeType is null) {{ throw new ArgumentNullException(nameof(arg.makeType)); }} 
+                    if (arg.makeType is null) {{ throw new global::System.ArgumentNullException(nameof(arg.makeType)); }} 
                     switch (arg.makeType) 
                     {{ 
                         {0}
@@ -2341,22 +2341,22 @@ namespace Business.SourceGenerator.Analysis
         {{ 
             switch (opt)
             {{
-                {0}{1}case GeneratorTypeOpt.ContainsType: return {2};
+                {0}{1}case global::Business.SourceGenerator.Meta.GeneratorTypeOpt.ContainsType: return {2};
                 {3}default: return default;
             }}
         }}";
 
-        const string iGeneratorTypeTemp = @"public partial class BusinessSourceGenerator : IGeneratorType
+        const string iGeneratorTypeTemp = @"public partial class BusinessSourceGenerator : global::Business.SourceGenerator.Meta.IGeneratorType
 {{
-    static readonly Lazy<IGeneratorType> generator = new Lazy<IGeneratorType>(() => new BusinessSourceGenerator());
+    static readonly global::System.Lazy<global::Business.SourceGenerator.Meta.IGeneratorType> generator = new global::System.Lazy<global::Business.SourceGenerator.Meta.IGeneratorType>(() => new global::{0}BusinessSourceGenerator());
 
-    public static IGeneratorType Generator {{ get => generator.Value; }}
+    public static global::Business.SourceGenerator.Meta.IGeneratorType Generator {{ get => generator.Value; }}
 
-    static readonly Lazy<IReadOnlyDictionary<string, Func<GeneratorTypeArg, GeneratorTypeOpt, object>>> generatorType = new Lazy<IReadOnlyDictionary<string, Func<GeneratorTypeArg, GeneratorTypeOpt, object>>>(() => new System.Collections.ObjectModel.ReadOnlyDictionary<string, Func<GeneratorTypeArg, GeneratorTypeOpt, object>>(new Dictionary<string, Func<GeneratorTypeArg, GeneratorTypeOpt, object>> {{{0}}}));
+    static readonly global::System.Lazy<global::System.Collections.Generic.IReadOnlyDictionary<global::System.String, global::System.Func<global::Business.SourceGenerator.Meta.GeneratorTypeArg, global::Business.SourceGenerator.Meta.GeneratorTypeOpt, global::System.Object>>> generatorType = new global::System.Lazy<global::System.Collections.Generic.IReadOnlyDictionary<global::System.String, global::System.Func<global::Business.SourceGenerator.Meta.GeneratorTypeArg, global::Business.SourceGenerator.Meta.GeneratorTypeOpt, global::System.Object>>>(() => new global::System.Collections.ObjectModel.ReadOnlyDictionary<global::System.String, global::System.Func<global::Business.SourceGenerator.Meta.GeneratorTypeArg, global::Business.SourceGenerator.Meta.GeneratorTypeOpt, global::System.Object>>(new global::System.Collections.Generic.Dictionary<global::System.String, global::System.Func<global::Business.SourceGenerator.Meta.GeneratorTypeArg, global::Business.SourceGenerator.Meta.GeneratorTypeOpt, global::System.Object>> {{{1}}}));
 
-    public static IReadOnlyDictionary<string, Func<GeneratorTypeArg, GeneratorTypeOpt, object>> GeneratorTypeSingle {{ get => generatorType.Value; }}
+    public static global::System.Collections.Generic.IReadOnlyDictionary<global::System.String, global::System.Func<global::Business.SourceGenerator.Meta.GeneratorTypeArg, global::Business.SourceGenerator.Meta.GeneratorTypeOpt, global::System.Object>> GeneratorTypeSingle {{ get => generatorType.Value; }}
 
-    public IReadOnlyDictionary<string, Func<GeneratorTypeArg, GeneratorTypeOpt, object>> GeneratorType {{ get => GeneratorTypeSingle; }}
+    public global::System.Collections.Generic.IReadOnlyDictionary<global::System.String, global::System.Func<global::Business.SourceGenerator.Meta.GeneratorTypeArg, global::Business.SourceGenerator.Meta.GeneratorTypeOpt, global::System.Object>> GeneratorType {{ get => GeneratorTypeSingle; }}
 }}";
 
         #endregion
@@ -2408,7 +2408,7 @@ namespace Business.SourceGenerator.Analysis
 
                     if (default != constructorParameters)
                     {
-                        constructorParametersList.Add($"default: return new List<Constructor> {{ {string.Join(", ", constructorParameters.parameters)} }};");
+                        constructorParametersList.Add($"default: return new global::System.Collections.Generic.List<global::Business.SourceGenerator.Meta.Constructor> {{ {string.Join(", ", constructorParameters.parameters)} }};");
                     }
                 }
 
@@ -2421,6 +2421,7 @@ namespace Business.SourceGenerator.Analysis
                 sb.AppendFormat("{{ \"{0}\", ", item.Key);
 
                 sb.AppendFormat(generatorTypeTemp, makeGenericTypeCase, createGenericTypeCase, containsType ? "true" : "false", constructorsCase);
+
 
                 sb.Append(" }");
 
@@ -2479,9 +2480,12 @@ namespace Business.SourceGenerator.Analysis
             if (!string.IsNullOrEmpty(assemblyName))
             {
                 sb.AppendFormat("namespace {1}{0}", $"{format}{{{format}", assemblyName);
+                sb.AppendFormat(iGeneratorTypeTemp, $"{assemblyName}.", generatorTypes.Any() ? $" {string.Join(", ", generatorTypes)} " : " ");
             }
-
-            sb.AppendFormat(iGeneratorTypeTemp, generatorTypes.Any() ? $" {string.Join(", ", generatorTypes)} " : " ");
+            else
+            {
+                sb.AppendFormat(iGeneratorTypeTemp, null, generatorTypes.Any() ? $" {string.Join(", ", generatorTypes)} " : " ");
+            }
 
             if (!string.IsNullOrEmpty(assemblyName))
             {
@@ -2552,7 +2556,7 @@ namespace Business.SourceGenerator.Analysis
                     continue;
                 }
 
-                constructors.Add(constructorKey.methodSign, $"case {constructorSign}: return new {constructorKey.methodSign};");
+                constructors.Add(constructorKey.methodSign, $"case {constructorSign}: return new global::{constructorKey.methodSign};");
                 parameters.Add(constructorKey.constructors);
 
                 constructorSign++;
