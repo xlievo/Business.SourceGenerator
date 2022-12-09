@@ -932,6 +932,7 @@ namespace Business.SourceGenerator.Analysis
 
         public static string TypeNameClean(string value, params string[] skip)
         {
+            /*
             if (systemTypeKeywords.TryGetValue(value, out string typeKeyword))
             {
                 value = typeKeyword;
@@ -972,7 +973,7 @@ namespace Business.SourceGenerator.Analysis
             {
                 value = value.Substring(System.Length);
             }
-
+            */
             return value;
         }
 
@@ -2108,8 +2109,8 @@ namespace Business.SourceGenerator.Analysis
             {
                 var value = $"{argName}[{parameter.Ordinal}]";
                 var type = parameter.Type;
-                var typeFullName = type.GetFullNameStandardFormat();
-                var typeFullNameClean = type.GetFullNameStandardFormat(typeClean);
+                //var typeFullName = type.GetFullNameStandardFormat();
+                var typeFullNameClean = $"global::{type.GetFullNameStandardFormat(typeClean)}";
                 var isValueType = type.IsValueType;
 
                 //if (typeFullName.StartsWith("System.Span") || typeFullName.StartsWith("System.ReadOnlySpan"))
@@ -2144,6 +2145,7 @@ namespace Business.SourceGenerator.Analysis
 
                 switch (typeFullNameClean)
                 {
+                    case "global::System.Object":
                     case "System.Object":
                     case "Object":
                     case "object":
@@ -2170,9 +2172,9 @@ namespace Business.SourceGenerator.Analysis
                 }
             }
 
-            var constructors = string.Join(", ", parameterList2.Select(c => $"new global::Business.SourceGenerator.Meta.Parameter({c})"));
+            var constructors = string.Join(", ", parameterList2.Select(c => $"new {FullyNameMeta}Parameter({c})"));
 
-            constructors = $"new global::Business.SourceGenerator.Meta.Constructor({(hasConstructorKey ? $"\"{symbol.GetFullNameStandardFormat()}\"" : "default")}, {sign}, {length}, {(0 < parameterList2.Count ? $"new global::Business.SourceGenerator.Meta.Parameter[] {{ {constructors} }}" : "global::System.Array.Empty<global::Business.SourceGenerator.Meta.Parameter>()")})";
+            constructors = $"new {FullyNameMeta}Constructor({(hasConstructorKey ? $"\"{symbol.GetFullNameStandardFormat()}\"" : "default")}, {sign}, {length}, {(0 < parameterList2.Count ? $"new {FullyNameMeta}Parameter[] {{ {constructors} }}" : $"global::System.Array.Empty<{FullyNameMeta}Parameter>()")})";
 
             return ($"{key}({string.Join(", ", parameterList)})", constructors);
         }
@@ -2288,11 +2290,11 @@ namespace Business.SourceGenerator.Analysis
                     default: break;
                 }
 
-                sb.AppendFormat("public partial {1} {2} : IGeneratorAccessor{0}{{{0}", format, type, typeSymbol.GetFullName(new GetFullNameOpt(noPrefix: true)));
-                sb.AppendFormat("static readonly global::System.Lazy<IAccessorNamedType> generatorAccessorType = new global::System.Lazy<IAccessorNamedType>(() => {1});{0}", format, typeSymbol.ToMeta(typeClean: typeClean));
+                sb.AppendFormat($"public partial {{1}} {{2}} : {FullyNameMeta}IGeneratorAccessor{{0}}{{{{{{0}}", format, type, typeSymbol.GetFullName(new GetFullNameOpt(noPrefix: true)));
+                sb.AppendFormat($"static readonly global::System.Lazy<{FullyNameMeta}IAccessorNamedType> generatorAccessorType = new global::System.Lazy<{FullyNameMeta}IAccessorNamedType>(() => {{1}});{{0}}", format, typeSymbol.ToMeta(typeClean: typeClean));
 
-                sb.AppendLine("public static IAccessorNamedType GeneratorAccessorType { get => generatorAccessorType.Value; }");
-                sb.AppendLine("public IAccessorNamedType AccessorType() => GeneratorAccessorType;");
+                sb.AppendLine($"public static {FullyNameMeta}IAccessorNamedType GeneratorAccessorType {{ get => generatorAccessorType.Value; }}");
+                sb.AppendLine($"public {FullyNameMeta}IAccessorNamedType AccessorType() => GeneratorAccessorType;");
                 sb.Append("}");
 
                 if (!typeSymbol.ContainingNamespace.IsGlobalNamespace)
@@ -2311,7 +2313,7 @@ namespace Business.SourceGenerator.Analysis
                     if (arg.makeType is null) {{ throw new global::System.ArgumentNullException(nameof(arg.makeType)); }} 
                     switch (arg.makeType) 
                     {{ 
-                        {0} 
+                        {{0}} 
                         default: return default; 
                     }} 
                 }}
@@ -2408,7 +2410,7 @@ namespace Business.SourceGenerator.Analysis
 
                     if (default != constructorParameters)
                     {
-                        constructorParametersList.Add($"default: return new global::System.Collections.Generic.List<global::Business.SourceGenerator.Meta.Constructor> {{ {string.Join(", ", constructorParameters.parameters)} }};");
+                        constructorParametersList.Add($"default: return new global::System.Collections.Generic.List<{FullyNameMeta}Constructor> {{ {string.Join(", ", constructorParameters.parameters)} }};");
                     }
                 }
 
@@ -2620,6 +2622,8 @@ namespace Business.SourceGenerator.Analysis
 
         const int accessorDepth = 4;
 
+        public const string FullyNameMeta = "global::Business.SourceGenerator.Meta.";
+
         #region ToCode
 
         public static string ToMeta(this ISymbol symbol, int depth = default, string receiverType = default, bool isClone = default, StringCollection types = default, Func<string, string> typeClean = default)
@@ -2678,9 +2682,9 @@ namespace Business.SourceGenerator.Analysis
 
                         #endregion
 
-                        var sb = new System.Text.StringBuilder("new AccessorNamedType(");
+                        var sb = new System.Text.StringBuilder($"new {FullyNameMeta}AccessorNamedType(");
                         //==================Meta==================//
-                        sb.AppendFormat("Accessibility.{0}, ", accessor.DeclaredAccessibility.GetName());
+                        sb.AppendFormat($"{FullyNameMeta}Accessibility.{{0}}, ", accessor.DeclaredAccessibility.GetName());
                         sb.AppendFormat("{0}, ", accessor.CanBeReferencedByName ? "true" : "false");
                         sb.AppendFormat("{0}, ", accessor.IsImplicitlyDeclared ? "true" : "false");
                         sb.AppendFormat("{0}, ", accessor.IsExtern ? "true" : "false");
@@ -2692,37 +2696,37 @@ namespace Business.SourceGenerator.Analysis
                         sb.AppendFormat("{0}, ", accessor.IsDefinition ? "true" : "false");
                         sb.AppendFormat("\"{0}\", ", accessor.Name);
                         sb.AppendFormat("\"{0}\", ", fullName);
-                        sb.AppendFormat("Kind.{0}, ", accessor.Kind.GetName());
+                        sb.AppendFormat($"{FullyNameMeta}Kind.{{0}}, ", accessor.Kind.GetName());
                         sb.AppendFormat("{0}, ", isDeclaringSyntaxReferences ? "true" : "false");
                         //==================IAccessorType==================//
                         sb.AppendFormat("{0}, ", accessor.IsNamespace ? "true" : "false");
                         sb.AppendFormat("{0}, ", accessor.IsType ? "true" : "false");
-                        sb.AppendFormat("{0}, ", !(members?.Any() ?? false) ? "default" : $"new Dictionary<string, IAccessorMeta> {{ {string.Join(", ", members.Select(c => $"{{ \"{c.Key}\", {c.Value} }}"))} }}");
+                        sb.AppendFormat("{0}, ", !(members?.Any() ?? false) ? "default" : $"new global::System.Collections.Generic.Dictionary<string, {FullyNameMeta}IAccessorMeta> {{ {string.Join(", ", members.Select(c => $"{{ \"{c.Key}\", {c.Value} }}"))} }}");
                         sb.AppendFormat("{0}, ", accessor.IsReferenceType ? "true" : "false");
                         sb.AppendFormat("{0}, ", accessor.IsReadOnly ? "true" : "false");
                         sb.AppendFormat("{0}, ", accessor.IsUnmanagedType ? "true" : "false");
                         sb.AppendFormat("{0}, ", accessor.IsRefLikeType ? "true" : "false");
-                        sb.AppendFormat("SpecialType.{0}, ", accessor.SpecialType.GetName());
+                        sb.AppendFormat($"{FullyNameMeta}SpecialType.{{0}}, ", accessor.SpecialType.GetName());
                         sb.AppendFormat("{0}, ", accessor.IsNativeIntegerType ? "true" : "false");
                         sb.AppendFormat("{0}, ", accessor.IsTupleType ? "true" : "false");
                         sb.AppendFormat("{0}, ", accessor.IsAnonymousType ? "true" : "false");
                         sb.AppendFormat("{0}, ", accessor.IsValueType ? "true" : "false");
-                        sb.AppendFormat("NullableAnnotation.{0}, ", accessor.NullableAnnotation.GetName());
+                        sb.AppendFormat($"{FullyNameMeta}NullableAnnotation.{{0}}, ", accessor.NullableAnnotation.GetName());
                         sb.AppendFormat("{0}, ", (skip2 || !accessor.AllInterfaces.Any()) ? "default" : $"new string[] {{ {string.Join(", ", accessor.AllInterfaces.Select(c => $"\"{c.GetFullNameStandardFormat()}\""))} }}");
                         sb.AppendFormat("{0}, ", accessor.BaseType is null ? "default" : $"\"{accessor.BaseType.GetFullNameStandardFormat()}\"");
-                        sb.AppendFormat("TypeKind.{0}, ", accessor.TypeKind.GetName());
+                        sb.AppendFormat($"{FullyNameMeta}TypeKind.{{0}}, ", accessor.TypeKind.GetName());
                         sb.AppendFormat("{0}, ", accessor.IsRecord ? "true" : "false");
-                        sb.AppendFormat("AsyncType.{0}, ", GetAsyncType(accessor).GetName());
+                        sb.AppendFormat($"{FullyNameMeta}AsyncType.{{0}}, ", GetAsyncType(accessor).GetName());
                         //==================IAccessorNamedType==================//
-                        sb.AppendFormat("{0}, ", (skip2 || !accessor.TypeArgumentNullableAnnotations.Any()) ? "default" : $"new NullableAnnotation[] {{ {string.Join(", ", accessor.TypeArgumentNullableAnnotations.Select(c => $"NullableAnnotation.{c.GetName()}"))} }}");
-                        sb.AppendFormat("{0}, ", (skip2 || null == accessor.TupleElements || !accessor.TupleElements.Any()) ? "default" : $"new IAccessorField[] {{ {string.Join(", ", accessor.TupleElements.Select(c => c.ToMeta(depth, accessor.Name)))} }}");
+                        sb.AppendFormat("{0}, ", (skip2 || !accessor.TypeArgumentNullableAnnotations.Any()) ? "default" : $"new {FullyNameMeta}NullableAnnotation[] {{ {string.Join(", ", accessor.TypeArgumentNullableAnnotations.Select(c => $"{FullyNameMeta}NullableAnnotation.{c.GetName()}"))} }}");
+                        sb.AppendFormat("{0}, ", (skip2 || null == accessor.TupleElements || !accessor.TupleElements.Any()) ? "default" : $"new {FullyNameMeta}IAccessorField[] {{ {string.Join(", ", accessor.TupleElements.Select(c => c.ToMeta(depth, accessor.Name)))} }}");
                         sb.AppendFormat("{0}, ", accessor.MightContainExtensionMethods ? "true" : "false");
-                        sb.AppendFormat("{0}, ", (skip2 || !accessor.Constructors.Any()) ? "default" : $"new IAccessorMethod[] {{ {string.Join(", ", accessor.Constructors.Select(c => c.ToMeta(depth, typeClean: typeClean)))} }}");
+                        sb.AppendFormat("{0}, ", (skip2 || !accessor.Constructors.Any()) ? "default" : $"new {FullyNameMeta}IAccessorMethod[] {{ {string.Join(", ", accessor.Constructors.Select(c => c.ToMeta(depth, typeClean: typeClean)))} }}");
                         sb.AppendFormat("{0}, ", (skip2 || accessor.EnumUnderlyingType is null) ? "default" : accessor.EnumUnderlyingType.ToMeta(depth));
                         sb.AppendFormat("{0}, ", (skip2 || accessor.DelegateInvokeMethod is null) ? "default" : accessor.DelegateInvokeMethod.ToMeta(depth));
                         sb.AppendFormat("{0}, ", accessor.IsSerializable ? "true" : "false");
 
-                        sb.AppendFormat("{0}, ", (skip || !accessor.TypeParameters.Any()) ? "default" : $"new Dictionary<string, IAccessorTypeParameter> {{ {string.Join(", ", accessor.TypeParameters.Select(c => $"{{ \"{c.GetFullNameStandardFormat()}\", {c.ToMeta(depth)} }}"))} }}");
+                        sb.AppendFormat("{0}, ", (skip || !accessor.TypeParameters.Any()) ? "default" : $"new global::System.Collections.Generic.Dictionary<string, {FullyNameMeta}IAccessorTypeParameter> {{ {string.Join(", ", accessor.TypeParameters.Select(c => $"{{ \"{c.GetFullNameStandardFormat()}\", {c.ToMeta(depth)} }}"))} }}");
                         //sb.Append((MemberNames?.Any() ?? false) ? $"new string[] {{ {string.Join(", ", MemberNames.Select(c => $"\"{c}\""))} }}, " : "default, ");
                         sb.AppendFormat("{0}, ", accessor.IsComImport ? "true" : "false");
                         sb.AppendFormat("{0}, ", accessor.IsImplicitClass ? "true" : "false");
@@ -2730,7 +2734,7 @@ namespace Business.SourceGenerator.Analysis
                         sb.AppendFormat("{0}, ", accessor.IsUnboundGenericType ? "true" : "false");
                         sb.AppendFormat("{0}, ", accessor.IsGenericType ? "true" : "false");
                         sb.AppendFormat("{0}, ", accessor.Arity);
-                        sb.AppendFormat("{0}", (skip || !accessor.TypeArguments.Any()) ? "default" : $"new IAccessorType[] {{ {string.Join(", ", accessor.TypeArguments.Select(c => c.ToMeta(depth)))} }}");
+                        sb.AppendFormat("{0}", (skip || !accessor.TypeArguments.Any()) ? "default" : $"new {FullyNameMeta}IAccessorType[] {{ {string.Join(", ", accessor.TypeArguments.Select(c => c.ToMeta(depth)))} }}");
                         return sb.Append(")").ToString();
                     }
                 case ITypeParameterSymbol accessor:
@@ -2741,9 +2745,9 @@ namespace Business.SourceGenerator.Analysis
                         var skip2 = skip || !isDeclaringSyntaxReferences;
                         var fullName = symbol.GetFullNameStandardFormat();
 
-                        var sb = new System.Text.StringBuilder("new AccessorTypeParameter(");
+                        var sb = new System.Text.StringBuilder($"new {FullyNameMeta}AccessorTypeParameter(");
                         //==================Meta==================//
-                        sb.AppendFormat("Accessibility.{0}, ", accessor.DeclaredAccessibility.GetName());
+                        sb.AppendFormat($"{FullyNameMeta}Accessibility.{{0}}, ", accessor.DeclaredAccessibility.GetName());
                         sb.AppendFormat("{0}, ", accessor.CanBeReferencedByName ? "true" : "false");
                         sb.AppendFormat("{0}, ", accessor.IsImplicitlyDeclared ? "true" : "false");
                         sb.AppendFormat("{0}, ", accessor.IsExtern ? "true" : "false");
@@ -2755,7 +2759,7 @@ namespace Business.SourceGenerator.Analysis
                         sb.AppendFormat("{0}, ", accessor.IsDefinition ? "true" : "false");
                         sb.AppendFormat("\"{0}\", ", accessor.Name);
                         sb.AppendFormat("\"{0}\", ", fullName);
-                        sb.AppendFormat("Kind.{0}, ", accessor.Kind.GetName());
+                        sb.AppendFormat($"{FullyNameMeta}Kind.{{0}}, ", accessor.Kind.GetName());
                         sb.AppendFormat("{0}, ", isDeclaringSyntaxReferences ? "true" : "false");
                         //==================IAccessorType==================//
                         sb.AppendFormat("{0}, ", accessor.IsNamespace ? "true" : "false");
@@ -2765,28 +2769,28 @@ namespace Business.SourceGenerator.Analysis
                         sb.AppendFormat("{0}, ", accessor.IsReadOnly ? "true" : "false");
                         sb.AppendFormat("{0}, ", accessor.IsUnmanagedType ? "true" : "false");
                         sb.AppendFormat("{0}, ", accessor.IsRefLikeType ? "true" : "false");
-                        sb.AppendFormat("SpecialType.{0}, ", accessor.SpecialType.GetName());
+                        sb.AppendFormat($"{FullyNameMeta}SpecialType.{{0}}, ", accessor.SpecialType.GetName());
                         sb.AppendFormat("{0}, ", accessor.IsNativeIntegerType ? "true" : "false");
                         sb.AppendFormat("{0}, ", accessor.IsTupleType ? "true" : "false");
                         sb.AppendFormat("{0}, ", accessor.IsAnonymousType ? "true" : "false");
                         sb.AppendFormat("{0}, ", accessor.IsValueType ? "true" : "false");
-                        sb.AppendFormat("NullableAnnotation.{0}, ", accessor.NullableAnnotation.GetName());
+                        sb.AppendFormat($"{FullyNameMeta}NullableAnnotation.{{0}}, ", accessor.NullableAnnotation.GetName());
                         sb.AppendFormat("{0}, ", (skip2 || !accessor.AllInterfaces.Any()) ? "default" : $"new string[] {{ {string.Join(", ", accessor.AllInterfaces.Select(c => $"\"{c.GetFullNameStandardFormat()}\""))} }}");
                         sb.AppendFormat("{0}, ", accessor.BaseType is null ? "default" : $"\"{accessor.BaseType.GetFullNameStandardFormat()}\"");
-                        sb.AppendFormat("TypeKind.{0}, ", accessor.TypeKind.GetName());
+                        sb.AppendFormat($"{FullyNameMeta}TypeKind.{{0}}, ", accessor.TypeKind.GetName());
                         sb.AppendFormat("{0}, ", accessor.IsRecord ? "true" : "false");
-                        sb.AppendFormat("AsyncType.{0}, ", GetAsyncType(accessor).GetName());
+                        sb.AppendFormat($"{FullyNameMeta}AsyncType.{{0}}, ", GetAsyncType(accessor).GetName());
                         //==================IAccessorTypeParameter==================//
                         sb.AppendFormat("{0}, ", accessor.Ordinal);
-                        sb.AppendFormat("VarianceKind.{0}, ", accessor.Variance.GetName());
-                        sb.AppendFormat("TypeParameterKind.{0}, ", accessor.TypeParameterKind.GetName());
+                        sb.AppendFormat($"{FullyNameMeta}VarianceKind.{{0}}, ", accessor.Variance.GetName());
+                        sb.AppendFormat($"{FullyNameMeta}TypeParameterKind.{{0}}, ", accessor.TypeParameterKind.GetName());
                         sb.AppendFormat("{0}, ", accessor.HasReferenceTypeConstraint ? "true" : "false");
-                        sb.AppendFormat("NullableAnnotation.{0}, ", accessor.ReferenceTypeConstraintNullableAnnotation.GetName());
+                        sb.AppendFormat($"{FullyNameMeta}NullableAnnotation.{{0}}, ", accessor.ReferenceTypeConstraintNullableAnnotation.GetName());
                         sb.AppendFormat("{0}, ", accessor.HasValueTypeConstraint ? "true" : "false");
                         sb.AppendFormat("{0}, ", accessor.HasUnmanagedTypeConstraint ? "true" : "false");
                         sb.AppendFormat("{0}, ", accessor.HasNotNullConstraint ? "true" : "false");
                         sb.AppendFormat("{0}, ", accessor.HasConstructorConstraint ? "true" : "false");
-                        sb.Append((skip2 || !accessor.ConstraintTypes.Any()) ? "default" : $"new IAccessorType[] {{ {string.Join(", ", accessor.ConstraintTypes.Select(c => c.ToMeta(depth)))} }}");
+                        sb.Append((skip2 || !accessor.ConstraintTypes.Any()) ? "default" : $"new {FullyNameMeta}IAccessorType[] {{ {string.Join(", ", accessor.ConstraintTypes.Select(c => c.ToMeta(depth)))} }}");
                         return sb.Append(")").ToString();
                     }
                 case ITypeSymbol accessor:
@@ -2848,9 +2852,9 @@ namespace Business.SourceGenerator.Analysis
 
                         #endregion
 
-                        var sb = new System.Text.StringBuilder("new AccessorType(");
+                        var sb = new System.Text.StringBuilder($"new {FullyNameMeta}AccessorType(");
                         //==================Meta==================//
-                        sb.AppendFormat("Accessibility.{0}, ", accessor.DeclaredAccessibility.GetName());
+                        sb.AppendFormat($"{FullyNameMeta}Accessibility.{{0}}, ", accessor.DeclaredAccessibility.GetName());
                         sb.AppendFormat("{0}, ", accessor.CanBeReferencedByName ? "true" : "false");
                         sb.AppendFormat("{0}, ", accessor.IsImplicitlyDeclared ? "true" : "false");
                         sb.AppendFormat("{0}, ", accessor.IsExtern ? "true" : "false");
@@ -2862,27 +2866,27 @@ namespace Business.SourceGenerator.Analysis
                         sb.AppendFormat("{0}, ", accessor.IsDefinition ? "true" : "false");
                         sb.AppendFormat("\"{0}\", ", accessor.Name);
                         sb.AppendFormat("\"{0}\", ", fullName);
-                        sb.AppendFormat("Kind.{0}, ", accessor.Kind.GetName());
+                        sb.AppendFormat($"{FullyNameMeta}Kind.{{0}}, ", accessor.Kind.GetName());
                         sb.AppendFormat("{0}, ", isDeclaringSyntaxReferences ? "true" : "false");
                         //==================IAccessorType==================//
                         sb.AppendFormat("{0}, ", accessor.IsNamespace ? "true" : "false");
                         sb.AppendFormat("{0}, ", accessor.IsType ? "true" : "false");
-                        sb.AppendFormat("{0}, ", !(members?.Any() ?? false) ? "default" : $"new Dictionary<string, IAccessorMeta> {{ {string.Join(", ", members.Select(c => $"{{ \"{c.Key}\", {c.Value} }}"))} }}");
+                        sb.AppendFormat("{0}, ", !(members?.Any() ?? false) ? "default" : $"new global::System.Collections.Generic.Dictionary<string, {FullyNameMeta}IAccessorMeta> {{ {string.Join(", ", members.Select(c => $"{{ \"{c.Key}\", {c.Value} }}"))} }}");
                         sb.AppendFormat("{0}, ", accessor.IsReferenceType ? "true" : "false");
                         sb.AppendFormat("{0}, ", accessor.IsReadOnly ? "true" : "false");
                         sb.AppendFormat("{0}, ", accessor.IsUnmanagedType ? "true" : "false");
                         sb.AppendFormat("{0}, ", accessor.IsRefLikeType ? "true" : "false");
-                        sb.AppendFormat("SpecialType.{0}, ", accessor.SpecialType.GetName());
+                        sb.AppendFormat($"{FullyNameMeta}SpecialType.{{0}}, ", accessor.SpecialType.GetName());
                         sb.AppendFormat("{0}, ", accessor.IsNativeIntegerType ? "true" : "false");
                         sb.AppendFormat("{0}, ", accessor.IsTupleType ? "true" : "false");
                         sb.AppendFormat("{0}, ", accessor.IsAnonymousType ? "true" : "false");
                         sb.AppendFormat("{0}, ", accessor.IsValueType ? "true" : "false");
-                        sb.AppendFormat("NullableAnnotation.{0}, ", accessor.NullableAnnotation.GetName());
+                        sb.AppendFormat($"{FullyNameMeta}NullableAnnotation.{{0}}, ", accessor.NullableAnnotation.GetName());
                         sb.AppendFormat("{0}, ", (skip2 || !accessor.AllInterfaces.Any()) ? "default" : $"new string[] {{ {string.Join(", ", accessor.AllInterfaces.Select(c => $"\"{c.GetFullNameStandardFormat()}\""))} }}");
                         sb.AppendFormat("{0}, ", accessor.BaseType is null ? "default" : $"\"{accessor.BaseType.GetFullNameStandardFormat()}\"");
-                        sb.AppendFormat("TypeKind.{0}, ", accessor.TypeKind.GetName());
+                        sb.AppendFormat($"{FullyNameMeta}TypeKind.{{0}}, ", accessor.TypeKind.GetName());
                         sb.AppendFormat("{0}, ", accessor.IsRecord ? "true" : "false");
-                        sb.AppendFormat("AsyncType.{0}", GetAsyncType(accessor).GetName());
+                        sb.AppendFormat($"{FullyNameMeta}AsyncType.{{0}}", GetAsyncType(accessor).GetName());
                         return sb.Append(")").ToString();
                     }
                 case IParameterSymbol accessor:
@@ -2892,9 +2896,9 @@ namespace Business.SourceGenerator.Analysis
                         var skip = accessorDepth < depth;
                         var fullName = symbol.GetFullNameStandardFormat();
 
-                        var sb = new System.Text.StringBuilder("new AccessorParameter(");
+                        var sb = new System.Text.StringBuilder($"new {FullyNameMeta}AccessorParameter(");
                         //==================Meta==================//
-                        sb.AppendFormat("Accessibility.{0}, ", accessor.DeclaredAccessibility.GetName());
+                        sb.AppendFormat($"{FullyNameMeta}Accessibility.{{0}}, ", accessor.DeclaredAccessibility.GetName());
                         sb.AppendFormat("{0}, ", accessor.CanBeReferencedByName ? "true" : "false");
                         sb.AppendFormat("{0}, ", accessor.IsImplicitlyDeclared ? "true" : "false");
                         sb.AppendFormat("{0}, ", accessor.IsExtern ? "true" : "false");
@@ -2906,16 +2910,16 @@ namespace Business.SourceGenerator.Analysis
                         sb.AppendFormat("{0}, ", accessor.IsDefinition ? "true" : "false");
                         sb.AppendFormat("\"{0}\", ", accessor.Name);
                         sb.AppendFormat("\"{0}\", ", fullName);
-                        sb.AppendFormat("Kind.{0}, ", accessor.Kind.GetName());
+                        sb.AppendFormat($"{FullyNameMeta}Kind.{{0}}, ", accessor.Kind.GetName());
                         sb.AppendFormat("{0}, ", isDeclaringSyntaxReferences ? "true" : "false");
                         //==================IAccessorParameter==================//
-                        sb.AppendFormat("RefKind.{0}, ", accessor.RefKind.GetName());
+                        sb.AppendFormat($"{FullyNameMeta}RefKind.{{0}}, ", accessor.RefKind.GetName());
                         sb.AppendFormat("{0}, ", accessor.IsParams ? "true" : "false");
                         sb.AppendFormat("{0}, ", accessor.IsOptional ? "true" : "false");
                         sb.AppendFormat("{0}, ", accessor.IsThis ? "true" : "false");
                         sb.AppendFormat("{0}, ", accessor.IsDiscard ? "true" : "false");
                         sb.AppendFormat("{0}, ", skip ? "default" : accessor.Type.ToMeta(depth));
-                        sb.AppendFormat("NullableAnnotation.{0}, ", accessor.NullableAnnotation.GetName());
+                        sb.AppendFormat($"{FullyNameMeta}NullableAnnotation.{{0}}, ", accessor.NullableAnnotation.GetName());
                         sb.AppendFormat("{0}, ", accessor.Ordinal);
                         sb.AppendFormat("{0}, ", accessor.HasExplicitDefaultValue ? "true" : "false");
                         sb.Append(accessor.HasExplicitDefaultValue ? ToDefaultValue(accessor.Type.SpecialType, accessor.ExplicitDefaultValue) : "default");
@@ -2931,12 +2935,12 @@ namespace Business.SourceGenerator.Analysis
                         var typeParameters = skip ? default : accessor.TypeParameters.ToDictionary(c => c.GetFullNameStandardFormat(), c => c);
 
                         var skip2 = string.IsNullOrEmpty(receiverType) || 2 < depth;
-                        var getValue = !skip2 ? GetValueCode(accessor, receiverType, typeParameters, false, typeClean) : default;
-                        var getValueAsync = !skip2 ? GetValueCode(accessor, receiverType, typeParameters, true, typeClean) : default;
+                        var getValue = !skip2 ? GetValueCode(accessor, $"global::{receiverType}", typeParameters, false, typeClean) : default;
+                        var getValueAsync = !skip2 ? GetValueCode(accessor, $"global::{receiverType}", typeParameters, true, typeClean) : default;
 
-                        var sb = new System.Text.StringBuilder("new AccessorMethod(");
+                        var sb = new System.Text.StringBuilder($"new {FullyNameMeta}AccessorMethod(");
                         //==================Meta==================//
-                        sb.AppendFormat("Accessibility.{0}, ", accessor.DeclaredAccessibility.GetName());
+                        sb.AppendFormat($"{FullyNameMeta}Accessibility.{{0}}, ", accessor.DeclaredAccessibility.GetName());
                         sb.AppendFormat("{0}, ", accessor.CanBeReferencedByName ? "true" : "false");
                         sb.AppendFormat("{0}, ", accessor.IsImplicitlyDeclared ? "true" : "false");
                         sb.AppendFormat("{0}, ", accessor.IsExtern ? "true" : "false");
@@ -2948,16 +2952,16 @@ namespace Business.SourceGenerator.Analysis
                         sb.AppendFormat("{0}, ", accessor.IsDefinition ? "true" : "false");
                         sb.AppendFormat("\"{0}\", ", accessor.Name);
                         sb.AppendFormat("\"{0}\", ", fullName);
-                        sb.AppendFormat("Kind.{0}, ", accessor.Kind.GetName());
+                        sb.AppendFormat($"{FullyNameMeta}Kind.{{0}}, ", accessor.Kind.GetName());
                         sb.AppendFormat("{0}, ", isDeclaringSyntaxReferences ? "true" : "false");
                         //==================IAccessorMethod==================//
                         sb.AppendFormat("{0}, ", accessor.IsReadOnly ? "true" : "false");
                         sb.AppendFormat("{0}, ", accessor.IsInitOnly ? "true" : "false");
-                        sb.AppendFormat("{0}, ", (skip || !accessor.Parameters.Any()) ? "default" : $"new IAccessorParameter[] {{ {string.Join(", ", accessor.Parameters.Select(c => c.ToMeta(depth)))} }}");
+                        sb.AppendFormat("{0}, ", (skip || !accessor.Parameters.Any()) ? "default" : $"new {FullyNameMeta}IAccessorParameter[] {{ {string.Join(", ", accessor.Parameters.Select(c => c.ToMeta(depth)))} }}");
                         sb.AppendFormat("{0}, ", accessor.IsPartialDefinition ? "true" : "false");
-                        sb.AppendFormat("{0}, ", (skip || !accessor.TypeParameters.Any()) ? "default" : $"new Dictionary<string, IAccessorTypeParameter> {{ {string.Join(", ", typeParameters.Select(c => $"{{ \"{c.Key}\", {c.Value.ToMeta(depth)} }}"))} }}");
+                        sb.AppendFormat("{0}, ", (skip || !accessor.TypeParameters.Any()) ? "default" : $"new global::System.Collections.Generic.Dictionary<string, {FullyNameMeta}IAccessorTypeParameter> {{ {string.Join(", ", typeParameters.Select(c => $"{{ \"{c.Key}\", {c.Value.ToMeta(depth)} }}"))} }}");
                         sb.AppendFormat("{0}, ", accessor.IsConditional ? "true" : "false");
-                        sb.AppendFormat("MethodKind.{0}, ", accessor.MethodKind.GetName());
+                        sb.AppendFormat($"{FullyNameMeta}MethodKind.{{0}}, ", accessor.MethodKind.GetName());
                         sb.AppendFormat("{0}, ", accessor.Arity);
                         sb.AppendFormat("{0}, ", accessor.IsGenericMethod ? "true" : "false");
                         sb.AppendFormat("{0}, ", accessor.IsExtensionMethod ? "true" : "false");
@@ -2967,9 +2971,9 @@ namespace Business.SourceGenerator.Analysis
                         sb.AppendFormat("{0}, ", accessor.ReturnsVoid ? "true" : "false");
                         sb.AppendFormat("{0}, ", accessor.ReturnsByRef ? "true" : "false");
                         sb.AppendFormat("{0}, ", accessor.ReturnsByRefReadonly ? "true" : "false");
-                        sb.AppendFormat("RefKind.{0}, ", accessor.RefKind.GetName());
+                        sb.AppendFormat($"{FullyNameMeta}RefKind.{{0}}, ", accessor.RefKind.GetName());
                         sb.AppendFormat("{0}, ", skip ? "default" : accessor.ReturnType?.ToMeta(depth));
-                        sb.AppendFormat("NullableAnnotation.{0}, ", accessor.ReturnNullableAnnotation.GetName());
+                        sb.AppendFormat($"{FullyNameMeta}NullableAnnotation.{{0}}, ", accessor.ReturnNullableAnnotation.GetName());
                         sb.AppendFormat("{0}, ", accessor.HidesBaseMethodsByName ? "true" : "false");
                         sb.AppendFormat("{0}, ", isClone ? "true" : "false");
                         sb.AppendFormat("{0}, ", skip2 ? "default" : getValue);
@@ -2991,17 +2995,18 @@ namespace Business.SourceGenerator.Analysis
                         }
 
                         var type = accessor.Type;
-                        var typeFullName = type.GetFullName();
+                        var typeFullName = type.GetFullNameStandardFormat();
 
                         string getValue = default;
                         string setValue = default;
                         if (!string.IsNullOrEmpty(receiverType) && 2 >= depth)
                         {
+                            receiverType = $"global::{receiverType}";
                             var name = $"{receiverType}.{symbol.Name}";
                             var castName = $"(({receiverType})obj).{symbol.Name}";
 
                             getValue = symbol.IsStatic ? $"obj => {name}" : $"obj => {castName}";
-                            var value = TypeKind.TypeParameter == type.TypeKind ? $"({type.Name})value" : type.IsValueType ? $"({typeClean(typeFullName)})value" : $"value as {typeClean(typeFullName)}";
+                            var value = TypeKind.TypeParameter == type.TypeKind ? $"({typeFullName})value" : type.IsValueType ? $"(global::{typeClean(typeFullName)})value" : TypeKind.Dynamic == type.TypeKind ? $"value as {typeClean(typeFullName.TrimEnd('?'))}" : $"value as global::{typeClean(typeFullName.TrimEnd('?'))}";
 
                             if (symbol.IsStatic)
                             {
@@ -3013,9 +3018,9 @@ namespace Business.SourceGenerator.Analysis
                             }
                         }
 
-                        var sb = new System.Text.StringBuilder("new AccessorField(");
+                        var sb = new System.Text.StringBuilder($"new {FullyNameMeta}AccessorField(");
                         //==================Meta==================//
-                        sb.AppendFormat("Accessibility.{0}, ", accessor.DeclaredAccessibility.GetName());
+                        sb.AppendFormat($"{FullyNameMeta}Accessibility.{{0}}, ", accessor.DeclaredAccessibility.GetName());
                         sb.AppendFormat("{0}, ", accessor.CanBeReferencedByName ? "true" : "false");
                         sb.AppendFormat("{0}, ", accessor.IsImplicitlyDeclared ? "true" : "false");
                         sb.AppendFormat("{0}, ", accessor.IsExtern ? "true" : "false");
@@ -3027,7 +3032,7 @@ namespace Business.SourceGenerator.Analysis
                         sb.AppendFormat("{0}, ", accessor.IsDefinition ? "true" : "false");
                         sb.AppendFormat("\"{0}\", ", accessor.Name);
                         sb.AppendFormat("\"{0}\", ", fullName);
-                        sb.AppendFormat("Kind.{0}, ", accessor.Kind.GetName());
+                        sb.AppendFormat($"{FullyNameMeta}Kind.{{0}}, ", accessor.Kind.GetName());
                         sb.AppendFormat("{0}, ", isDeclaringSyntaxReferences ? "true" : "false");
                         //==================IAccessorMember==================//
                         sb.AppendFormat("{0}, ", accessor.IsReadOnly ? "true" : "false");
@@ -3039,7 +3044,7 @@ namespace Business.SourceGenerator.Analysis
                         sb.AppendFormat("{0}, ", accessor.IsVolatile ? "true" : "false");
                         sb.AppendFormat("{0}, ", accessor.IsFixedSizeBuffer ? "true" : "false");
                         sb.AppendFormat("{0}, ", accessor.FixedSize);
-                        sb.AppendFormat("NullableAnnotation.{0}, ", accessor.NullableAnnotation.GetName());
+                        sb.AppendFormat($"{FullyNameMeta}NullableAnnotation.{{0}}, ", accessor.NullableAnnotation.GetName());
                         sb.AppendFormat("{0}, ", accessor.HasConstantValue ? "true" : "false");
                         //sb.AppendObject(accessor.ConstantValue, ", ");
                         sb.AppendFormat("{0}, ", accessor.HasConstantValue ? ToDefaultValue(accessor.Type.SpecialType, accessor.ConstantValue) : "default");
@@ -3079,16 +3084,17 @@ namespace Business.SourceGenerator.Analysis
                         }
 
                         var type = accessor.Type;
-                        var typeFullName = type.GetFullName();
+                        var typeFullName = type.GetFullNameStandardFormat();
 
                         string getValue = default;
                         string setValue = default;
                         if (!string.IsNullOrEmpty(receiverType) && 2 >= depth && !accessor.IsReadOnly)
                         {
+                            receiverType = $"global::{receiverType}";
                             var name = $"{receiverType}.{symbol.Name}";
                             var castName = $"(({receiverType})obj).{symbol.Name}";
                             getValue = symbol.IsStatic ? $"obj => {name}" : $"obj => {castName}";
-                            var value = TypeKind.TypeParameter == type.TypeKind ? $"({type.Name})value" : type.IsValueType ? $"({typeClean(typeFullName)})value" : $"value as {typeClean(typeFullName)}";
+                            var value = TypeKind.TypeParameter == type.TypeKind ? $"({typeFullName})value" : type.IsValueType ? $"(global::{typeClean(typeFullName)})value" : TypeKind.Dynamic == type.TypeKind ? $"value as {typeClean(typeFullName.TrimEnd('?'))}" : $"value as global::{typeClean(typeFullName.TrimEnd('?'))}";
 
                             if (symbol.IsStatic)
                             {
@@ -3100,9 +3106,9 @@ namespace Business.SourceGenerator.Analysis
                             }
                         }
 
-                        var sb = new System.Text.StringBuilder("new AccessorProperty(");
+                        var sb = new System.Text.StringBuilder($"new {FullyNameMeta}AccessorProperty(");
                         //==================Meta==================//
-                        sb.AppendFormat("Accessibility.{0}, ", accessor.DeclaredAccessibility.GetName());
+                        sb.AppendFormat($"{FullyNameMeta}Accessibility.{{0}}, ", accessor.DeclaredAccessibility.GetName());
                         sb.AppendFormat("{0}, ", accessor.CanBeReferencedByName ? "true" : "false");
                         sb.AppendFormat("{0}, ", accessor.IsImplicitlyDeclared ? "true" : "false");
                         sb.AppendFormat("{0}, ", accessor.IsExtern ? "true" : "false");
@@ -3114,7 +3120,7 @@ namespace Business.SourceGenerator.Analysis
                         sb.AppendFormat("{0}, ", accessor.IsDefinition ? "true" : "false");
                         sb.AppendFormat("\"{0}\", ", accessor.Name);
                         sb.AppendFormat("\"{0}\", ", fullName);
-                        sb.AppendFormat("Kind.{0}, ", accessor.Kind.GetName());
+                        sb.AppendFormat($"{FullyNameMeta}Kind.{{0}}, ", accessor.Kind.GetName());
                         sb.AppendFormat("{0}, ", isDeclaringSyntaxReferences ? "true" : "false");
                         //==================IAccessorMember==================//
                         sb.AppendFormat("{0}, ", accessor.IsReadOnly ? "true" : "false");
@@ -3123,8 +3129,8 @@ namespace Business.SourceGenerator.Analysis
                         sb.AppendFormat("{0}, ", isRepeat ? "true" : "false");
                         //==================IAccessorProperty==================//
                         sb.AppendFormat("{0}, ", accessor.IsIndexer ? "true" : "false");
-                        sb.AppendFormat("NullableAnnotation.{0}, ", accessor.NullableAnnotation.GetName());
-                        sb.AppendFormat("RefKind.{0}, ", accessor.RefKind.GetName());
+                        sb.AppendFormat($"{FullyNameMeta}NullableAnnotation.{{0}}, ", accessor.NullableAnnotation.GetName());
+                        sb.AppendFormat($"{FullyNameMeta}RefKind.{{0}}, ", accessor.RefKind.GetName());
                         sb.AppendFormat("{0}, ", accessor.ReturnsByRefReadonly ? "true" : "false");
                         sb.AppendFormat("{0}, ", accessor.ReturnsByRef ? "true" : "false");
                         sb.AppendFormat("{0}, ", accessor.IsWithEvents ? "true" : "false");
@@ -3164,7 +3170,7 @@ namespace Business.SourceGenerator.Analysis
                         }
 
                         var type = accessor.Type;
-                        var typeFullName = type.GetFullName();
+                        var typeFullName = type.GetFullNameStandardFormat();
 
                         string getValue = default;
                         string setValue = default;
@@ -3175,9 +3181,9 @@ namespace Business.SourceGenerator.Analysis
                             getValue = symbol.IsStatic ? $"obj => {name}" : $"obj => {castName}";
                         }
 
-                        var sb = new System.Text.StringBuilder("new AccessorEvent(");
+                        var sb = new System.Text.StringBuilder($"new {FullyNameMeta}AccessorEvent(");
                         //==================Meta==================//
-                        sb.AppendFormat("Accessibility.{0}, ", accessor.DeclaredAccessibility.GetName());
+                        sb.AppendFormat($"{FullyNameMeta}Accessibility.{{0}}, ", accessor.DeclaredAccessibility.GetName());
                         sb.AppendFormat("{0}, ", accessor.CanBeReferencedByName ? "true" : "false");
                         sb.AppendFormat("{0}, ", accessor.IsImplicitlyDeclared ? "true" : "false");
                         sb.AppendFormat("{0}, ", accessor.IsExtern ? "true" : "false");
@@ -3189,7 +3195,7 @@ namespace Business.SourceGenerator.Analysis
                         sb.AppendFormat("{0}, ", accessor.IsDefinition ? "true" : "false");
                         sb.AppendFormat("\"{0}\", ", accessor.Name);
                         sb.AppendFormat("\"{0}\", ", fullName);
-                        sb.AppendFormat("Kind.{0}, ", accessor.Kind.GetName());
+                        sb.AppendFormat($"{FullyNameMeta}Kind.{{0}}, ", accessor.Kind.GetName());
                         sb.AppendFormat("{0}, ", isDeclaringSyntaxReferences ? "true" : "false");
                         //==================IAccessorMember==================//
                         sb.Append("false, ");
@@ -3197,7 +3203,7 @@ namespace Business.SourceGenerator.Analysis
                         sb.AppendFormat("\"{0}\", ", typeFullName);
                         sb.AppendFormat("{0}, ", isRepeat ? "true" : "false");
                         //==================IAccessorEvent==================//
-                        sb.AppendFormat("NullableAnnotation.{0}, ", accessor.NullableAnnotation.GetName());
+                        sb.AppendFormat($"{FullyNameMeta}NullableAnnotation.{{0}}, ", accessor.NullableAnnotation.GetName());
                         sb.AppendFormat("{0}, ", accessor.IsWindowsRuntimeEvent ? "true" : "false");
                         sb.AppendFormat("{0}, ", skip ? "default" : accessor.AddMethod?.ToMeta() ?? "default");
                         sb.AppendFormat("{0}, ", skip ? "default" : accessor.RemoveMethod?.ToMeta() ?? "default");

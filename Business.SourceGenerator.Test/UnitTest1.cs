@@ -8,6 +8,7 @@ using System.Reflection;
 using Xunit;
 using System.Reflection.Emit;
 using System.Collections.Generic;
+using System.Runtime.CompilerServices;
 
 namespace Business.SourceGenerator.Test
 {
@@ -17,26 +18,8 @@ namespace Business.SourceGenerator.Test
         public void SimpleGeneratorTest()
         {
             // Create the 'input' compilation that the generator will act on
-            Compilation inputCompilation = CreateCompilation(@"
-namespace MyCode
-{
-    public class TypeTarget
-    {
-        public string A { get; set; }
+            Compilation inputCompilation = CreateCompilation(System.IO.File.ReadAllText(System.IO.Path.Combine(AppContext.BaseDirectory, "Code.cs")));
 
-        public int B { get; set; }
-
-        public static DateTime? C;
-
-        public static string? D;
-
-        public ValueTask E(dynamic a, int b = 2, params object[] args)
-        {
-            return ValueTask.CompletedTask;
-        }
-    }
-}
-");
             inputCompilation = inputCompilation.AddReferences(MetadataReference.CreateFromFile(typeof(Business.SourceGenerator.Meta.Accessibility).Assembly.Location));
 
             //var refs = System.IO.Directory.GetFiles(System.IO.Path.Combine("D:\\Repos\\Business.SourceGenerator\\Business.SourceGenerator.Test\\", "ref"));
@@ -84,8 +67,8 @@ namespace MyCode
             var source = generatorResult.GeneratedSources.First().SourceText.ToString();
         }
 
-        private static Compilation CreateCompilation(string source)
-            => CSharpCompilation.Create("compilation",
+        private static Compilation CreateCompilation(string source, string assemblyName = "UnitAssembly")
+            => CSharpCompilation.Create(assemblyName,
                 new[] { CSharpSyntaxTree.ParseText(source) },
                 new[] { MetadataReference.CreateFromFile(typeof(Binder).GetTypeInfo().Assembly.Location) },
                 new CSharpCompilationOptions(OutputKind.ConsoleApplication));

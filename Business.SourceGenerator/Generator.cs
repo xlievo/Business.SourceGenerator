@@ -41,7 +41,7 @@ namespace Business.SourceGenerator
             {
                 MetaData.Init(context);
 
-                var generatorTypeCode = $"{format2}{Expression.GeneratorCode(MetaData.AnalysisInfo, context.Compilation.AssemblyName, opt)}";
+                var generatorTypeCode = $"{Expression.GeneratorCode(MetaData.AnalysisInfo, context.Compilation.AssemblyName, opt)}";
                 /*
                 string generatorTypeCode = null;
 
@@ -60,11 +60,11 @@ namespace Business.SourceGenerator
                 if (!string.IsNullOrEmpty(generatorTypeCode) || !string.IsNullOrEmpty(accessors))
                 {
                     var accessorsCode = $"{format2}{accessors}";
-                    var usings = @"using Business.SourceGenerator.Meta;
+                    var usings = $@"using Business.SourceGenerator.Meta;
 using System;
 using System.Collections.Generic;
 using System.Threading.Tasks;
-using System.Linq;";
+using System.Linq;{format2}";
                     var code = $"{generatorTypeCode}{accessorsCode}";
 
                     context.AddSource(GeneratorCodeName, Microsoft.CodeAnalysis.Text.SourceText.From(code, System.Text.Encoding.UTF8));

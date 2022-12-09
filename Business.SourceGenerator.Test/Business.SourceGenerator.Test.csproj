@@ -33,4 +33,10 @@
     <ProjectReference Include="..\Business.SourceGenerator\Business.SourceGenerator.csproj" />
   </ItemGroup>
 
+  <ItemGroup>
+    <Compile Update="Code.cs">
+      <CopyToOutputDirectory>PreserveNewest</CopyToOutputDirectory>
+    </Compile>
+  </ItemGroup>
+
 </Project>
