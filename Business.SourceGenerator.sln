@@ -1,11 +1,13 @@
 ﻿
 Microsoft Visual Studio Solution File, Format Version 12.00
-# Visual Studio Version 16
-VisualStudioVersion = 16.0.32413.511
+# Visual Studio Version 17
+VisualStudioVersion = 17.4.33122.133
 MinimumVisualStudioVersion = 10.0.40219.1
 Project("{9A19103F-16F7-4668-BE54-9A1E7A4F7556}") = "Business.SourceGenerator", "Business.SourceGenerator\Business.SourceGenerator.csproj", "{EF8F3132-0B8A-47CB-96EB-B3BB53126F23}"
 EndProject
-Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "Business.SourceGenerator.Test", "Business.SourceGenerator.Test\Business.SourceGenerator.Test.csproj", "{DD7F570F-DFC8-438E-B666-68F7B6AB0F4A}"
+Project("{9A19103F-16F7-4668-BE54-9A1E7A4F7556}") = "Business.SourceGenerator.Test", "Business.SourceGenerator.Test\Business.SourceGenerator.Test.csproj", "{DD7F570F-DFC8-438E-B666-68F7B6AB0F4A}"
+EndProject
+Project("{9A19103F-16F7-4668-BE54-9A1E7A4F7556}") = "Business.SourceGenerator.Meta", "Business.SourceGenerator.Meta\Business.SourceGenerator.Meta.csproj", "{63353B91-1352-48AA-B77D-44D4CC5B8BA0}"
 EndProject
 Global
 	GlobalSection(SolutionConfigurationPlatforms) = preSolution
@@ -21,6 +23,10 @@ Global
 		{DD7F570F-DFC8-438E-B666-68F7B6AB0F4A}.Debug|Any CPU.Build.0 = Debug|Any CPU
 		{DD7F570F-DFC8-438E-B666-68F7B6AB0F4A}.Release|Any CPU.ActiveCfg = Release|Any CPU
 		{DD7F570F-DFC8-438E-B666-68F7B6AB0F4A}.Release|Any CPU.Build.0 = Release|Any CPU
+		{63353B91-1352-48AA-B77D-44D4CC5B8BA0}.Debug|Any CPU.ActiveCfg = Debug|Any CPU
+		{63353B91-1352-48AA-B77D-44D4CC5B8BA0}.Debug|Any CPU.Build.0 = Debug|Any CPU
+		{63353B91-1352-48AA-B77D-44D4CC5B8BA0}.Release|Any CPU.ActiveCfg = Release|Any CPU
+		{63353B91-1352-48AA-B77D-44D4CC5B8BA0}.Release|Any CPU.Build.0 = Release|Any CPU
 	EndGlobalSection
 	GlobalSection(SolutionProperties) = preSolution
 		HideSolutionNode = FALSE

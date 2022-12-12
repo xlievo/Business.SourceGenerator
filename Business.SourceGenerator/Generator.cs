@@ -33,7 +33,7 @@ namespace Business.SourceGenerator
         {
             var watchCount = new System.Diagnostics.Stopwatch();
             watchCount.Start();
-            var opt = new Expression.ToCodeOpt(standardFormat: true);
+            var opt = new Expression.ToCodeOpt(standardFormat: true, global: true);
             var format = opt.StandardFormat ? Environment.NewLine : " ";
             var format2 = opt.StandardFormat ? $"{format}{format}" : format;
 
@@ -63,9 +63,11 @@ namespace Business.SourceGenerator
                     var usings = $@"using Business.SourceGenerator.Meta;
 using System;
 using System.Collections.Generic;
+using System.Collections.ObjectModel;
 using System.Threading.Tasks;
 using System.Linq;{format2}";
-                    var code = $"{generatorTypeCode}{accessorsCode}";
+
+                    var code = $"{(!opt.Global ? usings : default)}{generatorTypeCode}{accessorsCode}";
 
                     context.AddSource(GeneratorCodeName, Microsoft.CodeAnalysis.Text.SourceText.From(code, System.Text.Encoding.UTF8));
                 }
@@ -79,7 +81,7 @@ using System.Linq;{format2}";
             finally
             {
                 //watch.Stop();
-                watchCount.Stop(); 
+                watchCount.Stop();
                 //context.Log($"generator complete! [{watchCount.Elapsed.TotalMilliseconds.Scale(0)}ms]");
             }
         }

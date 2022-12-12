@@ -22,15 +22,15 @@ namespace Business.SourceGenerator.Test
 
             inputCompilation = inputCompilation.AddReferences(MetadataReference.CreateFromFile(typeof(Business.SourceGenerator.Meta.Accessibility).Assembly.Location));
 
-            //var refs = System.IO.Directory.GetFiles(System.IO.Path.Combine("D:\\Repos\\Business.SourceGenerator\\Business.SourceGenerator.Test\\", "ref"));
+            var refs = System.IO.Directory.GetFiles(System.IO.Path.Combine(AppContext.BaseDirectory, "ref"));
 
-            //var references = new List<MetadataReference>(refs.Length);
-            //foreach (var item in refs)
-            //{
-            //    references.Add(MetadataReference.CreateFromFile(item));
-            //}
+            var references = new List<MetadataReference>(refs.Length);
+            foreach (var item in refs)
+            {
+                references.Add(MetadataReference.CreateFromFile(item));
+            }
 
-            //inputCompilation = inputCompilation.AddReferences(references);
+            inputCompilation = inputCompilation.AddReferences(references);
 
             // directly create an instance of the generator
             // (Note: in the compiler this is loaded from an assembly, and created via reflection at runtime)
@@ -46,7 +46,7 @@ namespace Business.SourceGenerator.Test
             // We can now assert things about the resulting compilation:
             Debug.Assert(diagnostics.IsEmpty); // there were no diagnostics created by the generators
             Debug.Assert(outputCompilation.SyntaxTrees.Count() == 2); // we have two syntax trees, the original 'user' provided one, and the one added by the generator
-            //var dias = outputCompilation.GetDiagnostics();
+            var dias = outputCompilation.GetDiagnostics();
             //Debug.Assert(outputCompilation.GetDiagnostics().IsEmpty); // verify the compilation with the added source has no diagnostics
 
             // Or we can look at the results directly:

@@ -7,7 +7,7 @@
 /Business.SourceGenerator.Test/bin
 /Business.SourceGenerator.Test/obj
 /Business.SourceGenerator.Test/Properties
-/Business.SourceGenerator.Meta/.vs/Business.SourceGenerator.Meta/DesignTimeBuild
+/Business.SourceGenerator.Meta/.vs
 /Business.SourceGenerator.Meta/bin
 /Business.SourceGenerator.Meta/obj
-/Business.SourceGenerator.Meta/Properties/PublishProfiles
+/Business.SourceGenerator.Meta/Properties
