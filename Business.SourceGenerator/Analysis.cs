@@ -2364,7 +2364,8 @@ namespace Business.SourceGenerator.Analysis
 
     public static {2}IGeneratorType Generator {{ get => generator.Value; }}
 
-    static readonly {3}Lazy<{4}IReadOnlyDictionary<{6}, {3}Func<{2}GeneratorTypeArg, {2}GeneratorTypeOpt, {7}>>> generatorType = new {3}Lazy<{4}IReadOnlyDictionary<{6}, {3}Func<{2}GeneratorTypeArg, {2}GeneratorTypeOpt, {7}>>>(() => new {5}ReadOnlyDictionary<{6}, {3}Func<{2}GeneratorTypeArg, {2}GeneratorTypeOpt, {7}>>(new {4}Dictionary<{6}, {3}Func<{2}GeneratorTypeArg, {2}GeneratorTypeOpt, {7}>> {{{1}}}));
+    static readonly {3}Lazy<{4}IReadOnlyDictionary<{6}, {3}Func<{2}GeneratorTypeArg, {2}GeneratorTypeOpt, {7}>>> generatorType = new {3}Lazy<{4}IReadOnlyDictionary<{6}, {3}Func<{2}GeneratorTypeArg, {2}GeneratorTypeOpt, {7}>>>(() => new {5}ReadOnlyDictionary<{6}, {3}Func<{2}GeneratorTypeArg, {2}GeneratorTypeOpt, {7}>>(new {4}Dictionary<{6}, {3}Func<{2}GeneratorTypeArg, {2}GeneratorTypeOpt, {7}>> 
+        {{{1}}}));
 
     public static {4}IReadOnlyDictionary<{6}, {3}Func<{2}GeneratorTypeArg, {2}GeneratorTypeOpt, {7}>> GeneratorTypeSingle {{ get => generatorType.Value; }}
 

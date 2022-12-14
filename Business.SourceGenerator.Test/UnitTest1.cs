@@ -12,15 +12,59 @@ namespace Business.SourceGenerator.Test
 {
     public class UnitTest1
     {
-        [Fact]
-        public void SimpleGeneratorTest()
+        [Theory]
+        [InlineData("ClassGeneric.cs")]
+        public void ClassGenericTest(string file)
         {
-            var temps = System.IO.Directory.GetFiles(System.IO.Path.Combine(AppContext.BaseDirectory, "TestTemp"));
+            var path = System.IO.Path.Combine(AppContext.BaseDirectory, "TestTemp", file);
 
-            foreach (var item in temps)
-            {
-                var source = Compilation(item);
-            }
+            Debug.Assert(System.IO.File.Exists(path));
+
+            var source = Compilation(path);
+        }
+
+        [Theory]
+        [InlineData("ClassMember.cs")]
+        public void ClassMemberTest(string file)
+        {
+            var path = System.IO.Path.Combine(AppContext.BaseDirectory, "TestTemp", file);
+
+            Debug.Assert(System.IO.File.Exists(path));
+
+            var source = Compilation(path);
+        }
+
+        [Theory]
+        [InlineData("ClassMethod.cs")]
+        public void ClassMethodTest(string file)
+        {
+            var path = System.IO.Path.Combine(AppContext.BaseDirectory, "TestTemp", file);
+
+            Debug.Assert(System.IO.File.Exists(path));
+
+            var source = Compilation(path);
+        }
+
+        [Theory]
+        [InlineData("StructMember.cs")]
+        public void StructMemberTest(string file)
+        {
+            var path = System.IO.Path.Combine(AppContext.BaseDirectory, "TestTemp", file);
+
+            Debug.Assert(System.IO.File.Exists(path));
+
+            var source = Compilation(path);
+        }
+
+        [Theory]
+        [InlineData("StructMethod.cs")]
+        public void StructMethodTest(string file)
+        {
+            var path = System.IO.Path.Combine(AppContext.BaseDirectory, "TestTemp", file);
+
+            Debug.Assert(System.IO.File.Exists(path));
+
+            var source = Compilation(path);
         }
 
         static string Compilation(string file)
