@@ -1,6 +1,6 @@
 ﻿namespace MyCode
 {
-    public partial struct StructMemberTarget
+    public partial struct StructMember
     {
         public string A { get; set; }
 

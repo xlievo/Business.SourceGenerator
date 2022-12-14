@@ -46,16 +46,19 @@
   </ItemGroup>
 
   <ItemGroup>
-    <Compile Update="TestTemp\ClassMemberTarget.cs">
+    <Compile Update="TestTemp\ClassGeneric.cs">
       <CopyToOutputDirectory>PreserveNewest</CopyToOutputDirectory>
     </Compile>
-    <Compile Update="TestTemp\ClassMethodTarget.cs">
+    <Compile Update="TestTemp\ClassMember.cs">
       <CopyToOutputDirectory>PreserveNewest</CopyToOutputDirectory>
     </Compile>
-    <Compile Update="TestTemp\StructMemberTarget.cs">
+    <Compile Update="TestTemp\ClassMethod.cs">
       <CopyToOutputDirectory>PreserveNewest</CopyToOutputDirectory>
     </Compile>
-    <Compile Update="TestTemp\StructMethodTarget.cs">
+    <Compile Update="TestTemp\StructMember.cs">
+      <CopyToOutputDirectory>PreserveNewest</CopyToOutputDirectory>
+    </Compile>
+    <Compile Update="TestTemp\StructMethod.cs">
       <CopyToOutputDirectory>PreserveNewest</CopyToOutputDirectory>
     </Compile>
   </ItemGroup>

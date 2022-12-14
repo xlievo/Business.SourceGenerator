@@ -3075,7 +3075,7 @@ namespace Business.SourceGenerator.Analysis
                             var castName = $"(({receiverType})obj).{symbol.Name}";
 
                             getValue = symbol.IsStatic ? $"obj => {name}" : $"obj => {castName}";
-                            var value = TypeKind.TypeParameter == type.TypeKind ? $"({typeFullName})value" : type.IsValueType ? $"({global}{typeClean(typeFullName)})value" : TypeKind.Dynamic == type.TypeKind ? $"value as {typeClean(typeFullName.TrimEnd('?'))}" : $"value as {global}{typeClean(typeFullName.TrimEnd('?'))}";
+                            var value = TypeKind.TypeParameter == type.TypeKind ? $"({type.Name})value" : type.IsValueType ? $"({global}{typeClean(typeFullName)})value" : TypeKind.Dynamic == type.TypeKind ? $"value as {typeClean(typeFullName.TrimEnd('?'))}" : $"value as {global}{typeClean(typeFullName.TrimEnd('?'))}";
 
                             if (symbol.IsStatic)
                             {
@@ -3163,7 +3163,7 @@ namespace Business.SourceGenerator.Analysis
                             var name = $"{receiverType}.{symbol.Name}";
                             var castName = $"(({receiverType})obj).{symbol.Name}";
                             getValue = symbol.IsStatic ? $"obj => {name}" : $"obj => {castName}";
-                            var value = TypeKind.TypeParameter == type.TypeKind ? $"({typeFullName})value" : type.IsValueType ? $"({global}{typeClean(typeFullName)})value" : TypeKind.Dynamic == type.TypeKind ? $"value as {typeClean(typeFullName.TrimEnd('?'))}" : $"value as {global}{typeClean(typeFullName.TrimEnd('?'))}";
+                            var value = TypeKind.TypeParameter == type.TypeKind ? $"({type.Name})value" : type.IsValueType ? $"({global}{typeClean(typeFullName)})value" : TypeKind.Dynamic == type.TypeKind ? $"value as {typeClean(typeFullName.TrimEnd('?'))}" : $"value as {global}{typeClean(typeFullName.TrimEnd('?'))}";
 
                             if (symbol.IsStatic)
                             {

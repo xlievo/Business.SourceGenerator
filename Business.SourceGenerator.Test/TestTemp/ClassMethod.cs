@@ -1,6 +1,6 @@
-﻿namespace MyCode
+﻿namespace Business.SourceGenerator.Test.TestTemp
 {
-    public partial struct StructMethodTarget
+    public partial class ClassMethod
     {
         public System.Threading.Tasks.ValueTask G(dynamic a, int b, decimal c, params object[] args)
         {

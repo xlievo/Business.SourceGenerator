@@ -1,6 +1,6 @@
 ﻿namespace MyCode
 {
-    public partial class ClassMemberTarget
+    public partial class ClassMember
     {
         public string A { get; set; }
 
@@ -51,33 +51,3 @@
         public static System.Action<int?> F3;
     }
 }
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
