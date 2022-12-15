@@ -2205,6 +2205,9 @@ namespace Business.SourceGenerator.Analysis
 
         static string GetValueCode(IMethodSymbol method, string receiverType, IDictionary<string, ITypeParameterSymbol> typeParameters, bool asTask, Func<string, string> typeClean, ToCodeOpt opt)
         {
+            var globalTasks = opt.GetGlobalName(GlobalName.System_Threading_Tasks);
+            var globalObject = opt.GetGlobalName(GlobalName.System_Object);
+
             var sign = GetMethodSign(method, method.Parameters, "args", typeClean, opt).methodSign;
 
             if (sign is null)
@@ -2218,7 +2221,7 @@ namespace Business.SourceGenerator.Analysis
             {
                 if (asTask)
                 {
-                    result = $"{result}; return Task.FromResult<object>(default);";
+                    result = $"{result}; return {globalTasks}Task.FromResult<{globalObject}>(default);";
                 }
                 else
                 {
@@ -2235,7 +2238,7 @@ namespace Business.SourceGenerator.Analysis
                     //async (obj, args) => Task.FromResult(await ((Library1.AAA)obj).BBB()))
                     switch (asyncType)
                     {
-                        case AsyncType.None: result = $"(obj, args) => Task.FromResult<object>({result})"; break;
+                        case AsyncType.None: result = $"(obj, args) => {globalTasks}Task.FromResult<{globalObject}>({result})"; break;
                         case AsyncType.Task: result = $"async (obj, args) => {{ await {result}; return default; }}"; break;
                         case AsyncType.TaskGeneric: result = $"async (obj, args) => await {result}"; break;
                         case AsyncType.ValueTask: result = $"async (obj, args) => {{ await {result}; return default; }}"; break;
@@ -2500,8 +2503,8 @@ namespace Business.SourceGenerator.Analysis
             if (!string.IsNullOrEmpty(assemblyName))
             {
                 sb.AppendFormat("namespace {1}{0}", $"{format}{{{format}", assemblyName);
-                sb.AppendFormat(iGeneratorTypeTemp, 
-                    opt.Global ? $"global::{assemblyName}." : default, 
+                sb.AppendFormat(iGeneratorTypeTemp,
+                    opt.Global ? $"global::{assemblyName}." : default,
                     generatorTypes.Any() ? $" {string.Join(", ", generatorTypes)} " : " ",
                     globalMeta,
                     globalSystem,
@@ -2512,9 +2515,9 @@ namespace Business.SourceGenerator.Analysis
             }
             else
             {
-                sb.AppendFormat(iGeneratorTypeTemp, 
-                    opt.Global ? "global::" : default, 
-                    generatorTypes.Any() ? $" {string.Join(", ", generatorTypes)} " : " ", 
+                sb.AppendFormat(iGeneratorTypeTemp,
+                    opt.Global ? "global::" : default,
+                    generatorTypes.Any() ? $" {string.Join(", ", generatorTypes)} " : " ",
                     globalMeta,
                     globalSystem,
                     globalGeneric,
@@ -2664,7 +2667,7 @@ namespace Business.SourceGenerator.Analysis
             System_Collections_Generic,
             System_Collections_ObjectModel,
             System_Threading_Tasks,
-           
+
             System_Object,
             System_String,
             System_Int32,
@@ -2680,7 +2683,7 @@ namespace Business.SourceGenerator.Analysis
                 case GlobalName.System_Collections_Generic: return opt.Global ? "global::System.Collections.Generic." : default;
                 case GlobalName.System_Collections_ObjectModel: return opt.Global ? "global::System.Collections.ObjectModel." : default;
                 case GlobalName.System_Threading_Tasks: return opt.Global ? "global::System.Threading.Tasks." : default;
-                
+
                 case GlobalName.System_Object: return opt.Global ? "global::System.Object" : "object";
                 case GlobalName.System_String: return opt.Global ? "global::System.String" : "string";
                 case GlobalName.System_Int32: return opt.Global ? "global::System.Int32" : "int";
@@ -2696,7 +2699,6 @@ namespace Business.SourceGenerator.Analysis
             var globalMeta = opt.GetGlobalName(GlobalName.Business_SourceGenerator_Meta);
             var globalGeneric = opt.GetGlobalName(GlobalName.System_Collections_Generic);
             var globalString = opt.GetGlobalName(GlobalName.System_String);
-            //var globalObject = opt.GetGlobalName(GlobalName.System_Object);
 
             switch (symbol)
             {
