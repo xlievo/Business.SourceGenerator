@@ -1,4 +1,6 @@
-﻿namespace MyCode
+﻿using System;
+
+namespace MyCode
 {
     public partial class ClassMember
     {
@@ -49,5 +51,21 @@
         public static dynamic? E3;
 
         public static System.Action<int?> F3;
+
+        public ClassMember(string a, int? b, DateTime? c, object d, dynamic e, Action<int?> f, string a1, int? b1, DateTime? c1, object d1, dynamic e1, Action<int?> f1)
+        {
+            A = a;
+            B = b;
+            C = c;
+            D = d;
+            E = e;
+            F = f;
+            A1 = a1;
+            B1 = b1;
+            C1 = c1;
+            D1 = d1;
+            E1 = e1;
+            F1 = f1;
+        }
     }
 }

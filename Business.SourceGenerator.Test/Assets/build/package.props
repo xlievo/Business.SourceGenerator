@@ -1,0 +1,11 @@
+﻿<Project>
+  <PropertyGroup>
+    <Business_SourceGenerator_Test>$(MSBuildThisFileDirectory)../</Business_SourceGenerator_Test>
+  </PropertyGroup>
+  <ItemGroup>
+    <CompilerVisibleProperty Include="Business_SourceGenerator_Test" />
+  </ItemGroup>
+  <ItemGroup>
+    <PackageReference Include="Microsoft.Net.Compilers.Toolset" Version="4.4.0" />
+  </ItemGroup>
+</Project>

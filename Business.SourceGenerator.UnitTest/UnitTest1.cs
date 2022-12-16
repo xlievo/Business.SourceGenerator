@@ -46,7 +46,7 @@ namespace Business.SourceGenerator.Test
         }
 
         [Theory]
-        [InlineData("StructMember.cs")]
+        [InlineData("StructMember.cs")] 
         public void StructMemberTest(string file)
         {
             var path = System.IO.Path.Combine(AppContext.BaseDirectory, "TestTemp", file);

@@ -2106,6 +2106,9 @@ namespace Business.SourceGenerator.Analysis
                 return (key, default);
             }
 
+            var globalSystem = opt.GetGlobalName(GlobalName.System);
+            var globalMeta = opt.GetGlobalName(GlobalName.Business_SourceGenerator_Meta);
+
             var parameterList = new List<string>();
             var parameterList2 = new List<string>();
             var length = 0;
@@ -2155,18 +2158,18 @@ namespace Business.SourceGenerator.Analysis
                     case "Object":
                     case "object":
                         parameterList.Add(value);
-                        parameterList2.Add($"typeof(object), TypeKind.{typeKind}, false, false, null");
+                        parameterList2.Add($"typeof(object), {globalMeta}TypeKind.{typeKind}, false, false, null");
                         break;
                     default:
                         if (SpecialType.System_Object == type.SpecialType || TypeKind.Dynamic == type.TypeKind)
                         {
                             parameterList.Add(value);
-                            parameterList2.Add($"typeof(object), TypeKind.{typeKind}, false, false, null");
+                            parameterList2.Add($"typeof(object), {globalMeta}TypeKind.{typeKind}, false, false, null");
                         }
                         else
                         {
                             parameterList.Add(isValueType ? $"({typeFullNameClean}){value}" : $"{value} as {typeFullNameClean}");
-                            parameterList2.Add($"typeof({typeFullNameClean}), TypeKind.{typeKind}, {(isValueType ? "true" : "false")}, {(parameter.HasExplicitDefaultValue ? "true" : "false")}, {(parameter.HasExplicitDefaultValue ? ToDefaultValue(parameter.Type.SpecialType, parameter.ExplicitDefaultValue) : "default")}");
+                            parameterList2.Add($"typeof({typeFullNameClean}), {globalMeta}TypeKind.{typeKind}, {(isValueType ? "true" : "false")}, {(parameter.HasExplicitDefaultValue ? "true" : "false")}, {(parameter.HasExplicitDefaultValue ? ToDefaultValue(parameter.Type.SpecialType, parameter.ExplicitDefaultValue) : "default")}");
                         }
                         break;
                 }
@@ -2177,11 +2180,9 @@ namespace Business.SourceGenerator.Analysis
                 }
             }
 
-            var globalMeta = opt.GetGlobalName(GlobalName.Business_SourceGenerator_Meta);
-
             var constructors = string.Join(", ", parameterList2.Select(c => $"new {globalMeta}Parameter({c})"));
 
-            constructors = $"new {globalMeta}Constructor({(hasConstructorKey ? $"\"{symbol.GetFullNameStandardFormat()}\"" : "default")}, {sign}, {length}, {(0 < parameterList2.Count ? $"new {globalMeta}Parameter[] {{ {constructors} }}" : $"{(opt.Global ? opt.GetGlobalName(GlobalName.System) : default)}Array.Empty<{globalMeta}Parameter>()")})";
+            constructors = $"new {globalMeta}Constructor({(hasConstructorKey ? $"\"{symbol.GetFullNameStandardFormat()}\"" : "default")}, {sign}, {length}, {(0 < parameterList2.Count ? $"new {globalMeta}Parameter[] {{ {constructors} }}" : $"{globalSystem}Array.Empty<{globalMeta}Parameter>()")})";
 
             return ($"{key}({string.Join(", ", parameterList)})", constructors);
         }
@@ -2535,6 +2536,9 @@ namespace Business.SourceGenerator.Analysis
 
             static void SetGenerics(IEnumerable<INamedTypeSymbol> makeGenerics, Dictionary<string, string> constructorsList, List<string> makeGenericsList, List<string> constructorParametersList, Func<string, string> typeClean, ref int constructorSign, ToCodeOpt opt, params ITypeSymbol[] typeArgument)
             {
+                var globalMeta = opt.GetGlobalName(GlobalName.Business_SourceGenerator_Meta);
+                var globalGeneric = opt.GetGlobalName(GlobalName.System_Collections_Generic);
+
                 foreach (var makeGeneric in makeGenerics)
                 {
                     if (makeGeneric.IsAbstract)
@@ -2558,7 +2562,7 @@ namespace Business.SourceGenerator.Analysis
                             constructorParametersList.Add("default: return default;");
                         }
 
-                        constructorParametersList.Add($"case \"{constructorParameters.key}\": return new List<Constructor> {{ {string.Join(", ", constructorParameters.parameters)} }};");
+                        constructorParametersList.Add($"case \"{constructorParameters.key}\": return new {globalGeneric}List<{globalMeta}Constructor> {{ {string.Join(", ", constructorParameters.parameters)} }};");
                     }
                 }
             }
