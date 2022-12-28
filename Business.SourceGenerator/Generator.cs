@@ -33,7 +33,7 @@ namespace Business.SourceGenerator
         {
             var watchCount = new System.Diagnostics.Stopwatch();
             watchCount.Start();
-            var opt = new Expression.ToCodeOpt(standardFormat: true, global: true);
+            var opt = new Expression.ToCodeOpt(standardFormat: true, global: false);
             var format = opt.StandardFormat ? Environment.NewLine : " ";
             var format2 = opt.StandardFormat ? $"{format}{format}" : format;
 

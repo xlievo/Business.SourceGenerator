@@ -812,6 +812,11 @@ namespace Business.SourceGenerator.Analysis
                 {
                     return $"{GetFullName(named.TypeArguments[0], opt, typeClean2)}{nullable}";
                 }
+
+                if (null == named)
+                {
+                    return $"{GetFullName(symbol.OriginalDefinition, opt, typeClean2)}{nullable}";
+                }
             }
 
             string args = default;
@@ -831,7 +836,7 @@ namespace Business.SourceGenerator.Analysis
 
                     if (0 < named?.TupleElements.Length)
                     {
-                        args = $"<{string.Join(", ", named.TupleElements.Select(c => $"{(TypeKind.Dynamic == c.Type.TypeKind ? objectNameClean : GetFullName(c.Type, opt, typeClean2))}"))}>";
+                        args = $"<{string.Join(", ", named.TupleElements.Select(c => $"{(TypeKind.Dynamic == c.Type.TypeKind && opt.StandardFormat ? objectNameClean : TypeKind.TypeParameter == c.Type.TypeKind ? c.Type.Name : GetFullName(c.Type, new GetFullNameOpt(opt.NoArgs, opt.Args, opt.StandardFormat, opt.UnboundGenericType, opt.Parameters, opt.NoPrefix, opt.Prefix, true), typeClean2))}"))}>";
                     }
                 }
                 else
@@ -2094,7 +2099,7 @@ namespace Business.SourceGenerator.Analysis
             return (key, cleanKey, typeParameters);
         }
 
-        static (string methodSign, string constructors) GetMethodSign(ISymbol symbol, string key, List<(string name, ITypeSymbol typeSymbol)> typeParameters, IEnumerable<IParameterSymbol> parameters, int sign, bool hasConstructorKey, string argName, Func<string, string> typeClean, ToCodeOpt opt, params ITypeSymbol[] typeArgument)
+        static (string methodSign, string constructors, string refs) GetMethodSign(ISymbol symbol, string key, List<(string name, ITypeSymbol typeSymbol)> typeParameters, IEnumerable<IParameterSymbol> parameters, int sign, bool hasConstructorKey, string argName, Func<string, string> typeClean, ToCodeOpt opt, params ITypeSymbol[] typeArgument)
         {
             if (symbol is null)
             {
@@ -2103,22 +2108,25 @@ namespace Business.SourceGenerator.Analysis
 
             if (parameters is null)
             {
-                return (key, default);
+                return (key, default, default);
             }
 
             var globalSystem = opt.GetGlobalName(GlobalName.System);
             var globalMeta = opt.GetGlobalName(GlobalName.Business_SourceGenerator_Meta);
+            var globalObject = opt.GetGlobalName(GlobalName.System_Object);
 
             var parameterList = new List<string>();
             var parameterList2 = new List<string>();
             var length = 0;
+            var refs = string.Empty;
 
             foreach (var parameter in parameters)
             {
                 var value = $"{argName}[{parameter.Ordinal}]";
                 var type = parameter.Type;
                 //var typeFullName = type.GetFullNameStandardFormat();
-                var typeFullNameClean = $"{opt.GetGlobalName(GlobalName.Globa)}{type.GetFullNameStandardFormat(typeClean)}";
+                //var typeFullNameClean = $"{opt.GetGlobalName(GlobalName.Globa)}{type.GetFullName(typeClean: typeClean)}";
+                var typeFullNameClean = $"{opt.GetGlobalName(GlobalName.Globa)}{type.GetFullNameStandardFormat(typeClean: typeClean)}";
                 var isValueType = type.IsValueType;
 
                 //if (typeFullName.StartsWith("System.Span") || typeFullName.StartsWith("System.ReadOnlySpan"))
@@ -2150,6 +2158,7 @@ namespace Business.SourceGenerator.Analysis
 
                 //var typeKind = (type.DeclaringSyntaxReferences.Any() ? type.TypeKind : TypeKind.Unknown).GetName();
                 var typeKind = (SpecialType.None == type?.SpecialType ? type.TypeKind : TypeKind.Unknown).GetName();
+                var parameterListObj = string.Empty;
 
                 switch (typeFullNameClean)
                 {
@@ -2157,22 +2166,45 @@ namespace Business.SourceGenerator.Analysis
                     case "System.Object":
                     case "Object":
                     case "object":
-                        parameterList.Add(value);
-                        parameterList2.Add($"typeof(object), {globalMeta}TypeKind.{typeKind}, false, false, null");
+                        //parameterList.Add(value);
+                        parameterListObj = value;
+                        parameterList2.Add($"typeof({globalObject}), {globalMeta}TypeKind.{typeKind}, false, false, null");
                         break;
                     default:
                         if (SpecialType.System_Object == type.SpecialType || TypeKind.Dynamic == type.TypeKind)
                         {
-                            parameterList.Add(value);
-                            parameterList2.Add($"typeof(object), {globalMeta}TypeKind.{typeKind}, false, false, null");
+                            //parameterList.Add(value);
+                            parameterListObj = value;
+                            parameterList2.Add($"typeof({globalObject}), {globalMeta}TypeKind.{typeKind}, false, false, null");
                         }
                         else
                         {
-                            parameterList.Add(isValueType ? $"({typeFullNameClean}){value}" : $"{value} as {typeFullNameClean}");
+                            //parameterList.Add(isValueType ? $"({typeFullNameClean}){value}" : $"{value} as {typeFullNameClean}");
+                            parameterListObj = isValueType ? $"({typeFullNameClean}){value}" : $"{value} as {typeFullNameClean}";
                             parameterList2.Add($"typeof({typeFullNameClean}), {globalMeta}TypeKind.{typeKind}, {(isValueType ? "true" : "false")}, {(parameter.HasExplicitDefaultValue ? "true" : "false")}, {(parameter.HasExplicitDefaultValue ? ToDefaultValue(parameter.Type.SpecialType, parameter.ExplicitDefaultValue) : "default")}");
                         }
                         break;
                 }
+
+                var argName2 = $"{argName.Split('.')[0]}{parameter.Ordinal}";
+
+                switch (parameter.RefKind)
+                {
+                    case RefKind.None:
+                        break;
+                    case RefKind.Ref:
+                        refs += $"var {argName2} = {parameterListObj}; ";
+                        parameterListObj = $"ref {argName2}";
+                        break;
+                    case RefKind.Out:
+                        parameterListObj = $"out {opt.GetGlobalName(GlobalName.Globa)}{type.GetFullName(typeClean: typeClean)} {argName2}";
+                        break;
+                    case RefKind.In:
+                        break;
+                    default: break;
+                }
+
+                parameterList.Add(parameterListObj);
 
                 if (!parameter.HasExplicitDefaultValue && !parameter.IsParams)
                 {
@@ -2184,10 +2216,10 @@ namespace Business.SourceGenerator.Analysis
 
             constructors = $"new {globalMeta}Constructor({(hasConstructorKey ? $"\"{symbol.GetFullNameStandardFormat()}\"" : "default")}, {sign}, {length}, {(0 < parameterList2.Count ? $"new {globalMeta}Parameter[] {{ {constructors} }}" : $"{globalSystem}Array.Empty<{globalMeta}Parameter>()")})";
 
-            return ($"{key}({string.Join(", ", parameterList)})", constructors);
+            return ($"{key}({string.Join(", ", parameterList)})", constructors, refs);
         }
 
-        static (string methodSign, string constructors) GetMethodSign(ISymbol symbol, IEnumerable<IParameterSymbol> parameters, string argName, Func<string, string> typeClean, ToCodeOpt opt, params ITypeSymbol[] typeArgument)
+        static (string methodSign, string constructors, string refs) GetMethodSign(ISymbol symbol, IEnumerable<IParameterSymbol> parameters, string argName, Func<string, string> typeClean, ToCodeOpt opt, params ITypeSymbol[] typeArgument)
         {
             if (symbol is null)
             {
@@ -2198,7 +2230,7 @@ namespace Business.SourceGenerator.Analysis
 
             if (parameters is null)
             {
-                return (cleanKey, default);
+                return (cleanKey, default, default);
             }
 
             return GetMethodSign(symbol, key, typeParameters, parameters, default, false, argName, typeClean, opt, typeArgument);
@@ -2209,14 +2241,16 @@ namespace Business.SourceGenerator.Analysis
             var globalTasks = opt.GetGlobalName(GlobalName.System_Threading_Tasks);
             var globalObject = opt.GetGlobalName(GlobalName.System_Object);
 
-            var sign = GetMethodSign(method, method.Parameters, "args", typeClean, opt).methodSign;
+            var methodSign = GetMethodSign(method, method.Parameters, "args", typeClean, opt);
+            var sign = methodSign.methodSign;
+            var refs = string.IsNullOrEmpty(methodSign.refs) ? default : methodSign.refs;
 
             if (sign is null)
             {
                 return "(obj, args) => default";
             }
 
-            string result = method.IsStatic ? $"{receiverType}.{sign}" : $"(({receiverType})obj).{sign}";
+            string result = method.IsStatic ? $"{refs}{receiverType}.{sign}" : $"{refs}(({receiverType})obj).{sign}";
 
             if (method.ReturnsVoid)
             {
@@ -2303,12 +2337,22 @@ namespace Business.SourceGenerator.Analysis
 
                 var globalMeta = opt.GetGlobalName(GlobalName.Business_SourceGenerator_Meta);
                 var globalSystem = opt.GetGlobalName(GlobalName.System);
+                var globalString = opt.GetGlobalName(GlobalName.System_String);
+                var globalObject = opt.GetGlobalName(GlobalName.System_Object);
+                var globalBoolean = opt.GetGlobalName(GlobalName.System_Boolean);
 
                 sb.AppendFormat($"public partial {{1}} {{2}} : {globalMeta}IGeneratorAccessor{{0}}{{{{{{0}}", format, type, typeSymbol.GetFullName(new GetFullNameOpt(noPrefix: true)));
                 sb.AppendFormat($"static readonly {globalSystem}Lazy<{globalMeta}IAccessorNamedType> generatorAccessorType = new {globalSystem}Lazy<{globalMeta}IAccessorNamedType>(() => {{1}});{{0}}", format, typeSymbol.ToMeta(opt, typeClean: typeClean));
 
                 sb.AppendLine($"public static {globalMeta}IAccessorNamedType GeneratorAccessorType {{ get => generatorAccessorType.Value; }}");
                 sb.AppendLine($"public {globalMeta}IAccessorNamedType AccessorType() => GeneratorAccessorType;");
+                sb.AppendFormat(accessorTemp,
+                    globalMeta,
+                    $"{(typeSymbol.IsValueType ? $"{format}        this = ({typeSymbol.GetFullName(new GetFullNameOpt(noPrefix: true))})accessor;{format}" : default)}",
+                    globalSystem,
+                    globalString,
+                    globalObject,
+                    globalBoolean);
                 sb.Append("}");
 
                 if (!typeSymbol.ContainingNamespace.IsGlobalNamespace)
@@ -2321,6 +2365,31 @@ namespace Business.SourceGenerator.Analysis
         }
 
         #region Temp
+
+        const string accessorTemp = @"public {5} AccessorSet({3} name, {4} value)
+{{
+    if (name is null)
+    {{
+        throw new {2}ArgumentNullException(nameof(name));
+    }}
+
+    if (AccessorType().Members.TryGetValue(name, out {0}IAccessorMeta meta) && meta is {0}IAccessorMember member)
+    {{
+        if (member.SetValue is null)
+        {{
+            return default;
+        }}
+
+        {0}IGeneratorAccessor accessor = this;
+
+        member.SetValue(ref accessor, value);
+        {1}
+        return true;
+    }}
+
+    return default;
+}}
+";
 
         const string makeGenericTypeTemp = @"case {1}GeneratorTypeOpt.MakeGenericType:
                 {{ 
@@ -2592,6 +2661,7 @@ namespace Business.SourceGenerator.Analysis
                 }
 
                 var constructorKey = GetMethodSign(named, methodKeyClean, typeParameters, constructor.Parameters, constructorSign, hasConstructorKey, "arg.args", typeClean, opt, typeArgument);
+                var refs = string.IsNullOrEmpty(constructorKey.refs) ? default : constructorKey.refs;
 
                 if (constructors.ContainsKey(constructorKey.methodSign))
                 {
@@ -2599,7 +2669,7 @@ namespace Business.SourceGenerator.Analysis
                     continue;
                 }
 
-                constructors.Add(constructorKey.methodSign, $"case {constructorSign}: return new {opt.GetGlobalName(GlobalName.Globa)}{constructorKey.methodSign};");
+                constructors.Add(constructorKey.methodSign, $"case {constructorSign}: {refs}return new {opt.GetGlobalName(GlobalName.Globa)}{constructorKey.methodSign};");
                 parameters.Add(constructorKey.constructors);
 
                 constructorSign++;
@@ -2675,6 +2745,7 @@ namespace Business.SourceGenerator.Analysis
             System_Object,
             System_String,
             System_Int32,
+            System_Boolean,
         }
 
         static string GetGlobalName(this ToCodeOpt opt, GlobalName name)
@@ -2691,6 +2762,7 @@ namespace Business.SourceGenerator.Analysis
                 case GlobalName.System_Object: return opt.Global ? "global::System.Object" : "object";
                 case GlobalName.System_String: return opt.Global ? "global::System.String" : "string";
                 case GlobalName.System_Int32: return opt.Global ? "global::System.Int32" : "int";
+                case GlobalName.System_Boolean: return opt.Global ? "global::System.Boolean" : "bool";
                 default: return default;
             }
         }
@@ -2703,6 +2775,7 @@ namespace Business.SourceGenerator.Analysis
             var globalMeta = opt.GetGlobalName(GlobalName.Business_SourceGenerator_Meta);
             var globalGeneric = opt.GetGlobalName(GlobalName.System_Collections_Generic);
             var globalString = opt.GetGlobalName(GlobalName.System_String);
+            var globalObject = opt.GetGlobalName(GlobalName.System_Object);
 
             switch (symbol)
             {
@@ -3086,11 +3159,11 @@ namespace Business.SourceGenerator.Analysis
 
                             if (symbol.IsStatic)
                             {
-                                setValue = $"(obj, value) => {name} = {value}";
+                                setValue = $"(ref {globalMeta}IGeneratorAccessor obj, {globalObject} value) => {name} = {value}";
                             }
                             else
                             {
-                                setValue = $"(obj, value) => {{ var obj2 = ({receiverType})obj; obj2.{symbol.Name} = {value}; }}";
+                                setValue = $"(ref {globalMeta}IGeneratorAccessor obj, {globalObject} value) => {{ var obj2 = ({receiverType})obj; obj2.{symbol.Name} = {value}; obj = obj2; }}";
                             }
                         }
 
@@ -3174,11 +3247,11 @@ namespace Business.SourceGenerator.Analysis
 
                             if (symbol.IsStatic)
                             {
-                                setValue = $"(obj, value) => {name} = {value}";
+                                setValue = $"(ref {globalMeta}IGeneratorAccessor obj, {globalObject} value) => {name} = {value}";
                             }
                             else
                             {
-                                setValue = $"(obj, value) => {{ var obj2 = ({receiverType})obj; obj2.{symbol.Name} = {value}; }}";
+                                setValue = $"(ref {globalMeta}IGeneratorAccessor obj, {globalObject} value) => {{ var obj2 = ({receiverType})obj; obj2.{symbol.Name} = {value}; obj = obj2; }}";
                             }
                         }
 

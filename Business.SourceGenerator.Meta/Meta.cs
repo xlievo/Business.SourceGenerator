@@ -40,6 +40,8 @@ namespace Business.SourceGenerator.Meta
         /// </summary>
         /// <returns></returns>
         public IAccessorNamedType AccessorType();
+
+        public bool AccessorSet(string name, object value);
     }
 
     public readonly struct GeneratorTypeArg
@@ -1542,6 +1544,8 @@ namespace Business.SourceGenerator.Meta
         public Func<object, object[], Task<object>> GetValueAsync { get; }
     }
 
+    public delegate void SetValue(ref IGeneratorAccessor obj, object value);
+
     /// <summary>
     /// IAccessorMember
     /// </summary>
@@ -1576,7 +1580,7 @@ namespace Business.SourceGenerator.Meta
         /// <summary>
         /// Set value.
         /// </summary>
-        public Action<object, object> SetValue { get; }
+        public SetValue SetValue { get; }
     }
 
     /// <summary>
@@ -3218,7 +3222,7 @@ namespace Business.SourceGenerator.Meta
     /// </remarks>
     public readonly struct AccessorField : IAccessorField
     {
-        public AccessorField(Accessibility declaredAccessibility, bool canBeReferencedByName, bool isImplicitlyDeclared, bool isExtern, bool isSealed, bool isAbstract, bool isOverride, bool isVirtual, bool isStatic, bool isDefinition, string name, string fullName, Kind kind, bool isDeclaringSyntaxReferences, bool isReadOnly, IAccessorType type, string typeFullName, bool isRepeat, bool isConst, bool isVolatile, bool isFixedSizeBuffer, int fixedSize, NullableAnnotation nullableAnnotation, bool hasConstantValue, object constantValue, bool isExplicitlyNamedTupleElement, Func<object, object> getValue, Action<object, object> setValue)
+        public AccessorField(Accessibility declaredAccessibility, bool canBeReferencedByName, bool isImplicitlyDeclared, bool isExtern, bool isSealed, bool isAbstract, bool isOverride, bool isVirtual, bool isStatic, bool isDefinition, string name, string fullName, Kind kind, bool isDeclaringSyntaxReferences, bool isReadOnly, IAccessorType type, string typeFullName, bool isRepeat, bool isConst, bool isVolatile, bool isFixedSizeBuffer, int fixedSize, NullableAnnotation nullableAnnotation, bool hasConstantValue, object constantValue, bool isExplicitlyNamedTupleElement, Func<object, object> getValue, SetValue setValue)
         {
             DeclaredAccessibility = declaredAccessibility;
             CanBeReferencedByName = canBeReferencedByName;
@@ -3377,7 +3381,7 @@ namespace Business.SourceGenerator.Meta
         /// <summary>
         /// Set value.
         /// </summary>
-        public Action<object, object> SetValue { get; }
+        public SetValue SetValue { get; }
 
         #endregion
 
@@ -3444,7 +3448,7 @@ namespace Business.SourceGenerator.Meta
     /// </remarks>
     public readonly struct AccessorProperty : IAccessorProperty
     {
-        public AccessorProperty(Accessibility declaredAccessibility, bool canBeReferencedByName, bool isImplicitlyDeclared, bool isExtern, bool isSealed, bool isAbstract, bool isOverride, bool isVirtual, bool isStatic, bool isDefinition, string name, string fullName, Kind kind, bool isDeclaringSyntaxReferences, bool isReadOnly, IAccessorType type, string typeFullName, bool isRepeat, bool isIndexer, NullableAnnotation nullableAnnotation, RefKind refKind, bool returnsByRefReadonly, bool returnsByRef, bool isWithEvents, bool isWriteOnly, Func<object, object> getValue, Action<object, object> setValue)
+        public AccessorProperty(Accessibility declaredAccessibility, bool canBeReferencedByName, bool isImplicitlyDeclared, bool isExtern, bool isSealed, bool isAbstract, bool isOverride, bool isVirtual, bool isStatic, bool isDefinition, string name, string fullName, Kind kind, bool isDeclaringSyntaxReferences, bool isReadOnly, IAccessorType type, string typeFullName, bool isRepeat, bool isIndexer, NullableAnnotation nullableAnnotation, RefKind refKind, bool returnsByRefReadonly, bool returnsByRef, bool isWithEvents, bool isWriteOnly, Func<object, object> getValue, SetValue setValue)
         {
             DeclaredAccessibility = declaredAccessibility;
             CanBeReferencedByName = canBeReferencedByName;
@@ -3602,7 +3606,7 @@ namespace Business.SourceGenerator.Meta
         /// <summary>
         /// Set value.
         /// </summary>
-        public Action<object, object> SetValue { get; }
+        public SetValue SetValue { get; }
 
         #endregion
 
@@ -3657,7 +3661,7 @@ namespace Business.SourceGenerator.Meta
     /// </remarks>
     public readonly struct AccessorEvent : IAccessorEvent
     {
-        public AccessorEvent(Accessibility declaredAccessibility, bool canBeReferencedByName, bool isImplicitlyDeclared, bool isExtern, bool isSealed, bool isAbstract, bool isOverride, bool isVirtual, bool isStatic, bool isDefinition, string name, string fullName, Kind kind, bool isDeclaringSyntaxReferences, bool isReadOnly, IAccessorType type, string typeFullName, bool isRepeat, NullableAnnotation nullableAnnotation, bool isWindowsRuntimeEvent, IAccessorMethod addMethod, IAccessorMethod removeMethod, Func<object, object> getValue, Action<object, object> setValue)
+        public AccessorEvent(Accessibility declaredAccessibility, bool canBeReferencedByName, bool isImplicitlyDeclared, bool isExtern, bool isSealed, bool isAbstract, bool isOverride, bool isVirtual, bool isStatic, bool isDefinition, string name, string fullName, Kind kind, bool isDeclaringSyntaxReferences, bool isReadOnly, IAccessorType type, string typeFullName, bool isRepeat, NullableAnnotation nullableAnnotation, bool isWindowsRuntimeEvent, IAccessorMethod addMethod, IAccessorMethod removeMethod, Func<object, object> getValue, SetValue setValue)
         {
             DeclaredAccessibility = declaredAccessibility;
             CanBeReferencedByName = canBeReferencedByName;
@@ -3812,7 +3816,7 @@ namespace Business.SourceGenerator.Meta
         /// <summary>
         /// Set value.
         /// </summary>
-        public Action<object, object> SetValue { get; }
+        public SetValue SetValue { get; }
 
         #endregion
 

@@ -147,6 +147,7 @@ namespace Business.SourceGenerator
             return member.GetValueAsync(accessor, args);
         }
 
+        /*
         public static bool AccessorSet(this IGeneratorAccessor accessor, string name, object value)
         {
             if (name is null)
@@ -161,14 +162,14 @@ namespace Business.SourceGenerator
                     return default;
                 }
 
-                member.SetValue(accessor, value);
+                member.SetValue(ref accessor, value);
 
                 return true;
             }
 
             return default;
         }
-
+        */
         #region IGeneratorType
 
         static string GetGenericType(Type type)

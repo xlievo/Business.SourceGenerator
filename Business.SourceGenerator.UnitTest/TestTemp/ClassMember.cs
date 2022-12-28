@@ -1,14 +1,15 @@
-﻿using System;
-
+﻿
 namespace MyCode
 {
     public partial class ClassMember
     {
-        public string A { get; set; }
+        const string ADEF = "ADEF!!!";
 
-        public int? B { get; set; }
+        public string A { get; set; } = ADEF;
 
-        public System.DateTime? C { get; set; }
+        public int? B { get; set; } = 33;
+
+        public System.DateTime? C { get; set; } = default;
 
         public object? D { get; set; }
 
@@ -16,17 +17,19 @@ namespace MyCode
 
         public System.Action<int?>? F;
 
-        public string A1;
+        public string A1 = "a1def!!!";
 
-        public int? B1;
+        public int? B1 = 333;
 
-        public System.DateTime? C1;
+        public System.DateTime? C1 = System.DateTime.Now;
 
         public object? D1;
 
         public dynamic? E1;
 
         public System.Action<int?> F1;
+
+        //========================================================//
 
         public static string A2 { get; set; }
 
@@ -52,7 +55,7 @@ namespace MyCode
 
         public static System.Action<int?> F3;
 
-        public ClassMember(string a, int? b, DateTime? c, object d, dynamic e, Action<int?> f, string a1, int? b1, DateTime? c1, object d1, dynamic e1, Action<int?> f1)
+        public ClassMember(string a, int? b, System.DateTime? c, object d, dynamic e, System.Action<int?> f, string a1, int? b1, System.DateTime? c1, object d1, dynamic e1, System.Action<int?> f1)
         {
             A = a;
             B = b;

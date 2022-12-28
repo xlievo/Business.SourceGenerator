@@ -1,4 +1,5 @@
-﻿namespace MyCode
+﻿
+namespace MyCode
 {
     public partial struct StructMember
     {
@@ -49,5 +50,24 @@
         public static dynamic? E3;
 
         public static System.Action<int?> F3;
+
+        public StructMember(ref string? a, out int? b, ref (int? c1, string? c2) c, out (int? c1, string? c2) d)
+        {
+            d = default;
+            var dd = c.c1 as dynamic;
+
+            //this.A = a;
+            b = 9;
+        }
+
+        public void StructMember2(ref string? a, out int? b, ref (int? c1, string? c2) c, out (int? c1, string? c2) d)
+        {
+            d = default;
+            var dd = c.c1 as dynamic;
+
+            //this.A = a;
+            b = 9;
+        }
     }
 }
+
