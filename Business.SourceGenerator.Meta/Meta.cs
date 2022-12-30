@@ -41,6 +41,12 @@ namespace Business.SourceGenerator.Meta
         /// <returns></returns>
         public IAccessorNamedType AccessorType();
 
+        /// <summary>
+        /// AccessorSet
+        /// </summary>
+        /// <param name="name"></param>
+        /// <param name="value"></param>
+        /// <returns></returns>
         public bool AccessorSet(string name, object value);
     }
 

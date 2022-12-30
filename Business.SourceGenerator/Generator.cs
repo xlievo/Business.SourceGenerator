@@ -29,11 +29,26 @@ namespace Business.SourceGenerator
         /// </summary>
         const string GeneratorCodeName = "BusinessSourceGenerator";
 
+        readonly bool global = false;
+
+        //internal Generator(bool global = false)
+        //{
+        //    this.global = global;
+        //}
+
         public void Execute(GeneratorExecutionContext context)
         {
             var watchCount = new System.Diagnostics.Stopwatch();
             watchCount.Start();
-            var opt = new Expression.ToCodeOpt(standardFormat: true, global: false);
+
+            var global = !string.IsNullOrEmpty(context.GetMSBuildProperty("Business_SourceGenerator_Global"));
+
+            if (!global)
+            {
+                global = this.global;
+            }
+
+            var opt = new Expression.ToCodeOpt(standardFormat: true, global: global);
             var format = opt.StandardFormat ? Environment.NewLine : " ";
             var format2 = opt.StandardFormat ? $"{format}{format}" : format;
 

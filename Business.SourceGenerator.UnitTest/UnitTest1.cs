@@ -14,60 +14,60 @@ namespace Business.SourceGenerator.Test
     {
         [Theory]
         [InlineData("ClassGeneric.cs")]
-        public void ClassGenericTest(string file)
+        public void ClassGenericTest(string file, bool global = false)
         {
             var path = System.IO.Path.Combine(AppContext.BaseDirectory, "TestTemp", file);
 
             Debug.Assert(System.IO.File.Exists(path));
 
-            var source = Compilation(path);
+            var source = Compilation(path, global);
         }
 
         [Theory]
         [InlineData("ClassMember.cs")]
-        public void ClassMemberTest(string file)
+        public void ClassMemberTest(string file, bool global = false)
         {
             var path = System.IO.Path.Combine(AppContext.BaseDirectory, "TestTemp", file);
 
             Debug.Assert(System.IO.File.Exists(path));
 
-            var source = Compilation(path);
+            var source = Compilation(path, global);
         }
 
         [Theory]
         [InlineData("ClassMethod.cs")]
-        public void ClassMethodTest(string file)
+        public void ClassMethodTest(string file, bool global = false)
         {
             var path = System.IO.Path.Combine(AppContext.BaseDirectory, "TestTemp", file);
 
             Debug.Assert(System.IO.File.Exists(path));
 
-            var source = Compilation(path);
+            var source = Compilation(path, global);
         }
 
         [Theory]
         [InlineData("StructMember.cs")] 
-        public void StructMemberTest(string file)
+        public void StructMemberTest(string file, bool global = false)
         {
             var path = System.IO.Path.Combine(AppContext.BaseDirectory, "TestTemp", file);
 
             Debug.Assert(System.IO.File.Exists(path));
 
-            var source = Compilation(path);
+            var source = Compilation(path, global);
         }
 
         [Theory]
         [InlineData("StructMethod.cs")]
-        public void StructMethodTest(string file)
+        public void StructMethodTest(string file, bool global = false)
         {
             var path = System.IO.Path.Combine(AppContext.BaseDirectory, "TestTemp", file);
 
             Debug.Assert(System.IO.File.Exists(path));
 
-            var source = Compilation(path);
+            var source = Compilation(path, global);
         }
 
-        static string Compilation(string file)
+        static string Compilation(string file, bool global = false)
         {
             // Create the 'input' compilation that the generator will act on
             Compilation inputCompilation = CreateCompilation(System.IO.File.ReadAllText(file));
