@@ -78,6 +78,15 @@ namespace Business.SourceGenerator
             return default;
         }
 
+        /// <summary>
+        /// AccessorGet
+        /// </summary>
+        /// <param name="accessor"></param>
+        /// <param name="name"></param>
+        /// <param name="value"></param>
+        /// <param name="args"></param>
+        /// <returns></returns>
+        /// <exception cref="ArgumentNullException"></exception>
         public static bool AccessorGet(this IGeneratorAccessor accessor, string name, out object value, params object[] args)
         {
             if (accessor is null)
@@ -122,6 +131,14 @@ namespace Business.SourceGenerator
             return default;
         }
 
+        /// <summary>
+        /// AccessorGetAsync
+        /// </summary>
+        /// <param name="accessor"></param>
+        /// <param name="name"></param>
+        /// <param name="args"></param>
+        /// <returns></returns>
+        /// <exception cref="ArgumentNullException"></exception>
         public static Task<object> AccessorGetAsync(this IGeneratorAccessor accessor, string name, params object[] args)
         {
             if (accessor is null)
@@ -170,6 +187,25 @@ namespace Business.SourceGenerator
             return default;
         }
         */
+
+        /// <summary>
+        /// AccessorSet
+        /// </summary>
+        /// <typeparam name="Type"></typeparam>
+        /// <param name="accessor"></param>
+        /// <param name="name"></param>
+        /// <param name="value"></param>
+        /// <returns></returns>
+        public static Type AccessorSet<Type>(this IGeneratorAccessor accessor, string name, object value)
+        {
+            if (accessor.AccessorSet(name, value))
+            {
+                return (Type)accessor;
+            }
+
+            return default;
+        }
+
         #region IGeneratorType
 
         static string GetGenericType(Type type)
@@ -349,6 +385,15 @@ namespace Business.SourceGenerator
 
             return value(new GeneratorTypeArg(GetGenericType(type.IsGenericTypeDefinition ? type : type.GetGenericTypeDefinition())), GeneratorTypeOpt.MakeGenericType) as Type;
         }
+
+        /// <summary>
+        /// Create objects of pre built type.
+        /// </summary>
+        /// <typeparam name="Type"></typeparam>
+        /// <param name="type">Target type</param>
+        /// <param name="args">An array of arguments that match in number, order, and type the parameters of the constructor to invoke. If args is an empty array or null, the constructor that takes no parameters (the parameterless constructor) is invoked.</param>
+        /// <returns>A reference to the newly created object.</returns>
+        public static Type CreateInstance<Type>(this System.Type type, params object[] args) => (Type)CreateInstance(GeneratorCode, type, args);
 
         /// <summary>
         /// Create objects of pre built type.

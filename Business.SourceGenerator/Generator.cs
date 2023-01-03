@@ -41,12 +41,12 @@ namespace Business.SourceGenerator
             var watchCount = new System.Diagnostics.Stopwatch();
             watchCount.Start();
 
-            var global = !string.IsNullOrEmpty(context.GetMSBuildProperty("Business_SourceGenerator_Global"));
+            //var global = !string.IsNullOrEmpty(context.GetMSBuildProperty("Business_SourceGenerator_Global"));
 
-            if (!global)
-            {
-                global = this.global;
-            }
+            //if (!global)
+            //{
+            //    global = this.global;
+            //}
 
             var opt = new Expression.ToCodeOpt(standardFormat: true, global: global);
             var format = opt.StandardFormat ? Environment.NewLine : " ";
