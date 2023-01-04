@@ -349,7 +349,7 @@ namespace Business.SourceGenerator
         /// <param name="type">Current generic type.</param>
         /// <param name="typeArgument">An array of types to be substituted for the type parameters of the current generic type.</param>
         /// <returns></returns>
-        public static Type MakeGenericTypes(this IGeneratorType generatorType, Type type, params Type[] typeArgument)
+        public static Type GetGenericType(this IGeneratorType generatorType, Type type, params Type[] typeArgument)
         {
             if (type is null)
             {
