@@ -36,16 +36,16 @@ namespace Business.SourceGenerator.Meta
     public interface IGeneratorAccessor
     {
         /// <summary>
-        /// IAccessorNamedType
+        /// Metadata objects.
         /// </summary>
         /// <returns></returns>
         public IAccessorNamedType AccessorType();
 
         /// <summary>
-        /// AccessorSet
+        /// Sets the property or field value of a specified object.
         /// </summary>
-        /// <param name="name"></param>
-        /// <param name="value"></param>
+        /// <param name="name">property or field name.</param>
+        /// <param name="value">The new value.</param>
         /// <returns></returns>
         public bool AccessorSet(string name, object value);
     }

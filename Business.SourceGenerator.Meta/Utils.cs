@@ -79,13 +79,31 @@ namespace Business.SourceGenerator
         }
 
         /// <summary>
-        /// AccessorGet
+        /// Gets the property or field value of a specified object.
         /// </summary>
-        /// <param name="accessor"></param>
-        /// <param name="name"></param>
-        /// <param name="value"></param>
-        /// <param name="args"></param>
-        /// <returns></returns>
+        /// <typeparam name="Type">Type of returned object.</typeparam>
+        /// <param name="accessor">The object whose value will be get.</param>
+        /// <param name="name">property or field name.</param>
+        /// <param name="value">The property or field value of the specified object.</param>
+        /// <param name="args">Parameter object of calling method.</param>
+        /// <returns>Return to true successfully.</returns>
+        public static bool AccessorGet<Type>(this IGeneratorAccessor accessor, string name, out Type value, params object[] args)
+        {
+            var result = AccessorGet(accessor, name, out object value2, args);
+
+            value = (Type)value2;
+
+            return result;
+        }
+
+        /// <summary>
+        /// Gets the property or field value of a specified object.
+        /// </summary>
+        /// <param name="accessor">The object whose value will be get.</param>
+        /// <param name="name">property or field name.</param>
+        /// <param name="value">The property or field value of the specified object.</param>
+        /// <param name="args">Parameter object of calling method.</param>
+        /// <returns>Return to true successfully.</returns>
         /// <exception cref="ArgumentNullException"></exception>
         public static bool AccessorGet(this IGeneratorAccessor accessor, string name, out object value, params object[] args)
         {
@@ -132,12 +150,28 @@ namespace Business.SourceGenerator
         }
 
         /// <summary>
-        /// AccessorGetAsync
+        /// Gets the method value of a specified object.
         /// </summary>
-        /// <param name="accessor"></param>
-        /// <param name="name"></param>
-        /// <param name="args"></param>
-        /// <returns></returns>
+        /// <typeparam name="Type">Type of returned object.</typeparam>
+        /// <param name="accessor">The object whose value will be get.</param>
+        /// <param name="name">method name.</param>
+        /// <param name="args">Parameter object of calling method.</param>
+        /// <returns>Specifies the method return value of the object.</returns>
+        /// <exception cref="ArgumentNullException"></exception>
+        public static async Task<Type> AccessorGetAsync<Type>(this IGeneratorAccessor accessor, string name, params object[] args)
+        {
+            var result = await AccessorGetAsync(accessor, name, args);
+
+            return (Type)result;
+        }
+
+        /// <summary>
+        /// Gets the method value of a specified object.
+        /// </summary>
+        /// <param name="accessor">The object whose value will be get.</param>
+        /// <param name="name">method name.</param>
+        /// <param name="args">Parameter object of calling method.</param>
+        /// <returns>Specifies the method return value of the object.</returns>
         /// <exception cref="ArgumentNullException"></exception>
         public static Task<object> AccessorGetAsync(this IGeneratorAccessor accessor, string name, params object[] args)
         {
@@ -189,12 +223,12 @@ namespace Business.SourceGenerator
         */
 
         /// <summary>
-        /// AccessorSet
+        /// Sets the property or field or method value of a specified object.
         /// </summary>
         /// <typeparam name="Type"></typeparam>
-        /// <param name="accessor"></param>
-        /// <param name="name"></param>
-        /// <param name="value"></param>
+        /// <param name="accessor">The object whose value will be set.</param>
+        /// <param name="name">property or field name.</param>
+        /// <param name="value">The new value.</param>
         /// <returns></returns>
         public static Type AccessorSet<Type>(this IGeneratorAccessor accessor, string name, object value)
         {
@@ -323,7 +357,7 @@ namespace Business.SourceGenerator
         /// <typeparam name="Type">An type parameter to be substituted for the type parameters of the current generic type.</typeparam>
         /// <param name="type">Current generic type.</param>
         /// <returns>A System.Type object representing the resulting constructed type.</returns>
-        public static System.Type MakeGenericType<Type>(this System.Type type) => MakeGenericTypes(GeneratorCode, type, typeof(Type));
+        public static System.Type GetGenericType<Type>(this System.Type type) => GetGenericType(GeneratorCode, type, typeof(Type));
 
         /// <summary>
         /// Substitutes the generic type parameter for the type parameters of the  current generic type definition and returns a System.Type object representing the resulting constructed type.
@@ -332,7 +366,7 @@ namespace Business.SourceGenerator
         /// <param name="generatorType">Target IGeneratorType.</param>
         /// <param name="type">Current generic type.</param>
         /// <returns>A System.Type object representing the resulting constructed type.</returns>
-        public static System.Type MakeGenericType<Type>(this IGeneratorType generatorType, System.Type type) => MakeGenericTypes(generatorType, type, typeof(Type));
+        public static System.Type GetGenericType<Type>(this IGeneratorType generatorType, System.Type type) => GetGenericType(generatorType, type, typeof(Type));
 
         /// <summary>
         /// Substitutes the elements of an array of types for the type parameters of the current generic type definition and returns a System.Type object representing the resulting constructed type.
@@ -340,7 +374,7 @@ namespace Business.SourceGenerator
         /// <param name="type">Current generic type.</param>
         /// <param name="typeArgument">An array of types to be substituted for the type parameters of the current generic type.</param>
         /// <returns>A System.Type object representing the resulting constructed type.</returns>
-        public static Type MakeGenericTypes(this Type type, params Type[] typeArgument) => MakeGenericTypes(GeneratorCode, type, typeArgument);
+        public static Type GetGenericType(this Type type, params Type[] typeArgument) => GetGenericType(GeneratorCode, type, typeArgument);
 
         /// <summary>
         /// Substitutes the elements of an array of types for the type parameters of the current generic type definition and returns a System.Type object representing the resulting constructed type.
@@ -348,7 +382,7 @@ namespace Business.SourceGenerator
         /// <param name="generatorType">Target IGeneratorType.</param>
         /// <param name="type">Current generic type.</param>
         /// <param name="typeArgument">An array of types to be substituted for the type parameters of the current generic type.</param>
-        /// <returns></returns>
+        /// <returns>A System.Type object representing the resulting constructed type.</returns>
         public static Type GetGenericType(this IGeneratorType generatorType, Type type, params Type[] typeArgument)
         {
             if (type is null)
