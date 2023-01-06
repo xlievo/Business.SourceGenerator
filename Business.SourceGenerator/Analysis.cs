@@ -2250,17 +2250,17 @@ namespace Business.SourceGenerator.Analysis
                 return "(obj, args) => default";
             }
 
-            string result = method.IsStatic ? $"{refs}{receiverType}.{sign}" : $"{refs}(({receiverType})obj).{sign}";
+            string result = method.IsStatic ? $"{receiverType}.{sign}" : $"(({receiverType})obj).{sign}";
 
             if (method.ReturnsVoid)
             {
                 if (asTask)
                 {
-                    result = $"{result}; return {globalTasks}Task.FromResult<{globalObject}>(default);";
+                    result = $"{refs}{result}; return {globalTasks}Task.FromResult<{globalObject}>(default);";
                 }
                 else
                 {
-                    result = $"{result}; return default;";
+                    result = $"{refs}{result}; return default;";
                 }
 
                 result = $"(obj, args) => {{ {result} }}";
@@ -2270,21 +2270,21 @@ namespace Business.SourceGenerator.Analysis
                 if (asTask)
                 {
                     var asyncType = GetAsyncType(method.ReturnType);
-                    //async (obj, args) => Task.FromResult(await ((Library1.AAA)obj).BBB()))
+
                     switch (asyncType)
                     {
-                        case AsyncType.None: result = $"(obj, args) => {globalTasks}Task.FromResult<{globalObject}>({result})"; break;
-                        case AsyncType.Task: result = $"async (obj, args) => {{ await {result}; return default; }}"; break;
-                        case AsyncType.TaskGeneric: result = $"async (obj, args) => await {result}"; break;
-                        case AsyncType.ValueTask: result = $"async (obj, args) => {{ await {result}; return default; }}"; break;
-                        case AsyncType.ValueTaskGeneric: result = $"async (obj, args) => await {result}"; break;
+                        case AsyncType.None: result = $"(obj, args) => {{ {refs}return {globalTasks}Task.FromResult<{globalObject}>({result}); }}"; break;
+                        case AsyncType.Task: result = $"async (obj, args) => {{ {refs}await {result}; return default; }}"; break;
+                        case AsyncType.TaskGeneric: result = $"async (obj, args) => {{ {refs}return await {result}; }}"; break;
+                        case AsyncType.ValueTask: result = $"async (obj, args) => {{ {refs}await {result}; return default; }}"; break;
+                        case AsyncType.ValueTaskGeneric: result = $"async (obj, args) => {{ {refs}return await {result}; }}"; break;
                         //case AsyncType.Other: break;
                         default: break;
                     }
                 }
                 else
                 {
-                    result = $"(obj, args) => {result}";
+                    result = $"(obj, args) => {{ {refs}return {result}; }}";
                 }
             }
 

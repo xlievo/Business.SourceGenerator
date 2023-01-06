@@ -52,7 +52,7 @@ namespace Business.SourceGenerator.Test
             var path = System.IO.Path.Combine(AppContext.BaseDirectory, "TestTemp", file);
 
             Debug.Assert(System.IO.File.Exists(path));
-
+            
             var source = Compilation(path, global);
         }
 
