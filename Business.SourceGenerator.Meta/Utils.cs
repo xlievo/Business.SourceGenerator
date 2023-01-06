@@ -156,13 +156,18 @@ namespace Business.SourceGenerator
         /// <param name="accessor">The object whose value will be get.</param>
         /// <param name="name">method name.</param>
         /// <param name="args">Parameter object of calling method.</param>
-        /// <returns>Specifies the method return value of the object.</returns>
+        /// <returns>Specifies the method return value of the object. Failed to return default object.</returns>
         /// <exception cref="ArgumentNullException"></exception>
         public static async Task<Type> AccessorGetAsync<Type>(this IGeneratorAccessor accessor, string name, params object[] args)
         {
-            var result = await AccessorGetAsync(accessor, name, args);
+            var result = AccessorGetAsync(accessor, name, args);
 
-            return (Type)result;
+            if (result is null)
+            {
+                return default;
+            }
+
+            return (Type)await result;
         }
 
         /// <summary>
@@ -171,7 +176,7 @@ namespace Business.SourceGenerator
         /// <param name="accessor">The object whose value will be get.</param>
         /// <param name="name">method name.</param>
         /// <param name="args">Parameter object of calling method.</param>
-        /// <returns>Specifies the method return value of the object.</returns>
+        /// <returns>Specifies the method return value of the object. Failed to return null.</returns>
         /// <exception cref="ArgumentNullException"></exception>
         public static Task<object> AccessorGetAsync(this IGeneratorAccessor accessor, string name, params object[] args)
         {
@@ -223,7 +228,7 @@ namespace Business.SourceGenerator
         */
 
         /// <summary>
-        /// Sets the property or field or method value of a specified object.
+        /// Sets the property or field value of a specified object.
         /// </summary>
         /// <typeparam name="Type"></typeparam>
         /// <param name="accessor">The object whose value will be set.</param>
