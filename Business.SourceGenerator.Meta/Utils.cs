@@ -91,7 +91,7 @@ namespace Business.SourceGenerator
         {
             var result = AccessorGet(accessor, name, out object value2, args);
 
-            value = (Type)value2;
+            value = result ? (Type)value2 : default;
 
             return result;
         }
