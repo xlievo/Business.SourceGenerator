@@ -79,7 +79,7 @@ namespace Business.SourceGenerator
         }
 
         /// <summary>
-        /// Gets the property or field value of a specified object.
+        /// Gets the property or field or method value of a specified object.
         /// </summary>
         /// <typeparam name="Type">Type of returned object.</typeparam>
         /// <param name="accessor">The object whose value will be get.</param>
@@ -97,7 +97,7 @@ namespace Business.SourceGenerator
         }
 
         /// <summary>
-        /// Gets the property or field value of a specified object.
+        /// Gets the property or field or method value of a specified object.
         /// </summary>
         /// <param name="accessor">The object whose value will be get.</param>
         /// <param name="name">property or field name.</param>
@@ -160,14 +160,9 @@ namespace Business.SourceGenerator
         /// <exception cref="ArgumentNullException"></exception>
         public static async Task<Type> AccessorGetAsync<Type>(this IGeneratorAccessor accessor, string name, params object[] args)
         {
-            var result = AccessorGetAsync(accessor, name, args);
+            var result = await AccessorGetAsync(accessor, name, args);
 
-            if (result is null)
-            {
-                return default;
-            }
-
-            return (Type)await result;
+            return (Type)result;
         }
 
         /// <summary>
@@ -182,22 +177,22 @@ namespace Business.SourceGenerator
         {
             if (accessor is null)
             {
-                throw new ArgumentNullException(nameof(accessor));
+                return Task.FromException<object>(new ArgumentNullException(nameof(accessor)));
             }
 
             if (name is null)
             {
-                throw new ArgumentNullException(nameof(name));
+                return Task.FromException<object>(new ArgumentNullException(nameof(name)));
             }
 
             if (args is null)
             {
-                throw new ArgumentNullException(nameof(args));
+                return Task.FromException<object>(new ArgumentNullException(nameof(args)));
             }
 
             if (!accessor.AccessorType().Members.TryGetValue(name, out IAccessorMeta meta) || !(meta is IAccessorMethod member) || member.GetValueAsync is null)
             {
-                return default;
+                return Task.FromException<object>(new MemberAccessException($"The current member \"{name}\" does not exist."));
             }
 
             return member.GetValueAsync(accessor, args);
