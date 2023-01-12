@@ -29,13 +29,18 @@ namespace Business.SourceGenerator
         /// </summary>
         const string GeneratorCodeName = "BusinessSourceGenerator";
 
-        static readonly Lazy<IGeneratorType> generatorCode = new Lazy<IGeneratorType>(() => GetGenericType(System.Reflection.Assembly.GetEntryAssembly()));
+        static readonly Lazy<IGeneratorType> generatorCode = new Lazy<IGeneratorType>(() => GetGenericType(GlobalEntryAssemblyName is null ? System.Reflection.Assembly.GetEntryAssembly() : AppDomain.CurrentDomain.GetAssemblies().FirstOrDefault(c => c.FullName.StartsWith($"{GlobalEntryAssemblyName},"))));
 
         /// <summary>
-        /// IGeneratorCode in Assembly.GetEntryAssembly().
+        /// IGeneratorCode in the global entry assembly.
         /// <para>According to the compilation order, the entry assembly will be compiled last.</para>
         /// </summary>
         public static IGeneratorType GeneratorCode { get => generatorCode.Value; }
+
+        /// <summary>
+        /// Specify the global entry assembly name. The default is System.Reflection.Assembly.GetEntryAssembly().
+        /// </summary>
+        public static string GlobalEntryAssemblyName = null;
 
         //public static bool SetGeneratorCode(System.Reflection.Assembly assembly)
         //{
@@ -48,7 +53,7 @@ namespace Business.SourceGenerator
 
         //    if (null != type)
         //    {
-        //        GeneratorCode = type.GetProperty("Generator").GetValue(null) as IGeneratorType;
+        //        generatorCode = type.GetProperty("Generator").GetValue(null) as IGeneratorType;
 
         //        return true;
         //    }
@@ -68,7 +73,7 @@ namespace Business.SourceGenerator
                 throw new ArgumentNullException(nameof(assembly));
             }
 
-            var type = assembly.GetType($"{assembly?.GetName().Name}.{GeneratorCodeName}", false);
+            var type = assembly.GetType($"{assembly.GetName().Name}.{GeneratorCodeName}", false);
 
             if (null != type)
             {
@@ -156,8 +161,9 @@ namespace Business.SourceGenerator
         /// <param name="accessor">The object whose value will be get.</param>
         /// <param name="name">method name.</param>
         /// <param name="args">Parameter object of calling method.</param>
-        /// <returns>Specifies the method return value of the object. Failed to return default object.</returns>
+        /// <returns>Specifies the method return value of the object.</returns>
         /// <exception cref="ArgumentNullException"></exception>
+        /// <exception cref="MemberAccessException"></exception>
         public static async Task<Type> AccessorGetAsync<Type>(this IGeneratorAccessor accessor, string name, params object[] args)
         {
             var result = await AccessorGetAsync(accessor, name, args);
@@ -171,8 +177,9 @@ namespace Business.SourceGenerator
         /// <param name="accessor">The object whose value will be get.</param>
         /// <param name="name">method name.</param>
         /// <param name="args">Parameter object of calling method.</param>
-        /// <returns>Specifies the method return value of the object. Failed to return null.</returns>
+        /// <returns>Specifies the method return value of the object.</returns>
         /// <exception cref="ArgumentNullException"></exception>
+        /// <exception cref="MemberAccessException"></exception>
         public static Task<object> AccessorGetAsync(this IGeneratorAccessor accessor, string name, params object[] args)
         {
             if (accessor is null)
@@ -327,7 +334,7 @@ namespace Business.SourceGenerator
             return default;
         }
 
-        static Func<GeneratorTypeArg, GeneratorTypeOpt, object> GetType(Type type, IGeneratorType generatorType)
+        static Func<GeneratorTypeArg, GeneratorTypeOpt, object> GetType(IGeneratorType generatorType, Type type)
         {
             if (!generatorType.GeneratorType.TryGetValue(GetGenericType(type), out Func<GeneratorTypeArg, GeneratorTypeOpt, object> value))
             {
@@ -466,7 +473,7 @@ namespace Business.SourceGenerator
                 throw new ArgumentNullException(nameof(args));
             }
 
-            var value = GetType(type, generatorType);
+            var value = GetType(generatorType, type);
 
             if (default == value)
             {
@@ -518,7 +525,7 @@ namespace Business.SourceGenerator
                 throw new ArgumentNullException(nameof(type), "This operation is only valid on generic types.");
             }
 
-            var value = GetType(type, generatorType);
+            var value = GetType(generatorType, type);
 
             if (default == value)
             {

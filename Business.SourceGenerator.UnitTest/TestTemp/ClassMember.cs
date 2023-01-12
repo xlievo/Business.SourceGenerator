@@ -7,7 +7,7 @@ namespace MyCode
 
         public string A { get; set; } = ADEF;
 
-        public int? B { get; set; } = 33;
+        public System.Collections.Generic.Dictionary<string, int?>? B { get; set; }
 
         public System.DateTime? C { get; set; } = default;
 
@@ -55,10 +55,10 @@ namespace MyCode
 
         public static System.Action<int?> F3;
 
-        public ClassMember(string a, int? b, System.DateTime? c, object d, dynamic e, System.Action<int?> f, string a1, int? b1, System.DateTime? c1, object d1, dynamic e1, System.Action<int?> f1)
+        public ClassMember(string a, System.DateTime? c, object d, dynamic e, System.Action<int?> f, string a1, int? b1, System.DateTime? c1, object d1, dynamic e1, System.Action<int?> f1)
         {
             A = a;
-            B = b;
+            //B = b;
             C = c;
             D = d;
             E = e;

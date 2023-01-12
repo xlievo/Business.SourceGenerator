@@ -4,9 +4,14 @@ using System;
 using System.Collections.Generic;
 using System.Collections.Immutable;
 using System.Diagnostics;
+using System.IO;
 using System.Linq;
 using System.Reflection;
+using System.Runtime.Loader;
+using System.Threading;
 using Xunit;
+using Business.SourceGenerator;
+using Business.SourceGenerator.Meta;
 
 namespace Business.SourceGenerator.Test
 {
@@ -20,7 +25,33 @@ namespace Business.SourceGenerator.Test
 
             Debug.Assert(System.IO.File.Exists(path));
 
-            var source = Compilation(path, global);
+            var testCode = @"
+using System;
+using System.Threading.Tasks;
+using System.Collections.Generic;
+using Business.SourceGenerator;
+using Business.SourceGenerator.Meta;
+
+namespace UnitAssembly
+{
+    internal class Program
+    {
+        static async Task<int> Main(string[] args)
+        {
+            Utils.GlobalEntryAssemblyName = ""UnitAssembly"";
+
+            var result = typeof(MyCode.ClassGeneric<string>)
+                    .CreateInstance<IGeneratorAccessor>()
+                    .AccessorSet<IGeneratorAccessor>(""A"", ""WWW"")
+                    .AccessorSet<IGeneratorAccessor>(""B"", new Dictionary<string, string>());
+
+            return 0;
+        }
+    }
+}
+";
+
+            var source = Compilation(path, global, OutputKind.ConsoleApplication, testCode);
         }
 
         [Theory]
@@ -31,7 +62,33 @@ namespace Business.SourceGenerator.Test
 
             Debug.Assert(System.IO.File.Exists(path));
 
-            var source = Compilation(path, global);
+            var testCode = @"
+using System;
+using System.Threading.Tasks;
+using System.Collections.Generic;
+using Business.SourceGenerator;
+using Business.SourceGenerator.Meta;
+
+namespace UnitAssembly
+{
+    internal class Program
+    {
+        static async Task<int> Main(string[] args)
+        {
+            Utils.GlobalEntryAssemblyName = ""UnitAssembly"";
+
+            var result = typeof(MyCode.ClassMember)
+                    .CreateInstance<IGeneratorAccessor>()
+                    .AccessorSet<IGeneratorAccessor>(""A"", ""WWW"")
+                    .AccessorSet<IGeneratorAccessor>(""B"", new Dictionary<string, int?>());
+
+            return 0;
+        }
+    }
+}
+";
+
+            var source = Compilation(path, global, OutputKind.ConsoleApplication, testCode);
         }
 
         [Theory]
@@ -46,13 +103,13 @@ namespace Business.SourceGenerator.Test
         }
 
         [Theory]
-        [InlineData("StructMember.cs")] 
+        [InlineData("StructMember.cs")]
         public void StructMemberTest(string file, bool global = false)
         {
             var path = System.IO.Path.Combine(AppContext.BaseDirectory, "TestTemp", file);
 
             Debug.Assert(System.IO.File.Exists(path));
-            
+
             var source = Compilation(path, global);
         }
 
@@ -67,12 +124,19 @@ namespace Business.SourceGenerator.Test
             var source = Compilation(path, global);
         }
 
-        static string Compilation(string file, bool global = false)
+        static string Compilation(string file, bool global = false, OutputKind outputKind = OutputKind.DynamicallyLinkedLibrary, string source = default)
         {
             // Create the 'input' compilation that the generator will act on
-            Compilation inputCompilation = CreateCompilation(System.IO.File.ReadAllText(file));
+            Compilation inputCompilation = CreateCompilation(System.IO.File.ReadAllText(file), outputKind);
 
-            inputCompilation = inputCompilation.AddReferences(MetadataReference.CreateFromFile(typeof(Business.SourceGenerator.Meta.Accessibility).Assembly.Location));
+            if (null != source)
+            {
+                inputCompilation = inputCompilation.AddSyntaxTrees(CSharpSyntaxTree.ParseText(source));
+            }
+
+            //inputCompilation = inputCompilation.AddReferences(MetadataReference.CreateFromFile(typeof(object).Assembly.Location));
+            //inputCompilation = inputCompilation.AddReferences(MetadataReference.CreateFromFile(typeof(Enumerable).Assembly.Location));
+            inputCompilation = inputCompilation.AddReferences(MetadataReference.CreateFromFile(typeof(Meta.Accessibility).Assembly.Location));
 
             var refs = System.IO.Directory.GetFiles(System.IO.Path.Combine(AppContext.BaseDirectory, "ref_NETCore_7.0"));
 
@@ -97,8 +161,32 @@ namespace Business.SourceGenerator.Test
 
             // We can now assert things about the resulting compilation:
             Debug.Assert(!diagnostics.Any(c => DiagnosticSeverity.Error == c.Severity), DiagnosticsFirst(diagnostics)); // there were no diagnostics created by the generators
-            Debug.Assert(outputCompilation.SyntaxTrees.Count() == 2); // we have two syntax trees, the original 'user' provided one, and the one added by the generator
+            //Debug.Assert(outputCompilation.SyntaxTrees.Count() == 3); // we have two syntax trees, the original 'user' provided one, and the one added by the generator
             var outputDiagnostics = outputCompilation.GetDiagnostics();
+
+            using (var codeStream = new MemoryStream())
+            {
+                var emitResult = outputCompilation.Emit(codeStream);
+
+                codeStream.Seek(0, SeekOrigin.Begin);
+
+                var assemblyContext = new AssemblyLoadContext(Path.GetRandomFileName(), true);
+                var assembly = assemblyContext.LoadFromStream(codeStream);
+
+                var entryPoint = outputCompilation.GetEntryPoint(CancellationToken.None);
+
+                if (entryPoint is not null)
+                {
+                    var type = assembly.GetType($"{entryPoint.ContainingNamespace.MetadataName}.{entryPoint.ContainingType.MetadataName}");
+                    var instance = assembly.CreateInstance(type.FullName);
+                    var method = type.GetMethod(entryPoint.MetadataName, BindingFlags.Public | BindingFlags.NonPublic | BindingFlags.Instance | BindingFlags.Static);
+
+                    var main = method.Invoke(instance, BindingFlags.InvokeMethod, Type.DefaultBinder, new object[] { Array.Empty<string>() }, null);
+                }
+
+                assemblyContext.Unload();
+            }
+
             Debug.Assert(!outputDiagnostics.Any(c => DiagnosticSeverity.Error == c.Severity), DiagnosticsFirst(outputDiagnostics));// verify the compilation with the added source has no diagnostics
 
             // Or we can look at the results directly:
