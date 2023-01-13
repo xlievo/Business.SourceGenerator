@@ -55,6 +55,11 @@ namespace MyCode
 
         public static System.Action<int?> F3;
 
+        public ClassMember()
+        {
+            
+        }
+
         public ClassMember(string a, System.DateTime? c, object d, dynamic e, System.Action<int?> f, string a1, int? b1, System.DateTime? c1, object d1, dynamic e1, System.Action<int?> f1)
         {
             A = a;

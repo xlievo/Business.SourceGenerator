@@ -12,6 +12,7 @@ using System.Threading;
 using Xunit;
 using Business.SourceGenerator;
 using Business.SourceGenerator.Meta;
+using System.Threading.Tasks;
 
 namespace Business.SourceGenerator.Test
 {
@@ -46,6 +47,18 @@ namespace UnitAssembly
                     .AccessorSet<IGeneratorAccessor>(""B"", new Dictionary<string, string>());
 
             return 0;
+        }
+
+        public object Test()
+        {
+            Utils.GlobalEntryAssemblyName = ""UnitAssembly"";
+
+            var result = typeof(MyCode.ClassGeneric<string>)
+                    .CreateInstance<IGeneratorAccessor>()
+                    .AccessorSet<IGeneratorAccessor>(""A"", ""WWW"")
+                    .AccessorSet<IGeneratorAccessor>(""B"", new Dictionary<string, string>());
+
+            return result;
         }
     }
 }
@@ -83,6 +96,18 @@ namespace UnitAssembly
                     .AccessorSet<IGeneratorAccessor>(""B"", new Dictionary<string, int?>());
 
             return 0;
+        }
+
+        public object Test()
+        {
+            Utils.GlobalEntryAssemblyName = ""UnitAssembly"";
+
+            var result = typeof(MyCode.ClassMember)
+                    .CreateInstance<IGeneratorAccessor>()
+                    .AccessorSet<IGeneratorAccessor>(""A"", ""WWW"")
+                    .AccessorSet<IGeneratorAccessor>(""B"", new Dictionary<string, int?>());
+
+            return result;
         }
     }
 }
@@ -129,7 +154,7 @@ namespace UnitAssembly
             // Create the 'input' compilation that the generator will act on
             Compilation inputCompilation = CreateCompilation(System.IO.File.ReadAllText(file), outputKind);
 
-            if (null != source)
+            if (source is not null)
             {
                 inputCompilation = inputCompilation.AddSyntaxTrees(CSharpSyntaxTree.ParseText(source));
             }
@@ -161,31 +186,13 @@ namespace UnitAssembly
 
             // We can now assert things about the resulting compilation:
             Debug.Assert(!diagnostics.Any(c => DiagnosticSeverity.Error == c.Severity), DiagnosticsFirst(diagnostics)); // there were no diagnostics created by the generators
-            //Debug.Assert(outputCompilation.SyntaxTrees.Count() == 3); // we have two syntax trees, the original 'user' provided one, and the one added by the generator
+            Debug.Assert(outputCompilation.SyntaxTrees.Count() == ((source is not null) ? 3 : 2)); // we have two syntax trees, the original 'user' provided one, and the one added by the generator
+
             var outputDiagnostics = outputCompilation.GetDiagnostics();
 
-            using (var codeStream = new MemoryStream())
-            {
-                var emitResult = outputCompilation.Emit(codeStream);
+            var mainResult = MainInvoke(outputCompilation);
 
-                codeStream.Seek(0, SeekOrigin.Begin);
-
-                var assemblyContext = new AssemblyLoadContext(Path.GetRandomFileName(), true);
-                var assembly = assemblyContext.LoadFromStream(codeStream);
-
-                var entryPoint = outputCompilation.GetEntryPoint(CancellationToken.None);
-
-                if (entryPoint is not null)
-                {
-                    var type = assembly.GetType($"{entryPoint.ContainingNamespace.MetadataName}.{entryPoint.ContainingType.MetadataName}");
-                    var instance = assembly.CreateInstance(type.FullName);
-                    var method = type.GetMethod(entryPoint.MetadataName, BindingFlags.Public | BindingFlags.NonPublic | BindingFlags.Instance | BindingFlags.Static);
-
-                    var main = method.Invoke(instance, BindingFlags.InvokeMethod, Type.DefaultBinder, new object[] { Array.Empty<string>() }, null);
-                }
-
-                assemblyContext.Unload();
-            }
+            var methodResult = MethodInvoke(outputCompilation, "Test");
 
             Debug.Assert(!outputDiagnostics.Any(c => DiagnosticSeverity.Error == c.Severity), DiagnosticsFirst(outputDiagnostics));// verify the compilation with the added source has no diagnostics
 
@@ -215,5 +222,62 @@ namespace UnitAssembly
                 new[] { MetadataReference.CreateFromFile(typeof(Binder).GetTypeInfo().Assembly.Location) },
                 new CSharpCompilationOptions(outputKind));
 
+        static int MainInvoke(Compilation compilation)
+        {
+            using var codeStream = new MemoryStream();
+
+            var emitResult = compilation.Emit(codeStream);
+
+            codeStream.Seek(0, SeekOrigin.Begin);
+
+            var assemblyContext = new AssemblyLoadContext(Path.GetRandomFileName(), true);
+            var assembly = assemblyContext.LoadFromStream(codeStream);
+
+            var entryPoint = compilation.GetEntryPoint(default);
+
+            if (entryPoint is null)
+            {
+                return -1;
+            }
+
+            var type = assembly.GetType($"{entryPoint.ContainingNamespace.MetadataName}.{entryPoint.ContainingType.MetadataName}");
+            var instance = assembly.CreateInstance(type.FullName);
+            var method = type.GetMethod(entryPoint.MetadataName, BindingFlags.Public | BindingFlags.NonPublic | BindingFlags.Instance | BindingFlags.Static);
+
+            var main = ((Task<int>)method.Invoke(instance, BindingFlags.InvokeMethod, Type.DefaultBinder, new object[] { Array.Empty<string>() }, null)).GetAwaiter().GetResult();
+
+            assemblyContext.Unload();
+
+            return main;
+        }
+
+        static object MethodInvoke(Compilation compilation, string methodName)
+        {
+            using var codeStream = new MemoryStream();
+
+            var emitResult = compilation.Emit(codeStream);
+
+            codeStream.Seek(0, SeekOrigin.Begin);
+
+            var assemblyContext = new AssemblyLoadContext(Path.GetRandomFileName(), true);
+            var assembly = assemblyContext.LoadFromStream(codeStream);
+
+            var symbol = compilation.GetSymbolsWithName(methodName).FirstOrDefault() as IMethodSymbol;
+
+            if (symbol is null)
+            {
+                return default;
+            }
+
+            var type = assembly.GetType($"{symbol.ContainingNamespace.MetadataName}.{symbol.ContainingType.MetadataName}");
+            var instance = assembly.CreateInstance(type.FullName);
+            var method = type.GetMethod(symbol.MetadataName, BindingFlags.Public | BindingFlags.NonPublic | BindingFlags.Instance | BindingFlags.Static);
+
+            var main = method.Invoke(instance, BindingFlags.InvokeMethod, Type.DefaultBinder, Array.Empty<object>(), null);
+
+            assemblyContext.Unload();
+
+            return main;
+        }
     }
 }

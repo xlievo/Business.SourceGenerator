@@ -35,5 +35,10 @@
         {
             return System.Threading.Tasks.Task.FromResult<T>(default);
         }
+
+        public ClassGeneric()
+        {
+            
+        }
     }
 }
