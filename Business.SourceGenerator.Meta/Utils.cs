@@ -29,7 +29,7 @@ namespace Business.SourceGenerator
         /// </summary>
         const string GeneratorCodeName = "BusinessSourceGenerator";
 
-        static readonly Lazy<IGeneratorType> generatorCode = new Lazy<IGeneratorType>(() => GetGenericType(GlobalEntryAssemblyName is null ? System.Reflection.Assembly.GetEntryAssembly() : AppDomain.CurrentDomain.GetAssemblies().FirstOrDefault(c => c.FullName.StartsWith($"{GlobalEntryAssemblyName},"))));
+        static Lazy<IGeneratorType> generatorCode = new Lazy<IGeneratorType>(() => GetGenericType(System.Reflection.Assembly.GetEntryAssembly()));
 
         /// <summary>
         /// IGeneratorCode in the global entry assembly.
@@ -40,7 +40,38 @@ namespace Business.SourceGenerator
         /// <summary>
         /// Specify the global entry assembly name. The default is System.Reflection.Assembly.GetEntryAssembly().
         /// </summary>
-        public static string GlobalEntryAssemblyName = null;
+        /// <param name="entryAssemblyName">Entry assembly name.</param>
+        public static void SetGeneratorCode(string entryAssemblyName)
+        {
+            if (entryAssemblyName is null)
+            {
+                throw new ArgumentNullException(nameof(entryAssemblyName));
+            }
+
+            generatorCode = new Lazy<IGeneratorType>(() => GetGenericType(AppDomain.CurrentDomain.GetAssemblies().FirstOrDefault(c => c.FullName.StartsWith($"{entryAssemblyName},"))));
+        }
+
+        /*
+        static string globalEntryAssemblyName = default;
+
+        /// <summary>
+        /// Specify the global entry assembly name. The default is System.Reflection.Assembly.GetEntryAssembly().
+        /// </summary>
+        public static string GlobalEntryAssemblyName
+        {
+            get => globalEntryAssemblyName;
+            set
+            {
+                globalEntryAssemblyName = value;
+
+                generatorCode = new Lazy<IGeneratorType>(() =>
+                {
+                    var ass = globalEntryAssemblyName is null ? System.Reflection.Assembly.GetEntryAssembly() : AppDomain.CurrentDomain.GetAssemblies().FirstOrDefault(c => c.FullName.StartsWith($"{globalEntryAssemblyName},"));
+                    return GetGenericType(ass);
+                });
+            }
+        }
+        */
 
         //public static bool SetGeneratorCode(System.Reflection.Assembly assembly)
         //{

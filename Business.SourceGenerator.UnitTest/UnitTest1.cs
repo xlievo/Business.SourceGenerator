@@ -33,13 +33,13 @@ using System.Collections.Generic;
 using Business.SourceGenerator;
 using Business.SourceGenerator.Meta;
 
-namespace UnitAssembly
+namespace ClassGenericAssembly
 {
     internal class Program
     {
         static async Task<int> Main(string[] args)
         {
-            Utils.GlobalEntryAssemblyName = ""UnitAssembly"";
+            Utils.SetGeneratorCode(""ClassGenericAssembly"");
 
             var result = typeof(MyCode.ClassGeneric<string>)
                     .CreateInstance<IGeneratorAccessor>()
@@ -51,7 +51,7 @@ namespace UnitAssembly
 
         public object Test()
         {
-            Utils.GlobalEntryAssemblyName = ""UnitAssembly"";
+            Utils.SetGeneratorCode(""ClassGenericAssembly"");
 
             var result = typeof(MyCode.ClassGeneric<string>)
                     .CreateInstance<IGeneratorAccessor>()
@@ -64,7 +64,7 @@ namespace UnitAssembly
 }
 ";
 
-            var source = Compilation(path, global, OutputKind.ConsoleApplication, testCode);
+            var source = Compilation(path, global, OutputKind.ConsoleApplication, "ClassGenericAssembly", testCode);
         }
 
         [Theory]
@@ -82,13 +82,13 @@ using System.Collections.Generic;
 using Business.SourceGenerator;
 using Business.SourceGenerator.Meta;
 
-namespace UnitAssembly
+namespace ClassMemberAssembly
 {
     internal class Program
     {
         static async Task<int> Main(string[] args)
         {
-            Utils.GlobalEntryAssemblyName = ""UnitAssembly"";
+            Utils.SetGeneratorCode(""ClassMemberAssembly"");
 
             var result = typeof(MyCode.ClassMember)
                     .CreateInstance<IGeneratorAccessor>()
@@ -100,7 +100,7 @@ namespace UnitAssembly
 
         public object Test()
         {
-            Utils.GlobalEntryAssemblyName = ""UnitAssembly"";
+            Utils.SetGeneratorCode(""ClassMemberAssembly"");
 
             var result = typeof(MyCode.ClassMember)
                     .CreateInstance<IGeneratorAccessor>()
@@ -113,7 +113,7 @@ namespace UnitAssembly
 }
 ";
 
-            var source = Compilation(path, global, OutputKind.ConsoleApplication, testCode);
+            var source = Compilation(path, global, OutputKind.ConsoleApplication, "ClassMemberAssembly", testCode);
         }
 
         [Theory]
@@ -149,10 +149,10 @@ namespace UnitAssembly
             var source = Compilation(path, global);
         }
 
-        static string Compilation(string file, bool global = false, OutputKind outputKind = OutputKind.DynamicallyLinkedLibrary, string source = default)
+        static string Compilation(string file, bool global = false, OutputKind outputKind = OutputKind.DynamicallyLinkedLibrary, string assemblyName = "UnitAssembly", string source = default)
         {
             // Create the 'input' compilation that the generator will act on
-            Compilation inputCompilation = CreateCompilation(System.IO.File.ReadAllText(file), outputKind);
+            Compilation inputCompilation = CreateCompilation(System.IO.File.ReadAllText(file), outputKind, assemblyName);
 
             if (source is not null)
             {
