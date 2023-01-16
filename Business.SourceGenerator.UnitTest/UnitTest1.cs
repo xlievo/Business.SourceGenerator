@@ -13,6 +13,7 @@ using Xunit;
 using Business.SourceGenerator;
 using Business.SourceGenerator.Meta;
 using System.Threading.Tasks;
+using Microsoft.VisualStudio.TestPlatform.ObjectModel;
 
 namespace Business.SourceGenerator.Test
 {
@@ -26,20 +27,22 @@ namespace Business.SourceGenerator.Test
 
             Debug.Assert(System.IO.File.Exists(path));
 
-            var testCode = @"
+            const string assemblyName = "ClassGenericAssembly";
+
+            var testCode = $@"
 using System;
 using System.Threading.Tasks;
 using System.Collections.Generic;
 using Business.SourceGenerator;
 using Business.SourceGenerator.Meta;
 
-namespace ClassGenericAssembly
-{
+namespace UnitAssembly
+{{
     internal class Program
-    {
+    {{
         static async Task<int> Main(string[] args)
-        {
-            Utils.SetGeneratorCode(""ClassGenericAssembly"");
+        {{
+            Utils.SetGeneratorCode(""{assemblyName}"");
 
             var result = typeof(MyCode.ClassGeneric<string>)
                     .CreateInstance<IGeneratorAccessor>()
@@ -47,11 +50,11 @@ namespace ClassGenericAssembly
                     .AccessorSet<IGeneratorAccessor>(""B"", new Dictionary<string, string>());
 
             return 0;
-        }
+        }}
 
         public object Test()
-        {
-            Utils.SetGeneratorCode(""ClassGenericAssembly"");
+        {{
+            Utils.SetGeneratorCode(""{assemblyName}"");
 
             var result = typeof(MyCode.ClassGeneric<string>)
                     .CreateInstance<IGeneratorAccessor>()
@@ -59,12 +62,24 @@ namespace ClassGenericAssembly
                     .AccessorSet<IGeneratorAccessor>(""B"", new Dictionary<string, string>());
 
             return result;
-        }
-    }
-}
+        }}
+    }}
+}}
 ";
 
-            var source = Compilation(path, global, OutputKind.ConsoleApplication, "ClassGenericAssembly", testCode);
+            var compileResult = Compilation(path, global, OutputKind.ConsoleApplication, assemblyName, testCode);
+
+            var source = compileResult.GeneratorSource;
+
+            var mainResult = MainInvoke(compileResult.Compilation);
+
+            dynamic testResult = MethodInvoke(compileResult.Compilation, "Test");
+
+            Debug.Assert(testResult is not null);
+
+            Debug.Assert((bool)"WWW".Equals(testResult.A));
+
+            Debug.Assert((bool)typeof(Dictionary<string, string>).Equals(testResult.B.GetType()));
         }
 
         [Theory]
@@ -75,20 +90,22 @@ namespace ClassGenericAssembly
 
             Debug.Assert(System.IO.File.Exists(path));
 
-            var testCode = @"
+            const string assemblyName = "ClassMemberAssembly";
+
+            var testCode = $@"
 using System;
 using System.Threading.Tasks;
 using System.Collections.Generic;
 using Business.SourceGenerator;
 using Business.SourceGenerator.Meta;
 
-namespace ClassMemberAssembly
-{
+namespace UnitAssembly
+{{
     internal class Program
-    {
+    {{
         static async Task<int> Main(string[] args)
-        {
-            Utils.SetGeneratorCode(""ClassMemberAssembly"");
+        {{
+            Utils.SetGeneratorCode(""{assemblyName}"");
 
             var result = typeof(MyCode.ClassMember)
                     .CreateInstance<IGeneratorAccessor>()
@@ -96,24 +113,36 @@ namespace ClassMemberAssembly
                     .AccessorSet<IGeneratorAccessor>(""B"", new Dictionary<string, int?>());
 
             return 0;
-        }
+        }}
 
         public object Test()
-        {
-            Utils.SetGeneratorCode(""ClassMemberAssembly"");
+        {{
+            Utils.SetGeneratorCode(""{assemblyName}"");
 
             var result = typeof(MyCode.ClassMember)
                     .CreateInstance<IGeneratorAccessor>()
-                    .AccessorSet<IGeneratorAccessor>(""A"", ""WWW"")
+                    .AccessorSet<IGeneratorAccessor>(""A"", ""WWW2"")
                     .AccessorSet<IGeneratorAccessor>(""B"", new Dictionary<string, int?>());
 
             return result;
-        }
-    }
-}
+        }}
+    }}
+}}
 ";
 
-            var source = Compilation(path, global, OutputKind.ConsoleApplication, "ClassMemberAssembly", testCode);
+            var compileResult = Compilation(path, global, OutputKind.ConsoleApplication, assemblyName, testCode);
+
+            var source = compileResult.GeneratorSource;
+
+            var mainResult = MainInvoke(compileResult.Compilation);
+
+            dynamic testResult = MethodInvoke(compileResult.Compilation, "Test");
+
+            Debug.Assert(testResult is not null);
+
+            Debug.Assert((bool)"WWW2".Equals(testResult.A));
+
+            Debug.Assert((bool)typeof(Dictionary<string, int?>).Equals(testResult.B.GetType()));
         }
 
         [Theory]
@@ -148,8 +177,8 @@ namespace ClassMemberAssembly
 
             var source = Compilation(path, global);
         }
-
-        static string Compilation(string file, bool global = false, OutputKind outputKind = OutputKind.DynamicallyLinkedLibrary, string assemblyName = "UnitAssembly", string source = default)
+        
+        static (Compilation Compilation, string GeneratorSource) Compilation(string file, bool global = false, OutputKind outputKind = OutputKind.DynamicallyLinkedLibrary, string assemblyName = "UnitAssembly", string source = default)
         {
             // Create the 'input' compilation that the generator will act on
             Compilation inputCompilation = CreateCompilation(System.IO.File.ReadAllText(file), outputKind, assemblyName);
@@ -190,10 +219,6 @@ namespace ClassMemberAssembly
 
             var outputDiagnostics = outputCompilation.GetDiagnostics();
 
-            var mainResult = MainInvoke(outputCompilation);
-
-            var methodResult = MethodInvoke(outputCompilation, "Test");
-
             Debug.Assert(!outputDiagnostics.Any(c => DiagnosticSeverity.Error == c.Severity), DiagnosticsFirst(outputDiagnostics));// verify the compilation with the added source has no diagnostics
 
             // Or we can look at the results directly:
@@ -211,7 +236,7 @@ namespace ClassMemberAssembly
             Debug.Assert(generatorResult.GeneratedSources.Length == 1);
             Debug.Assert(generatorResult.Exception is null);
 
-            return generatorResult.GeneratedSources.First().SourceText.ToString();
+            return (outputCompilation, generatorResult.GeneratedSources.First().SourceText.ToString());
         }
 
         static string DiagnosticsFirst(ImmutableArray<Diagnostic> diagnostics, DiagnosticSeverity severity = DiagnosticSeverity.Error) => diagnostics.FirstOrDefault(c => severity == c.Severity)?.GetMessage();
