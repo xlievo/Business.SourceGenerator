@@ -4,7 +4,7 @@
     {
         public string A { get; set; }
 
-        public int? B { get; set; }
+        public System.Collections.Generic.Dictionary<string, int?>? B { get; set; }
 
         public System.DateTime? C { get; set; }
 

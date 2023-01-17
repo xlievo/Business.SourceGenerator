@@ -14,6 +14,7 @@ using Business.SourceGenerator;
 using Business.SourceGenerator.Meta;
 using System.Threading.Tasks;
 using Microsoft.VisualStudio.TestPlatform.ObjectModel;
+using Business.SourceGenerator.UnitTest;
 
 namespace Business.SourceGenerator.Test
 {
@@ -23,10 +24,6 @@ namespace Business.SourceGenerator.Test
         [InlineData("ClassGeneric.cs")]
         public void ClassGenericTest(string file, bool global = false)
         {
-            var path = System.IO.Path.Combine(AppContext.BaseDirectory, "TestTemp", file);
-
-            Debug.Assert(System.IO.File.Exists(path));
-
             const string assemblyName = "ClassGenericAssembly";
 
             var testCode = $@"
@@ -66,14 +63,17 @@ namespace UnitAssembly
     }}
 }}
 ";
+            var path = System.IO.Path.Combine(AppContext.BaseDirectory, "TestTemp", file);
+
+            Debug.Assert(System.IO.File.Exists(path));
 
             var compileResult = Compilation(path, global, OutputKind.ConsoleApplication, assemblyName, testCode);
 
             var source = compileResult.GeneratorSource;
 
-            var mainResult = MainInvoke(compileResult.Compilation);
+            MainInvoke(compileResult.Compilation);
 
-            dynamic testResult = MethodInvoke(compileResult.Compilation, "Test");
+            dynamic testResult = MethodInvoke(compileResult.Compilation, "UnitAssembly.Program.Test");
 
             Debug.Assert(testResult is not null);
 
@@ -86,10 +86,6 @@ namespace UnitAssembly
         [InlineData("ClassMember.cs")]
         public void ClassMemberTest(string file, bool global = false)
         {
-            var path = System.IO.Path.Combine(AppContext.BaseDirectory, "TestTemp", file);
-
-            Debug.Assert(System.IO.File.Exists(path));
-
             const string assemblyName = "ClassMemberAssembly";
 
             var testCode = $@"
@@ -103,40 +99,29 @@ namespace UnitAssembly
 {{
     internal class Program
     {{
-        static async Task<int> Main(string[] args)
-        {{
-            Utils.SetGeneratorCode(""{assemblyName}"");
-
-            var result = typeof(MyCode.ClassMember)
-                    .CreateInstance<IGeneratorAccessor>()
-                    .AccessorSet<IGeneratorAccessor>(""A"", ""WWW"")
-                    .AccessorSet<IGeneratorAccessor>(""B"", new Dictionary<string, int?>());
-
-            return 0;
-        }}
+        static async Task<int> Main(string[] args) => 0;
 
         public object Test()
         {{
             Utils.SetGeneratorCode(""{assemblyName}"");
 
-            var result = typeof(MyCode.ClassMember)
+            return typeof(MyCode.ClassMember)
                     .CreateInstance<IGeneratorAccessor>()
                     .AccessorSet<IGeneratorAccessor>(""A"", ""WWW2"")
                     .AccessorSet<IGeneratorAccessor>(""B"", new Dictionary<string, int?>());
-
-            return result;
         }}
     }}
 }}
 ";
+            var path = System.IO.Path.Combine(AppContext.BaseDirectory, "TestTemp", file);
+
+            Debug.Assert(System.IO.File.Exists(path));
 
             var compileResult = Compilation(path, global, OutputKind.ConsoleApplication, assemblyName, testCode);
 
             var source = compileResult.GeneratorSource;
 
-            var mainResult = MainInvoke(compileResult.Compilation);
-
-            dynamic testResult = MethodInvoke(compileResult.Compilation, "Test");
+            dynamic testResult = MethodInvoke(compileResult.Compilation, "UnitAssembly.Program.Test");
 
             Debug.Assert(testResult is not null);
 
@@ -146,38 +131,185 @@ namespace UnitAssembly
         }
 
         [Theory]
-        [InlineData("ClassMethod.cs")]
-        public void ClassMethodTest(string file, bool global = false)
-        {
-            var path = System.IO.Path.Combine(AppContext.BaseDirectory, "TestTemp", file);
-
-            Debug.Assert(System.IO.File.Exists(path));
-
-            var source = Compilation(path, global);
-        }
-
-        [Theory]
         [InlineData("StructMember.cs")]
         public void StructMemberTest(string file, bool global = false)
         {
+            const string assemblyName = "StructMemberAssembly";
+
+            var testCode = $@"
+using System;
+using System.Threading.Tasks;
+using System.Collections.Generic;
+using Business.SourceGenerator;
+using Business.SourceGenerator.Meta;
+
+namespace UnitAssembly
+{{
+    internal class Program
+    {{
+        static async Task<int> Main(string[] args) => 0;
+
+        public object Test()
+        {{
+            Utils.SetGeneratorCode(""{assemblyName}"");
+
+            return typeof(MyCode.StructMember)
+                    .CreateInstance<IGeneratorAccessor>()
+                    .AccessorSet<IGeneratorAccessor>(""A"", ""WWW2"")
+                    .AccessorSet<IGeneratorAccessor>(""B"", new Dictionary<string, int?>());
+        }}
+    }}
+}}
+";
+
             var path = System.IO.Path.Combine(AppContext.BaseDirectory, "TestTemp", file);
 
             Debug.Assert(System.IO.File.Exists(path));
 
-            var source = Compilation(path, global);
+            var compileResult = Compilation(path, global, OutputKind.ConsoleApplication, assemblyName, testCode);
+
+            var source = compileResult.GeneratorSource;
+
+            dynamic testResult = MethodInvoke(compileResult.Compilation, "UnitAssembly.Program.Test");
+
+            Debug.Assert(testResult is not null);
+
+            Debug.Assert((bool)"WWW2".Equals(testResult.A));
+
+            Debug.Assert((bool)typeof(Dictionary<string, int?>).Equals(testResult.B.GetType()));
         }
 
         [Theory]
-        [InlineData("StructMethod.cs")]
-        public void StructMethodTest(string file, bool global = false)
+        [InlineData("MethodInvoke.cs")]
+        public void MethodInvokeTest(string file, bool global = false)
         {
+            const string assemblyName = "MethodInvokeAssembly";
+
+            var testCode = $@"
+using System;
+using System.Threading.Tasks;
+using System.Collections.Generic;
+using Business.SourceGenerator;
+using Business.SourceGenerator.Meta;
+
+namespace UnitAssembly
+{{
+    internal class Program
+    {{
+        static async Task<int> Main(string[] args) => 0;
+
+        public object StructMethod3()
+        {{
+            Utils.SetGeneratorCode(""{assemblyName}"");
+
+            var acc = typeof(MyCode.MethodInvoke).CreateInstance<IGeneratorAccessor>();
+            
+            (int? c1, string? c2) c = (33, ""66"");
+            (int? c1, string? c2) d = (44, ""88"");
+
+            if(acc.AccessorGet(""StructMethod3"", out object value, string.Empty, 3, c, d))
+            {{
+                return value;
+            }}
+
+            return default;
+        }}
+
+        public object StructMethod4()
+        {{
+            Utils.SetGeneratorCode(""{assemblyName}"");
+
+            var acc = typeof(MyCode.MethodInvoke).CreateInstance<IGeneratorAccessor>();
+            
+            (int? c1, string? c2) c = (33, ""66"");
+            (int? c1, string? c2) d = (44, ""88"");
+
+            if(acc.AccessorGet(""StructMethod4"", out object value, string.Empty, 3, c, d))
+            {{
+                return value;
+            }}
+
+            return default;
+        }}
+
+        public object StructMethod5()
+        {{
+            Utils.SetGeneratorCode(""{assemblyName}"");
+
+            var acc = typeof(MyCode.MethodInvoke).CreateInstance<IGeneratorAccessor>();
+            
+            (int? c1, string? c2) c = (33, ""66"");
+            (int? c1, string? c2) d = (44, ""88"");
+
+            if(acc.AccessorGet(""StructMethod5"", out object value, string.Empty, 3, c, d))
+            {{
+                return value;
+            }}
+
+            return default;
+        }}
+
+        public async ValueTask<object> StructMethod6()
+        {{
+            Utils.SetGeneratorCode(""{assemblyName}"");
+
+            var acc = typeof(MyCode.MethodInvoke).CreateInstance<IGeneratorAccessor>();
+            
+            (int? c1, string? c2) c = (33, ""66"");
+            (int? c1, string? c2) d = (44, ""88"");
+
+            return await acc.AccessorGetAsync(""StructMethod6"", string.Empty, 3, c, d);
+        }}
+
+        public async ValueTask<object> StructMethod7()
+        {{
+            Utils.SetGeneratorCode(""{assemblyName}"");
+
+            var acc = typeof(MyCode.MethodInvoke).CreateInstance<IGeneratorAccessor>();
+            
+            (int? c1, string? c2) c = (33, ""66"");
+            (int? c1, string? c2) d = (44, ""88"");
+
+            return await acc.AccessorGetAsync(""StructMethod7"", string.Empty, 3, c, d);
+        }}
+    }}
+}}
+";
+
             var path = System.IO.Path.Combine(AppContext.BaseDirectory, "TestTemp", file);
 
             Debug.Assert(System.IO.File.Exists(path));
 
-            var source = Compilation(path, global);
+            var compileResult = Compilation(path, global, OutputKind.ConsoleApplication, assemblyName, testCode);
+
+            var source = compileResult.GeneratorSource;
+
+            dynamic testResult = MethodInvoke(compileResult.Compilation, "UnitAssembly.Program.StructMethod3");
+            Debug.Assert(testResult is not null);
+            Debug.Assert((bool)33.Equals(testResult.Item1));
+            Debug.Assert((bool)"66".Equals(testResult.Item2));
+
+            testResult = MethodInvoke(compileResult.Compilation, "UnitAssembly.Program.StructMethod4");
+            Debug.Assert(testResult is not null);
+            Debug.Assert(testResult is Task);
+
+            testResult = MethodInvoke(compileResult.Compilation, "UnitAssembly.Program.StructMethod5");
+            Debug.Assert(testResult is not null);
+            Debug.Assert(testResult is ValueTask);
+
+            testResult = MethodInvoke(compileResult.Compilation, "UnitAssembly.Program.StructMethod6");
+            Debug.Assert(testResult is not null);
+            var testResult2 = testResult.GetAwaiter().GetResult();
+            Debug.Assert((bool)33.Equals(testResult2.Item1));
+            Debug.Assert((bool)"66".Equals(testResult2.Item2));
+
+            testResult = MethodInvoke(compileResult.Compilation, "UnitAssembly.Program.StructMethod7");
+            Debug.Assert(testResult is not null);
+            testResult2 = testResult.GetAwaiter().GetResult();
+            Debug.Assert((bool)33.Equals(testResult2.Item1));
+            Debug.Assert((bool)"66".Equals(testResult2.Item2));
         }
-        
+
         static (Compilation Compilation, string GeneratorSource) Compilation(string file, bool global = false, OutputKind outputKind = OutputKind.DynamicallyLinkedLibrary, string assemblyName = "UnitAssembly", string source = default)
         {
             // Create the 'input' compilation that the generator will act on
@@ -269,11 +401,11 @@ namespace UnitAssembly
             var instance = assembly.CreateInstance(type.FullName);
             var method = type.GetMethod(entryPoint.MetadataName, BindingFlags.Public | BindingFlags.NonPublic | BindingFlags.Instance | BindingFlags.Static);
 
-            var main = ((Task<int>)method.Invoke(instance, BindingFlags.InvokeMethod, Type.DefaultBinder, new object[] { Array.Empty<string>() }, null)).GetAwaiter().GetResult();
+            var result = ((Task<int>)method.Invoke(instance, BindingFlags.InvokeMethod, Type.DefaultBinder, new object[] { Array.Empty<string>() }, null)).GetAwaiter().GetResult();
 
             assemblyContext.Unload();
 
-            return main;
+            return result;
         }
 
         static object MethodInvoke(Compilation compilation, string methodName)
@@ -287,7 +419,9 @@ namespace UnitAssembly
             var assemblyContext = new AssemblyLoadContext(Path.GetRandomFileName(), true);
             var assembly = assemblyContext.LoadFromStream(codeStream);
 
-            var symbol = compilation.GetSymbolsWithName(methodName).FirstOrDefault() as IMethodSymbol;
+            var sp = methodName.Split('.');
+            var nameOpt = new FullName.GetFullNameOpt(true);
+            var symbol = compilation.GetSymbolsWithName(sp[sp.Length - 1]).FirstOrDefault(c => FullName.GetFullName(c, nameOpt) == methodName);
 
             if (symbol is null)
             {
@@ -298,11 +432,11 @@ namespace UnitAssembly
             var instance = assembly.CreateInstance(type.FullName);
             var method = type.GetMethod(symbol.MetadataName, BindingFlags.Public | BindingFlags.NonPublic | BindingFlags.Instance | BindingFlags.Static);
 
-            var main = method.Invoke(instance, BindingFlags.InvokeMethod, Type.DefaultBinder, Array.Empty<object>(), null);
+            var result = method.Invoke(instance, BindingFlags.InvokeMethod, Type.DefaultBinder, Array.Empty<object>(), null);
 
             assemblyContext.Unload();
 
-            return main;
+            return result;
         }
     }
 }
