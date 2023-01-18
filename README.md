@@ -9,12 +9,34 @@ Because AOT mode cannot dynamically generate code and types at run time, it requ
 [![](https://img.shields.io/badge/License-MIT-blue?style=flat-square)](https://github.com/xlievo/Business.SourceGenerator/blob/master/LICENSE)
 ***
 
-## MakeGenericType & CreateInstance
-**Replace System.Type.MakeGenericType(typeArguments) by generating generic type code in advance.**
+## GetGenericType
+**Replace System.Type.MakeGenericType(typeArguments) by generating generic type code in advance, Gets the specified generic type.**
 
 1. Declare [Business.SourceGenerator.Meta.GeneratorType] features on struct or class or interface that need to be generated in advance.
-2. Call typeof(MyClass<>).MakeGenericType<int>(); to get the specified type.
-3. Call typeof(MyClass<>).MakeGenericType<int>().CreateInstance(params object[] args) to get an instance of the specified type.
+2. Call typeof(MyClass<>).GetGenericType<int>();
+
+## CreateInstance
+**Gets an instance of the specified type.**
+
+1. Call typeof(MyClass<>).GetGenericType<int>().CreateInstance(params object[] args);
+
+## AccessorGet & AccessorGetAsync
+**Access the members and methods of the specified instance.**
+**The specified class or struct needs to declare the 'partial' keyword.**
+
+1. Call typeof(MyClass<>).GetGenericType<int>()
+			.CreateInstance<>(params object[] args)
+			.AccessorGetAsync(string name, params object[] args);
+2. Call AccessorGetAsync<Type>(string name, params object[] args);
+
+## CreateInstance
+**Set the value of a field or property.**
+**The specified class or struct needs to declare the 'partial' keyword.**
+
+1. Call typeof(MyClass<int>)
+			.CreateInstance<IGeneratorAccessor>()
+			.AccessorSet<IGeneratorAccessor>("A", "WWW")
+			.AccessorSet<IGeneratorAccessor>("B", new Dictionary<string, string>());
 
 ## About the secondary distribution of nuget packages [direct reference without watching]
 1. Please create the following directory in the project root directory
