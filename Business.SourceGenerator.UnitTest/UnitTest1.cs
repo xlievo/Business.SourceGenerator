@@ -275,10 +275,6 @@ namespace UnitAssembly
     }}
 }}
 ";
-            typeof(MyCode.ClassGeneric<string>)
-                    .CreateInstance<IGeneratorAccessor>()
-                    .AccessorSet<IGeneratorAccessor>("A", "WWW")
-                    .AccessorSet<IGeneratorAccessor>("B", new Dictionary<string, string>());
 
             var path = System.IO.Path.Combine(AppContext.BaseDirectory, "TestTemp", file);
 
