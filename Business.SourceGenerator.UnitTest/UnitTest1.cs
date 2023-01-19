@@ -275,6 +275,8 @@ namespace UnitAssembly
     }}
 }}
 ";
+            typeof(MyCode.ClassGeneric<string>)
+                .GetGenericType<int>().CreateInstance(params object[] args);
 
             var path = System.IO.Path.Combine(AppContext.BaseDirectory, "TestTemp", file);
 
