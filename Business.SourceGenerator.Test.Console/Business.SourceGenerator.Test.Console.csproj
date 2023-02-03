@@ -1,0 +1,41 @@
+﻿<Project Sdk="Microsoft.NET.Sdk">
+
+  <PropertyGroup>
+    <OutputType>Exe</OutputType>
+    <TargetFramework>net7.0</TargetFramework>
+    <!--<ImplicitUsings>enable</ImplicitUsings>-->
+    <Nullable>enable</Nullable>
+    <PublishAot>true</PublishAot>
+    <!--<RunAOTCompilation>true</RunAOTCompilation>-->
+    <!--<TrimMode>partial</TrimMode>-->
+    <TrimmerRemoveSymbols>true</TrimmerRemoveSymbols>
+    <EventSourceSupport>false</EventSourceSupport>
+    <AutoreleasePoolSupport>false</AutoreleasePoolSupport>
+    <ILLinkTreatWarningsAsErrors>false</ILLinkTreatWarningsAsErrors>
+
+    <EnableTrimAnalyzer>true</EnableTrimAnalyzer>
+    <PublishReadyToRunEmitSymbols>false</PublishReadyToRunEmitSymbols>
+    <DebuggerSupport>false</DebuggerSupport>
+    <EnableUnsafeUTF7Encoding>true</EnableUnsafeUTF7Encoding>
+    <InvariantGlobalization>true</InvariantGlobalization>
+    <HttpActivityPropagationSupport>false</HttpActivityPropagationSupport>
+    <MetadataUpdaterSupport>true</MetadataUpdaterSupport>
+    <UseSystemResourceKeys>true</UseSystemResourceKeys>
+    <StartupObject>Business.SourceGenerator.Test.Console.Program</StartupObject>
+
+    <!--<IlcDisableReflection>true</IlcDisableReflection>-->
+  </PropertyGroup>
+
+  <ItemGroup>
+    <TrimmerRootDescriptor Include="MyRoots.xml" />
+  </ItemGroup>
+
+  <ItemGroup>
+    <PackageReference Include="Business.SourceGenerator.Test" Version="1.0.1.18" />
+  </ItemGroup>
+
+  <ItemGroup>
+    <Folder Include="Properties\" />
+  </ItemGroup>
+
+</Project>

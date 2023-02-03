@@ -1,0 +1,5 @@
+﻿<linker>
+  <assembly fullname="Business.SourceGenerator.Test.Console">
+    <type fullname="Business.SourceGenerator.Test.Console.BusinessSourceGenerator" preserve="all" />
+  </assembly>
+</linker>

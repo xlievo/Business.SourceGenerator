@@ -11,6 +11,8 @@ Project("{9A19103F-16F7-4668-BE54-9A1E7A4F7556}") = "Business.SourceGenerator.Un
 EndProject
 Project("{9A19103F-16F7-4668-BE54-9A1E7A4F7556}") = "Business.SourceGenerator.Test", "Business.SourceGenerator.Test\Business.SourceGenerator.Test.csproj", "{F8358330-DD3E-4EF5-8C6C-39FE66898194}"
 EndProject
+Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "Business.SourceGenerator.Test.Console", "Business.SourceGenerator.Test.Console\Business.SourceGenerator.Test.Console.csproj", "{9832B66D-FF05-4D99-9996-B1371951B10F}"
+EndProject
 Global
 	GlobalSection(SolutionConfigurationPlatforms) = preSolution
 		Debug|Any CPU = Debug|Any CPU
@@ -33,6 +35,10 @@ Global
 		{F8358330-DD3E-4EF5-8C6C-39FE66898194}.Debug|Any CPU.Build.0 = Debug|Any CPU
 		{F8358330-DD3E-4EF5-8C6C-39FE66898194}.Release|Any CPU.ActiveCfg = Release|Any CPU
 		{F8358330-DD3E-4EF5-8C6C-39FE66898194}.Release|Any CPU.Build.0 = Release|Any CPU
+		{9832B66D-FF05-4D99-9996-B1371951B10F}.Debug|Any CPU.ActiveCfg = Debug|Any CPU
+		{9832B66D-FF05-4D99-9996-B1371951B10F}.Debug|Any CPU.Build.0 = Debug|Any CPU
+		{9832B66D-FF05-4D99-9996-B1371951B10F}.Release|Any CPU.ActiveCfg = Release|Any CPU
+		{9832B66D-FF05-4D99-9996-B1371951B10F}.Release|Any CPU.Build.0 = Release|Any CPU
 	EndGlobalSection
 	GlobalSection(SolutionProperties) = preSolution
 		HideSolutionNode = FALSE
