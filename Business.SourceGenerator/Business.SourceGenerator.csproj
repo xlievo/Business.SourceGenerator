@@ -35,7 +35,7 @@
     <!--<None Include="Assets\build\package.targets" Pack="true" PackagePath="build\$(PackageId).targets" />-->
     <!--<None Include="Assets\src\**" Pack="True" PackagePath="src" />-->
     
-    <PackageReference Include="Business.SourceGenerator.Meta" Version="0.0.0.22" />
+    <PackageReference Include="Business.SourceGenerator.Meta" Version="0.0.0.23" />
     <PackageReference Include="System.Threading.Tasks.Extensions" Version="4.5.4" />
   </ItemGroup>
 
