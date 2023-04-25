@@ -1,8 +1,18 @@
-﻿namespace MyCode
+﻿
+
+
+
+
+namespace MyCode
 {
     public partial class ClassGeneric<T> : System.Collections.Generic.Dictionary<T, T>
+    where T : class
     {
+        public System.Nullable<System.DateTimeOffset> A0 { get; set; }
+
         public T A { get; set; }
+
+        public int[] C { get; set; }
 
         public System.Collections.Generic.Dictionary<T, T> B { get; set; }
 
@@ -20,7 +30,7 @@
 
         public static System.Action<T?> F2 { get; set; }
 
-        public static T A3;
+        public static int A3;
 
         public static System.Collections.Generic.Dictionary<T, T> B3;
 
@@ -38,7 +48,19 @@
 
         public ClassGeneric()
         {
-            
+            //System.Globalization.Calendar
+        }
+
+        public ClassGeneric(T t)
+        {
+
+        }
+
+        public ClassGeneric(ref int aaa, out int bbb)
+        {
+            bbb = 3;
+            var ss = new sbyte[666];
+            ss[2] = 6;
         }
     }
 }

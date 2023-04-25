@@ -20,16 +20,12 @@ namespace Business.SourceGenerator
     using Microsoft.CodeAnalysis;
     using System;
     using System.Collections.Generic;
+    using System.Linq;
 
     [Generator(LanguageNames.CSharp)]
     public class Generator : ISourceGenerator
     {
-        /// <summary>
-        /// "BusinessSourceGenerator"
-        /// </summary>
-        const string GeneratorCodeName = "BusinessSourceGenerator";
-
-        readonly bool global = false;
+        readonly bool global = true;
 
         //internal Generator(bool global = false)
         //{
@@ -48,43 +44,44 @@ namespace Business.SourceGenerator
             //    global = this.global;
             //}
 
-            var opt = new Expression.ToCodeOpt(standardFormat: true, global: global);
+            var opt = new SyntaxToCode.ToCodeOpt(standardFormat: true, global: global);
             var format = opt.StandardFormat ? Environment.NewLine : " ";
             var format2 = opt.StandardFormat ? $"{format}{format}" : format;
 
+            var usings = new string[]
+            {
+                "Business.SourceGenerator.Meta",
+                "Business.SourceGenerator",
+                "System.Collections.Generic",
+                "System.Collections.ObjectModel",
+                "System.Threading.Tasks.Sources",
+                "System.Threading.Tasks",
+                "System.Threading",
+                "System.Linq.Expressions",
+                "System.Linq",
+                "System.Globalization",
+                "System.IO",
+                "System",
+            };
+
             try
             {
-                MetaData.Init(context);
+                AnalysisMeta.Init(context);
 
-                var generatorTypeCode = $"{Expression.GeneratorCode(MetaData.AnalysisInfo, context.Compilation.AssemblyName, opt)}";
-                /*
-                string generatorTypeCode = null;
+                var generatorTypeCode = $"{Expression.GeneratorCode(AnalysisMeta.AnalysisInfo, context.Compilation.AssemblyName, opt, usings)}";
 
-                if (null != context.Compilation.GetEntryPoint(context.CancellationToken))
-                {
-                    watch.Restart();
-                    generatorTypeCode = $"{format2}{Expression.GeneratorCode(MetaData.AnalysisInfo, context.Compilation.AssemblyName, opt)}";
-                    watch.Stop();
-                    context.Log($"step 2 GeneratorCode complete! [{watch.Elapsed.TotalMilliseconds.Scale(0)}ms]");
-                }
-                */
                 #region AddSource
 
-                var accessors = Expression.GeneratorAccessor(MetaData.AnalysisInfo, context.Compilation.AssemblyName, opt);
+                var accessors = Expression.GeneratorAccessor(AnalysisMeta.AnalysisInfo, context.Compilation.AssemblyName, opt, usings);
 
                 if (!string.IsNullOrEmpty(generatorTypeCode) || !string.IsNullOrEmpty(accessors))
                 {
                     var accessorsCode = $"{format2}{accessors}";
-                    var usings = $@"using Business.SourceGenerator.Meta;
-using System;
-using System.Collections.Generic;
-using System.Collections.ObjectModel;
-using System.Threading.Tasks;
-using System.Linq;{format2}";
+                    var usings2 = $"{string.Join(Meta.Global.EnvironmentNewLine, usings.Select(c => $"using {c};"))}{format2}";
 
-                    var code = $"{(!opt.Global ? usings : default)}{generatorTypeCode}{accessorsCode}";
+                    var code = $"{(!opt.Global ? usings2 : default)}{generatorTypeCode}{accessorsCode}";
 
-                    context.AddSource(GeneratorCodeName, Microsoft.CodeAnalysis.Text.SourceText.From(code, System.Text.Encoding.UTF8));
+                    context.AddSource(Meta.Global.GeneratorCodeName, Microsoft.CodeAnalysis.Text.SourceText.From(code, System.Text.Encoding.UTF8));
                 }
 
                 #endregion

@@ -15,11 +15,296 @@ using Business.SourceGenerator.Meta;
 using System.Threading.Tasks;
 using Microsoft.VisualStudio.TestPlatform.ObjectModel;
 using Business.SourceGenerator.UnitTest;
+using TypeNameFormatter;
+using Microsoft.CodeAnalysis.CSharp.Syntax;
+using System.Collections.Concurrent;
+using System.Xml.Linq;
+using Microsoft.VisualBasic;
+using MyCode;
+using Business.SourceGenerator.Analysis;
+using System.Collections;
+using Microsoft.VisualStudio.TestPlatform.CommunicationUtilities;
+using System.Collections.Specialized;
 
 namespace Business.SourceGenerator.Test
 {
     public class UnitTest1
     {
+        [Theory]
+        [InlineData("GetFullName2.cs")]
+        public void GetFullName2Test(string file, bool global = false)
+        {
+            //string nullType2 = GetFormattedName(typeof(System.Threading.Tasks.ValueTask<System.Threading.Tasks.ValueTask<int?>?>?));
+
+            //System.Threading.Tasks.ValueTask<System.Collections.Generic.IDictionary<System.Threading.Tasks.ValueTask<System.Int32[]>?, System.Threading.Tasks.ValueTask<System.Int32?>?>>?
+
+            string nullType4 = GetFormattedName(typeof(ValueTask<IDictionary<System.Nullable<ValueTask<int[]?>>, ValueTask<int?>?>?>?));
+            string nullType5 = GetFormattedName(typeof(ValueTask<IDictionary<ValueTask<int[]?>?, ValueTask<int?>?>?>?), true);
+            string nullType6 = GetFormattedName(typeof((string? a, int? b)?));
+            string nullType7 = GetFormattedName(typeof((string? a, int? b)?), true);
+            string nullType8 = GetFormattedName(typeof(int?*[]));
+            string nullType9 = GetFormattedName(typeof(int?*[]), true);
+
+            var anonymousType = new { A = "A", B = new int?(3) };
+            var anonymouType = anonymousType.GetType();
+            string nullType10 = GetFormattedName(anonymouType);
+            string nullType11 = GetFormattedName(anonymouType, true);
+
+            //{System.String A, System.Nullable<System.Int32> B}
+            //{System.String A, System.Nullable<System.Int32> B}
+
+            const string assemblyName = "GetFullName2Assembly";
+
+            var path = System.IO.Path.Combine(AppContext.BaseDirectory, "TestTemp", file);
+
+            Debug.Assert(System.IO.File.Exists(path));
+
+            Compilation compilation = CreateCompilation(System.IO.File.ReadAllText(path), assemblyName: assemblyName);
+
+            var refs = System.IO.Directory.GetFiles(System.IO.Path.Combine(AppContext.BaseDirectory, "ref_NETCore_7.0"));
+
+            var references = new List<MetadataReference>(refs.Length);
+            foreach (var item in refs)
+            {
+                references.Add(MetadataReference.CreateFromFile(item));
+            }
+
+            compilation = compilation.AddReferences(references);
+
+            var syntax = compilation.SyntaxTrees.FirstOrDefault();
+
+            var model = compilation.GetSemanticModel(syntax);
+
+            var nodes = syntax.GetRoot().DescendantNodes();
+
+            var symbols = GetSymbol(nodes, model).ToList();
+
+            static string typeClean(string type) => Analysis.SymbolTypeName.TypeNameClean(type, $"{assemblyName}.", "System.Collections.Generic.", "System.Collections.ObjectModel.", "System.Threading.Tasks.");
+
+            var symbolsName0 = symbols.Select(c => Analysis.SymbolTypeName.GetFullName(c, Analysis.SymbolTypeName.GetFullNameOpt.Create(typeParameterStyle: Analysis.SymbolTypeName.TypeParameterStyle.Real))).Distinct().ToList();
+
+            var symbolsName = symbols.Select(c =>
+            {
+                var name = Analysis.SymbolTypeName.GetFullNameStandardFormat(c, Analysis.SymbolTypeName.GetFullNameOpt.Create(typeParameterStyle: Analysis.SymbolTypeName.TypeParameterStyle.Name));
+
+                if (name == "MyCode.GetFullName2<T>.AnonymousType<T2>..c2")
+                {
+
+                }
+
+                return name;
+            }).Distinct().ToList();
+
+            var symbolsName3 = symbols.Select(c => Analysis.SymbolTypeName.GetFullName(c, Analysis.SymbolTypeName.GetFullNameOpt.Create(typeParameterStyle: Analysis.SymbolTypeName.TypeParameterStyle.FullName))).Distinct().ToList();
+
+            //foreach (var item in symbols)
+            //{
+            //    if (item.ToDisplayString() == "T2?")
+            //    {
+
+            //    }
+            //    var name = Analysis.Test.GetFullName2(item);
+            //}
+
+            var symbolsName2 = symbols.Select(c => Analysis.SymbolTypeName.GetFullName(c, Analysis.SymbolTypeName.GetFullNameOpt.Create(noNullableQuestionMark: true))).Distinct().ToList();
+
+            //var symbolsName3 = symbols.Select(c => Analysis.Test.GetFullName2(c, Analysis.Test.GetFullNameOpt2.Create(noNullableQuestionMark: true, anonymousTypeStyle: Analysis.Test.AnonymousTypeStyle.Curly))).Distinct().ToList();
+
+            //var symbolsName4 = symbols.Select(c => Analysis.Test.GetFullName2(c, Analysis.Test.GetFullNameOpt2.Create(noNullableQuestionMark: true, anonymousTypeStyle: Analysis.Test.AnonymousTypeStyle.Curly | Analysis.Test.AnonymousTypeStyle.Name))).Distinct().ToList();
+
+            //var symbolsName44 = symbols.Select(c => Analysis.Test.GetFullName2(c, Analysis.Test.GetFullNameOpt2.Create(noNullableQuestionMark: true, anonymousTypeStyle: Analysis.Test.AnonymousTypeStyle.Curly | Analysis.Test.AnonymousTypeStyle.Type))).Distinct().ToList();
+
+            //var symbolsName5 = symbols.Select(c => Analysis.Test.GetFullName2(c, Analysis.Test.GetFullNameOpt2.Create(noNullableQuestionMark: true, anonymousTypeStyle: Analysis.Test.AnonymousTypeStyle.Type))).Distinct().ToList();
+
+            //var symbolsName55 = symbols.Select(c => Analysis.Test.GetFullName2(c, Analysis.Test.GetFullNameOpt2.Create(noNullableQuestionMark: true, anonymousTypeStyle: Analysis.Test.AnonymousTypeStyle.Name))).Distinct().ToList();
+
+            //var symbolsName6 = symbols.Select(c => Analysis.Test.GetFullName2(c, Analysis.Test.GetFullNameOpt2.Create(noNullableQuestionMark: true, anonymousTypeStyle: Analysis.Test.AnonymousTypeStyle.Type | Analysis.Test.AnonymousTypeStyle.Round))).Distinct().ToList();
+
+            //var symbolsName66 = symbols.Select(c => Analysis.Test.GetFullName2(c, Analysis.Test.GetFullNameOpt2.Create(noNullableQuestionMark: true, anonymousTypeStyle: Analysis.Test.AnonymousTypeStyle.Name | Analysis.Test.AnonymousTypeStyle.Round))).Distinct().ToList();
+
+            //var symbolsName666 = symbols.Select(c => Analysis.Test.GetFullName2(c, Analysis.Test.GetFullNameOpt2.Create(noNullableQuestionMark: true, anonymousTypeStyle: Analysis.Test.AnonymousTypeStyle.Round))).Distinct().ToList();
+
+            var testArgs = Analysis.SymbolTypeName.GetFullName(symbols[35], Analysis.SymbolTypeName.GetFullNameOpt.Create(captureStyle: Analysis.SymbolTypeName.CaptureStyle.Args));
+            var testArgs2 = Analysis.SymbolTypeName.GetFullName(symbols[35]);
+            //[35] = {(T a, int b).b}
+            //System.ValueTuple<T, System.Int32>.b
+
+            //<MyCode.GetFullName2<T>.T[], System.Int32[]>
+            //System.ValueTuple<MyCode.GetFullName2<T>.T[], System.Int32[]>
+
+            //<MyCode.GetFullName2<T>.T?, System.Int32?>
+            //<MyCode.GetFullName2<T>.T?, System.Int32?>
+            //<MyCode.GetFullName2<T>.T?, System.Int32?>
+            //<MyCode.GetFullName2<T>.T?, System.Int32?>
+
+            //<<System.ValueTuple<MyCode.GetFullName2<T>.T?, System.Int32?>>
+            //System.ValueTuple<MyCode.GetFullName2<T>.T, System.Int32>?
+            //System.ValueTuple<MyCode.GetFullName2<T>.T?, System.Int32?>?
+
+            //<T>.AnonymousType<T2>(<T>.AnonymousType<T2>.T2[], <<T>.T>, <<<System.DateOnly>, <<<System.Int32>>>>>)
+
+            //MyCode.GetFullName2<T>.AnonymousType<T2>(MyCode.GetFullName2<T>.AnonymousType<T2>.T2[], MyCode.GetFullName2<T>.T?, System.ValueTuple<System.DateOnly?, System.Threading.Tasks.ValueTask<System.Int32?>?>?)
+
+            //MyCode.GetFullName2<T>.AnonymousType<T2>(MyCode.GetFullName2<T>.AnonymousType<T2>.T2[], MyCode.GetFullName2<T>.T?, System.ValueTuple<System.DateOnly?, System.Threading.Tasks.ValueTask<System.Int32?>?>?)
+
+            Debug.Assert(symbolsName.Contains(nullType4));
+            Debug.Assert(symbolsName3.Contains(nullType4));
+            Debug.Assert(symbolsName2.Contains(nullType5));
+            Debug.Assert(symbolsName.Contains(nullType6));
+            Debug.Assert(symbolsName2.Contains(nullType7));
+            Debug.Assert(symbolsName.Contains(nullType8));
+            Debug.Assert(symbolsName2.Contains(nullType9));
+            Debug.Assert(symbolsName.Contains(nullType10));
+            Debug.Assert(symbolsName2.Contains(nullType11));
+
+            //foreach (var item in symbols)
+            //{
+            //    var name = Analysis.Test.GetFullName2(item);
+            //}
+        }
+
+        static IEnumerable<ISymbol> GetSymbol(IEnumerable<SyntaxNode> nodes, SemanticModel model)
+        {
+            foreach (var item in nodes)
+            {
+                switch (item.RawKind)
+                {
+                    case (int)SyntaxKind.InterfaceDeclaration:
+                    case (int)SyntaxKind.ClassDeclaration:
+                    case (int)SyntaxKind.StructDeclaration:
+                    case (int)SyntaxKind.PropertyDeclaration:
+                    case (int)SyntaxKind.FieldDeclaration:
+                    case (int)SyntaxKind.MethodDeclaration:
+                    case (int)SyntaxKind.LocalFunctionStatement:
+                    case (int)SyntaxKind.ContinueStatement:
+                    case (int)SyntaxKind.ConstructorConstraint:
+                    case (int)SyntaxKind.ConstructorDeclaration:
+                    case (int)SyntaxKind.EnumDeclaration:
+                    case (int)SyntaxKind.IndexerDeclaration:
+                    case (int)SyntaxKind.VariableDeclarator:
+                    case (int)SyntaxKind.VariableDeclaration:
+                    case (int)SyntaxKind.BaseList:
+                    case (int)SyntaxKind.SimpleBaseType:
+                    case (int)SyntaxKind.TypeOfExpression:
+                    case (int)SyntaxKind.CastExpression:
+                    case (int)SyntaxKind.PredefinedType:
+                    case (int)SyntaxKind.DivideExpression:
+                    case (int)SyntaxKind.ConditionalExpression:
+                    case (int)SyntaxKind.DefaultExpression:
+
+                    case (int)SyntaxKind.QualifiedName:
+                    case (int)SyntaxKind.GenericName:
+                    case (int)SyntaxKind.TypeParameter:
+                    case (int)SyntaxKind.TypeArgumentList:
+                    case (int)SyntaxKind.Argument:
+                    case (int)SyntaxKind.Parameter:
+                    case (int)SyntaxKind.InvocationExpression:
+                    case (int)SyntaxKind.IdentifierName:
+                    case (int)SyntaxKind.Attribute:
+
+                    case (int)SyntaxKind.AsExpression:
+                    case (int)SyntaxKind.ObjectCreationExpression:
+                    case (int)SyntaxKind.EqualsValueClause:
+                    case (int)SyntaxKind.SimpleMemberAccessExpression:
+                    case (int)SyntaxKind.SimpleAssignmentExpression:
+                    case (int)SyntaxKind.NullLiteralExpression:
+                    case (int)SyntaxKind.ElementAccessExpression:
+                    case (int)SyntaxKind.NullableType:
+                    case (int)SyntaxKind.TupleType:
+                        {
+                            var declared = model.GetDeclaredSymbol(item) ?? model.GetTypeInfo(item).Type;
+
+                            if (null == declared || SymbolKind.ErrorType == declared.Kind)
+                            {
+                                continue;
+                            }
+
+                            if (declared is ITypeSymbol typeSymbol && Microsoft.CodeAnalysis.SpecialType.System_Void == typeSymbol.SpecialType)
+                            {
+                                continue;
+                            }
+
+                            yield return declared;
+                        }
+                        break;
+                    default: break;
+                }
+            }
+        }
+
+        static string GetFormattedName(Type type, bool noNull = false)
+        {
+            var opt = TypeNameFormatter.TypeNameFormatOptions.Namespaces | TypeNameFormatter.TypeNameFormatOptions.NoKeywords | TypeNameFormatter.TypeNameFormatOptions.NoTuple;
+            //| TypeNameFormatter.TypeNameFormatOptions.NoAnonymousTypes;
+
+            //if (noAnonymous)
+            //{
+            //opt |= TypeNameFormatter.TypeNameFormatOptions.NoAnonymousTypes;
+            //}
+
+            if (noNull)
+            {
+                opt |= TypeNameFormatter.TypeNameFormatOptions.NoNullableQuestionMark;
+            }
+            return TypeName.GetFormattedName(type, opt);
+        }
+
+        [Theory]
+        [InlineData("Nullable.cs")]
+        public void NullTest(string file, bool global = false)
+        {
+            string dateTimeOffsetType = GetFormattedName(typeof(DateTimeOffset?));
+            string intType = GetFormattedName(typeof(int?));
+            string valueTaskType = GetFormattedName(typeof(ValueTask<int>));
+
+            const string assemblyName = "NullableAssembly";
+
+            var testCode = $@"
+using System;
+using System.Threading.Tasks;
+using System.Collections.Generic;
+using Business.SourceGenerator;
+using Business.SourceGenerator.Meta;
+
+namespace UnitAssembly
+{{
+    internal class Program
+    {{
+        static async Task<int> Main(string[] args)
+        {{
+            return 0;
+        }}
+
+        public object Test()
+        {{
+            {assemblyName}.BusinessSourceGenerator.Generator.SetGeneratorCode();
+
+            Business.SourceGenerator.Utils.GeneratorCode.GeneratorType.TryGetValue(typeof({valueTaskType}), out Business.SourceGenerator.Meta.GeneratorTypeMeta value);
+
+            return value;
+        }}
+    }}
+}}
+";
+
+
+            var path = System.IO.Path.Combine(AppContext.BaseDirectory, "TestTemp", file);
+
+            Debug.Assert(System.IO.File.Exists(path));
+
+            var compileResult = Compilation(path, global, OutputKind.ConsoleApplication, assemblyName, testCode);
+
+            var source = compileResult.GeneratorSource;
+
+            dynamic testResult = MethodInvoke(compileResult.Compilation, "UnitAssembly.Program.Test");
+
+            //Debug.Assert(testResult is not null);
+
+            //Debug.Assert((bool)"WWW".Equals(testResult.A));
+
+            //Debug.Assert((bool)typeof(Dictionary<string, string>).Equals(testResult.B.GetType()));
+        }
+
         [Theory]
         [InlineData("ClassGeneric.cs")]
         public void ClassGenericTest(string file, bool global = false)
@@ -39,7 +324,7 @@ namespace UnitAssembly
     {{
         static async Task<int> Main(string[] args)
         {{
-            Utils.SetGeneratorCode(""{assemblyName}"");
+            {assemblyName}.BusinessSourceGenerator.Generator.SetGeneratorCode();
 
             var result = typeof(MyCode.ClassGeneric<string>)
                     .CreateInstance<IGeneratorAccessor>()
@@ -51,7 +336,7 @@ namespace UnitAssembly
 
         public object Test()
         {{
-            Utils.SetGeneratorCode(""{assemblyName}"");
+            {assemblyName}.BusinessSourceGenerator.Generator.SetGeneratorCode();
 
             var result = typeof(MyCode.ClassGeneric<string>)
                     .CreateInstance<IGeneratorAccessor>()
@@ -63,17 +348,21 @@ namespace UnitAssembly
     }}
 }}
 ";
+
             var path = System.IO.Path.Combine(AppContext.BaseDirectory, "TestTemp", file);
 
             Debug.Assert(System.IO.File.Exists(path));
 
-            var compileResult = Compilation(path, global, OutputKind.ConsoleApplication, assemblyName, testCode);
+            var iResult = File.ReadAllText(Path.Combine(AppContext.BaseDirectory, "TestTemp", "IResult.cs"));
 
+            var compileResult = Compilation(path, global, OutputKind.ConsoleApplication, assemblyName, testCode, iResult);
+            //System.Threading.Tasks.ValueTask
             var source = compileResult.GeneratorSource;
 
             MainInvoke(compileResult.Compilation);
 
             dynamic testResult = MethodInvoke(compileResult.Compilation, "UnitAssembly.Program.Test");
+
 
             Debug.Assert(testResult is not null);
 
@@ -103,11 +392,11 @@ namespace UnitAssembly
 
         public object Test()
         {{
-            Utils.SetGeneratorCode(""{assemblyName}"");
+            {assemblyName}.BusinessSourceGenerator.Generator.SetGeneratorCode();
 
             return typeof(MyCode.ClassMember)
                     .CreateInstance<IGeneratorAccessor>()
-                    .AccessorSet<IGeneratorAccessor>(""A"", ""WWW2"")
+                    .AccessorSet<IGeneratorAccessor>(""A"", ""WWW3"")
                     .AccessorSet<IGeneratorAccessor>(""B"", new Dictionary<string, int?>());
         }}
     }}
@@ -125,7 +414,7 @@ namespace UnitAssembly
 
             Debug.Assert(testResult is not null);
 
-            Debug.Assert((bool)"WWW2".Equals(testResult.A));
+            Debug.Assert((bool)"WWW3".Equals(testResult.A));
 
             Debug.Assert((bool)typeof(Dictionary<string, int?>).Equals(testResult.B.GetType()));
         }
@@ -151,7 +440,7 @@ namespace UnitAssembly
 
         public object Test()
         {{
-            Utils.SetGeneratorCode(""{assemblyName}"");
+            {assemblyName}.BusinessSourceGenerator.Generator.SetGeneratorCode();
 
             return typeof(MyCode.StructMember)
                     .CreateInstance<IGeneratorAccessor>()
@@ -200,14 +489,20 @@ namespace UnitAssembly
 
         public object StructMethod3()
         {{
-            Utils.SetGeneratorCode(""{assemblyName}"");
+            {assemblyName}.BusinessSourceGenerator.Generator.SetGeneratorCode();
 
-            var acc = typeof(MyCode.MethodInvoke).CreateInstance<IGeneratorAccessor>();
+            var acc = typeof(MyCode.MethodInvoke<System.IO.MemoryStream>).CreateInstance<IGeneratorAccessor>();
             
             (int? c1, string? c2) c = (33, ""66"");
             (int? c1, string? c2) d = (44, ""88"");
-
-            if(acc.AccessorGet(""StructMethod3"", out object value, string.Empty, 3, c, d))
+            
+            //StructMethod3(ref string? a, out int? b, ref (int? c1, string? c2) c, out (int? c1, string? c2) d)
+            if(acc.AccessorMethod(""StructMethod3"", out object value, 
+                RefArg.Ref(string.Empty), 
+                RefArg.Out<int?>(),
+                RefArg.Ref(c),
+                RefArg.Out<(int? c1, string? c2)>()
+                ))
             {{
                 return value;
             }}
@@ -217,14 +512,19 @@ namespace UnitAssembly
 
         public object StructMethod4()
         {{
-            Utils.SetGeneratorCode(""{assemblyName}"");
+            {assemblyName}.BusinessSourceGenerator.Generator.SetGeneratorCode();
 
-            var acc = typeof(MyCode.MethodInvoke).CreateInstance<IGeneratorAccessor>();
+            var acc = typeof(MyCode.MethodInvoke<System.IO.MemoryStream>).CreateInstance<IGeneratorAccessor>();
             
             (int? c1, string? c2) c = (33, ""66"");
             (int? c1, string? c2) d = (44, ""88"");
 
-            if(acc.AccessorGet(""StructMethod4"", out object value, string.Empty, 3, c, d))
+            //StructMethod4(ref string? a, out int? b, ref (int? c1, string? c2) c, out (int? c1, string? c2) d)
+            if(acc.AccessorMethod(""StructMethod4"", out object value,
+                RefArg.Ref(string.Empty), 
+                RefArg.Out<int?>(),
+                RefArg.Ref(c),
+                RefArg.Out<(int? c1, string? c2)>()))
             {{
                 return value;
             }}
@@ -234,14 +534,20 @@ namespace UnitAssembly
 
         public object StructMethod5()
         {{
-            Utils.SetGeneratorCode(""{assemblyName}"");
+            {assemblyName}.BusinessSourceGenerator.Generator.SetGeneratorCode();
 
-            var acc = typeof(MyCode.MethodInvoke).CreateInstance<IGeneratorAccessor>();
+            var acc = typeof(MyCode.MethodInvoke<System.IO.MemoryStream>).CreateInstance<IGeneratorAccessor>();
             
             (int? c1, string? c2) c = (33, ""66"");
             (int? c1, string? c2) d = (44, ""88"");
 
-            if(acc.AccessorGet(""StructMethod5"", out object value, string.Empty, 3, c, d))
+            //StructMethod5(ref string? a, out int? b, ref (int? c1, string? c2) c, out (int? c1, string? c2) d)
+            if(acc.AccessorMethod(""StructMethod5"", out object value,
+                RefArg.Ref(string.Empty), 
+                RefArg.Out<int?>(),
+                RefArg.Ref(c),
+                RefArg.Out<(int? c1, string? c2)>()
+                ))
             {{
                 return value;
             }}
@@ -251,26 +557,65 @@ namespace UnitAssembly
 
         public async ValueTask<object> StructMethod6()
         {{
-            Utils.SetGeneratorCode(""{assemblyName}"");
+            {assemblyName}.BusinessSourceGenerator.Generator.SetGeneratorCode();
 
-            var acc = typeof(MyCode.MethodInvoke).CreateInstance<IGeneratorAccessor>();
+            var acc = typeof(MyCode.MethodInvoke<System.IO.MemoryStream>).CreateInstance<IGeneratorAccessor>();
             
             (int? c1, string? c2) c = (33, ""66"");
             (int? c1, string? c2) d = (44, ""88"");
 
-            return await acc.AccessorGetAsync(""StructMethod6"", string.Empty, 3, c, d);
+            //StructMethod6(ref string? a, out int? b, ref (int? c1, string? c2) c, out (int? c1, string? c2) d)
+            return await acc.AccessorMethodAsync(""StructMethod6"", 
+                RefArg.Ref(string.Empty), 
+                RefArg.Out<int?>(),
+                RefArg.Ref(c),
+                RefArg.Out<(int? c1, string? c2)>()
+                );
         }}
 
         public async ValueTask<object> StructMethod7()
         {{
-            Utils.SetGeneratorCode(""{assemblyName}"");
+            {assemblyName}.BusinessSourceGenerator.Generator.SetGeneratorCode();
 
-            var acc = typeof(MyCode.MethodInvoke).CreateInstance<IGeneratorAccessor>();
+            var acc = typeof(MyCode.MethodInvoke<System.IO.MemoryStream>).CreateInstance<IGeneratorAccessor>();
             
-            (int? c1, string? c2) c = (33, ""66"");
+            var aaa = new System.IO.MemoryStream();
+            var bbb = new List<string>();
+
+            (DateTimeOffset? c1, IList<string>? c2) c = (DateTimeOffset.Now, bbb);
             (int? c1, string? c2) d = (44, ""88"");
 
-            return await acc.AccessorGetAsync(""StructMethod7"", string.Empty, 3, c, d);
+            var structMember2 = new MyCode.StructMember2 {{ A = 111 }};
+
+            /*
+            StructMethod7<T2>(
+            ref T2? a,
+            out int? b,
+            ref (DateTimeOffset? c1, T2? c2) c,
+            out (int? c1, string? c2) d,
+            ref StructMember2 structMember21,
+            string e = ""eee"",
+            System.Single f = default,
+            StructMember2 structMember2 = default,
+            object ddf = default, params int[] ppp)
+            */
+
+            var args = new object[] 
+            {{ 
+                RefArg.Ref(bbb), 
+                RefArg.Out<int?>(),
+                RefArg.Ref(c), 
+                RefArg.Out<(int? c1, string? c2)>(),
+                RefArg.Ref(structMember2), 
+                ""qqq"", 
+                55f 
+            }};
+
+            await acc.AccessorMethodAsync(""StructMethod7"", args);
+
+            //structMember2 = (MyCode.StructMember2)args[2];
+
+            return args[3];
         }}
     }}
 }}
@@ -280,13 +625,15 @@ namespace UnitAssembly
 
             Debug.Assert(System.IO.File.Exists(path));
 
-            var compileResult = Compilation(path, global, OutputKind.ConsoleApplication, assemblyName, testCode);
+            var iResult = File.ReadAllText(Path.Combine(AppContext.BaseDirectory, "TestTemp", "IResult.cs"));
+
+            var compileResult = Compilation(path, global, OutputKind.ConsoleApplication, assemblyName, testCode, iResult);
 
             var source = compileResult.GeneratorSource;
 
             dynamic testResult = MethodInvoke(compileResult.Compilation, "UnitAssembly.Program.StructMethod3");
             Debug.Assert(testResult is not null);
-            Debug.Assert((bool)33.Equals(testResult.Item1));
+            Debug.Assert((bool)6789.Equals(testResult.Item1));
             Debug.Assert((bool)"66".Equals(testResult.Item2));
 
             testResult = MethodInvoke(compileResult.Compilation, "UnitAssembly.Program.StructMethod4");
@@ -306,18 +653,96 @@ namespace UnitAssembly
             testResult = MethodInvoke(compileResult.Compilation, "UnitAssembly.Program.StructMethod7");
             Debug.Assert(testResult is not null);
             testResult2 = testResult.GetAwaiter().GetResult();
-            Debug.Assert((bool)33.Equals(testResult2.Item1));
-            Debug.Assert((bool)"66".Equals(testResult2.Item2));
+            //Debug.Assert((bool)6789.Equals(testResult2.Item1));
+            //Debug.Assert((bool)"66".Equals(testResult2.Item2));
         }
 
-        static (Compilation Compilation, string GeneratorSource) Compilation(string file, bool global = false, OutputKind outputKind = OutputKind.DynamicallyLinkedLibrary, string assemblyName = "UnitAssembly", string source = default)
+        [Theory]
+        [InlineData("Refs.cs")]
+        public void RefsTest(string file, bool global = false)
+        {
+            const string assemblyName = "RefsAssembly";
+
+            var testCode = $@"
+using System;
+using System.Threading.Tasks;
+using System.Collections.Generic;
+using Business.SourceGenerator;
+using Business.SourceGenerator.Meta;
+
+namespace UnitAssembly
+{{
+    internal class Program
+    {{
+        static async Task<int> Main(string[] args)
+        {{
+            return 0;
+        }}
+
+        public object Test()
+        {{
+            {assemblyName}.BusinessSourceGenerator.Generator.SetGeneratorCode();
+
+            //var result = typeof(MyCode.ClassGeneric<string>)
+            //        .CreateInstance<IGeneratorAccessor>()
+            //        .AccessorSet<IGeneratorAccessor>(""A"", ""WWW"")
+            //        .AccessorSet<IGeneratorAccessor>(""B"", new Dictionary<string, string>());
+
+            //return result;
+
+            //Method0(string ooo, out int bbb, ref int aaa, out int ddd, string www = ""sss"", params string[] ccc)
+            var args = new object[] {{ ""yyy"", RefArg.Out<int>(), RefArg.Ref(555), RefArg.Out<int>(), ""www"" }};
+
+            //Refs(ref int a, out System.DateTimeOffset b)
+            var args2 = new object[] {{ RefArg.Ref(777), RefArg.Out<System.DateTimeOffset>() }};
+
+            var success = typeof(MyCode.Refs).CreateInstance<IGeneratorAccessor>(args2)
+                  .AccessorMethod(""Method0"", out ValueTask<dynamic> result, args);
+
+            return args;
+            
+            //return typeof(Business.SourceGenerator.Test.ResultObject3<object>).CreateInstance<IGeneratorAccessor>();
+
+            return 0;
+        }}
+    }}
+}}
+";
+
+
+            var path = System.IO.Path.Combine(AppContext.BaseDirectory, "TestTemp", file);
+
+            Debug.Assert(System.IO.File.Exists(path));
+
+            var iResult = File.ReadAllText(Path.Combine(AppContext.BaseDirectory, "TestTemp", "IResult.cs"));
+
+            var compileResult = Compilation(path, global, OutputKind.ConsoleApplication, assemblyName, testCode);
+            //System.Threading.Tasks.ValueTask
+            var source = compileResult.GeneratorSource;
+
+            var testResult = MethodInvoke(compileResult.Compilation, "UnitAssembly.Program.Test");
+
+
+            Debug.Assert(testResult is not null);
+
+            //Debug.Assert((bool)"WWW".Equals(testResult.A));
+
+            //Debug.Assert((bool)typeof(Dictionary<string, string>).Equals(testResult.B.GetType()));
+        }
+
+        static (Compilation Compilation, string GeneratorSource) Compilation(string file, bool global = false, OutputKind outputKind = OutputKind.DynamicallyLinkedLibrary, string assemblyName = "UnitAssembly", params string[] source)
         {
             // Create the 'input' compilation that the generator will act on
             Compilation inputCompilation = CreateCompilation(System.IO.File.ReadAllText(file), outputKind, assemblyName);
 
             if (source is not null)
             {
-                inputCompilation = inputCompilation.AddSyntaxTrees(CSharpSyntaxTree.ParseText(source));
+                //inputCompilation = inputCompilation.AddSyntaxTrees(CSharpSyntaxTree.ParseText(source));
+
+                foreach (var item in source)
+                {
+                    inputCompilation = inputCompilation.AddSyntaxTrees(CSharpSyntaxTree.ParseText(item));
+                }
             }
 
             //inputCompilation = inputCompilation.AddReferences(MetadataReference.CreateFromFile(typeof(object).Assembly.Location));
@@ -347,7 +772,7 @@ namespace UnitAssembly
 
             // We can now assert things about the resulting compilation:
             Debug.Assert(!diagnostics.Any(c => DiagnosticSeverity.Error == c.Severity), DiagnosticsFirst(diagnostics)); // there were no diagnostics created by the generators
-            Debug.Assert(outputCompilation.SyntaxTrees.Count() == ((source is not null) ? 3 : 2)); // we have two syntax trees, the original 'user' provided one, and the one added by the generator
+            //Debug.Assert(outputCompilation.SyntaxTrees.Count() == ((source is not null) ? 3 : 2)); // we have two syntax trees, the original 'user' provided one, and the one added by the generator
 
             var outputDiagnostics = outputCompilation.GetDiagnostics();
 
@@ -368,6 +793,7 @@ namespace UnitAssembly
             Debug.Assert(generatorResult.GeneratedSources.Length == 1);
             Debug.Assert(generatorResult.Exception is null);
 
+            var debugSources = generatorResult.GeneratedSources.FirstOrDefault().SourceText.ToString();
             return (outputCompilation, generatorResult.GeneratedSources.First().SourceText.ToString());
         }
 

@@ -6,6 +6,8 @@
     <!--<ImplicitUsings>enable</ImplicitUsings>-->
     <Nullable>enable</Nullable>
     <PublishAot>true</PublishAot>
+    <IlcDisableReflection>true</IlcDisableReflection>
+    <StripSymbols>true</StripSymbols>
     <!--<RunAOTCompilation>true</RunAOTCompilation>-->
     <!--<TrimMode>partial</TrimMode>-->
     <TrimmerRemoveSymbols>true</TrimmerRemoveSymbols>
@@ -22,8 +24,7 @@
     <MetadataUpdaterSupport>true</MetadataUpdaterSupport>
     <UseSystemResourceKeys>true</UseSystemResourceKeys>
     <StartupObject>Business.SourceGenerator.Test.Console.Program</StartupObject>
-
-    <!--<IlcDisableReflection>true</IlcDisableReflection>-->
+    <AllowUnsafeBlocks>True</AllowUnsafeBlocks>
   </PropertyGroup>
 
   <ItemGroup>
@@ -31,11 +32,18 @@
   </ItemGroup>
 
   <ItemGroup>
-    <PackageReference Include="Business.SourceGenerator.Test" Version="1.0.1.18" />
+    <Folder Include="Properties\" />
   </ItemGroup>
 
   <ItemGroup>
-    <Folder Include="Properties\" />
+    <PackageReference Include="Business.SourceGenerator.Test" Version="1.0.2.3" />
+  </ItemGroup>
+
+  <ItemGroup>
+    <PackageReference Update="Microsoft.Net.Compilers.Toolset" Version="4.5.0">
+      <PrivateAssets>all</PrivateAssets>
+      <IncludeAssets>runtime; build; native; contentfiles; analyzers; buildtransitive</IncludeAssets>
+    </PackageReference>
   </ItemGroup>
 
 </Project>

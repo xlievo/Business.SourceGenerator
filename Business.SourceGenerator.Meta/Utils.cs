@@ -18,130 +18,54 @@ namespace Business.SourceGenerator
 {
     using Business.SourceGenerator.Meta;
     using System;
-    using System.Collections.Generic;
     using System.Threading.Tasks;
-    using System.Linq;
 
     public static partial class Utils
     {
-        /// <summary>
-        /// "BusinessSourceGenerator"
-        /// </summary>
-        const string GeneratorCodeName = "BusinessSourceGenerator";
-
-        static Lazy<IGeneratorType> generatorCode = new Lazy<IGeneratorType>(() => GetGenericType(System.Reflection.Assembly.GetEntryAssembly()));
+        static Lazy<IGeneratorType> generatorCode = default;
 
         /// <summary>
-        /// IGeneratorCode in the global entry assembly.
+        /// Global IGeneratorType.
         /// <para>According to the compilation order, the entry assembly will be compiled last.</para>
         /// </summary>
         public static IGeneratorType GeneratorCode { get => generatorCode.Value; }
 
         /// <summary>
-        /// Specify the global entry assembly name. The default is System.Reflection.Assembly.GetEntryAssembly().
+        /// Specify the global IGeneratorType.
         /// </summary>
-        /// <param name="entryAssemblyName">Entry assembly name.</param>
-        public static void SetGeneratorCode(string entryAssemblyName)
-        {
-            if (entryAssemblyName is null)
-            {
-                throw new ArgumentNullException(nameof(entryAssemblyName));
-            }
+        /// <param name="generatorType"></param>
+        public static void SetGeneratorCode(this IGeneratorType generatorType) => generatorCode = new Lazy<IGeneratorType>(() => generatorType);
 
-            generatorCode = new Lazy<IGeneratorType>(() => GetGenericType(AppDomain.CurrentDomain.GetAssemblies().FirstOrDefault(c => c.FullName.StartsWith($"{entryAssemblyName},"))));
-        }
-
-        /*
-        static string globalEntryAssemblyName = default;
+        #region Member
 
         /// <summary>
-        /// Specify the global entry assembly name. The default is System.Reflection.Assembly.GetEntryAssembly().
-        /// </summary>
-        public static string GlobalEntryAssemblyName
-        {
-            get => globalEntryAssemblyName;
-            set
-            {
-                globalEntryAssemblyName = value;
-
-                generatorCode = new Lazy<IGeneratorType>(() =>
-                {
-                    var ass = globalEntryAssemblyName is null ? System.Reflection.Assembly.GetEntryAssembly() : AppDomain.CurrentDomain.GetAssemblies().FirstOrDefault(c => c.FullName.StartsWith($"{globalEntryAssemblyName},"));
-                    return GetGenericType(ass);
-                });
-            }
-        }
-        */
-
-        //public static bool SetGeneratorCode(System.Reflection.Assembly assembly)
-        //{
-        //    if (assembly is null)
-        //    {
-        //        throw new ArgumentNullException(nameof(assembly));
-        //    }
-
-        //    var type = assembly.GetType($"{assembly?.GetName().Name}.{GeneratorCodeName}", false);
-
-        //    if (null != type)
-        //    {
-        //        generatorCode = type.GetProperty("Generator").GetValue(null) as IGeneratorType;
-
-        //        return true;
-        //    }
-
-        //    return false;
-        //}
-
-        /// <summary>
-        /// Gets the generator type of the specified assembly.
-        /// </summary>
-        /// <param name="assembly">Target assembly.</param>
-        /// <returns>A IGeneratorType or null</returns>
-        public static IGeneratorType GetGenericType(System.Reflection.Assembly assembly)
-        {
-            if (assembly is null)
-            {
-                throw new ArgumentNullException(nameof(assembly));
-            }
-
-            var type = assembly.GetType($"{assembly.GetName().Name}.{GeneratorCodeName}", false);
-
-            if (null != type)
-            {
-                return type.GetProperty("Generator").GetValue(null) as IGeneratorType;
-            }
-
-            return default;
-        }
-
-        /// <summary>
-        /// Gets the property or field or method value of a specified object.
+        /// Gets the property or field value of a specified object.
         /// </summary>
         /// <typeparam name="Type">Type of returned object.</typeparam>
         /// <param name="accessor">The object whose value will be get.</param>
         /// <param name="name">property or field name.</param>
-        /// <param name="value">The property or field value of the specified object.</param>
+        /// <param name="result">The property or field value of the specified object.</param>
         /// <param name="args">Parameter object of calling method.</param>
         /// <returns>Return to true successfully.</returns>
-        public static bool AccessorGet<Type>(this IGeneratorAccessor accessor, string name, out Type value, params object[] args)
+        public static bool AccessorGet<Type>(this IGeneratorAccessor accessor, string name, out Type result, params object[] args)
         {
-            var result = AccessorGet(accessor, name, out object value2, args);
+            var success = AccessorGet(accessor, name, out object result2, args);
 
-            value = result ? (Type)value2 : default;
+            result = success ? (Type)result2 : default;
 
-            return result;
+            return success;
         }
 
         /// <summary>
-        /// Gets the property or field or method value of a specified object.
+        /// Gets the property or field value of a specified object.
         /// </summary>
         /// <param name="accessor">The object whose value will be get.</param>
         /// <param name="name">property or field name.</param>
-        /// <param name="value">The property or field value of the specified object.</param>
+        /// <param name="result">The property or field value of the specified object.</param>
         /// <param name="args">Parameter object of calling method.</param>
         /// <returns>Return to true successfully.</returns>
         /// <exception cref="ArgumentNullException"></exception>
-        public static bool AccessorGet(this IGeneratorAccessor accessor, string name, out object value, params object[] args)
+        public static bool AccessorGet(this IGeneratorAccessor accessor, string name, out object result, params object[] args)
         {
             if (accessor is null)
             {
@@ -155,110 +79,18 @@ namespace Business.SourceGenerator
 
             if (args is null)
             {
-                throw new ArgumentNullException(nameof(args));
+                args = Array.Empty<object>();
             }
 
-            if (accessor.AccessorType().Members.TryGetValue(name, out IAccessorMeta meta))
+            if (!accessor.AccessorType().Members.TryGetValue(name, out IAccessor meta) || !(meta is IAccessorMember member) || member.GetValue is null)
             {
-                switch (meta)
-                {
-                    case IAccessorMember member:
-                        if (member.GetValue is null)
-                        {
-                            break;
-                        }
-                        value = member.GetValue(accessor);
-                        return true;
-                    case IAccessorMethod member:
-                        if (member.GetValue is null)
-                        {
-                            break;
-                        }
-                        value = member.GetValue(accessor, args);
-                        return true;
-                    default: break;
-                }
+                result = default;
+                return default;
             }
 
-            value = default;
-
-            return default;
+            result = member.GetValue(accessor);
+            return true;
         }
-
-        /// <summary>
-        /// Gets the method value of a specified object.
-        /// </summary>
-        /// <typeparam name="Type">Type of returned object.</typeparam>
-        /// <param name="accessor">The object whose value will be get.</param>
-        /// <param name="name">method name.</param>
-        /// <param name="args">Parameter object of calling method.</param>
-        /// <returns>Specifies the method return value of the object.</returns>
-        /// <exception cref="ArgumentNullException"></exception>
-        /// <exception cref="MemberAccessException"></exception>
-        public static async Task<Type> AccessorGetAsync<Type>(this IGeneratorAccessor accessor, string name, params object[] args)
-        {
-            var result = await AccessorGetAsync(accessor, name, args);
-
-            return (Type)result;
-        }
-
-        /// <summary>
-        /// Gets the method value of a specified object.
-        /// </summary>
-        /// <param name="accessor">The object whose value will be get.</param>
-        /// <param name="name">method name.</param>
-        /// <param name="args">Parameter object of calling method.</param>
-        /// <returns>Specifies the method return value of the object.</returns>
-        /// <exception cref="ArgumentNullException"></exception>
-        /// <exception cref="MemberAccessException"></exception>
-        public static Task<object> AccessorGetAsync(this IGeneratorAccessor accessor, string name, params object[] args)
-        {
-            if (accessor is null)
-            {
-                return Task.FromException<object>(new ArgumentNullException(nameof(accessor)));
-            }
-
-            if (name is null)
-            {
-                return Task.FromException<object>(new ArgumentNullException(nameof(name)));
-            }
-
-            if (args is null)
-            {
-                return Task.FromException<object>(new ArgumentNullException(nameof(args)));
-            }
-
-            if (!accessor.AccessorType().Members.TryGetValue(name, out IAccessorMeta meta) || !(meta is IAccessorMethod member) || member.GetValueAsync is null)
-            {
-                return Task.FromException<object>(new MemberAccessException($"The current member \"{name}\" does not exist."));
-            }
-
-            return member.GetValueAsync(accessor, args);
-        }
-
-        /*
-        public static bool AccessorSet(this IGeneratorAccessor accessor, string name, object value)
-        {
-            if (name is null)
-            {
-                throw new ArgumentNullException(nameof(name));
-            }
-
-            if (accessor.AccessorType().Members.TryGetValue(name, out IAccessorMeta meta) && meta is IAccessorMember member)
-            {
-                if (member.SetValue is null)
-                {
-                    return default;
-                }
-
-                member.SetValue(ref accessor, value);
-
-                return true;
-            }
-
-            return default;
-        }
-        */
 
         /// <summary>
         /// Sets the property or field value of a specified object.
@@ -278,116 +110,268 @@ namespace Business.SourceGenerator
             return default;
         }
 
-        #region IGeneratorType
+        #endregion
 
-        static string GetGenericType(Type type)
+        #region Method
+
+        /// <summary>
+        /// Call the specified method to obtain the return object and out parameters.
+        /// </summary>
+        /// <typeparam name="ResultType"></typeparam>
+        /// <param name="accessor">Own an instance of this method.</param>
+        /// <param name="name">Method name.</param>
+        /// <param name="result">Return value, obtained as an out declaration.</param>
+        /// <param name="args">Method parameter array.</param>
+        /// <returns></returns>
+        public static bool AccessorMethod<ResultType>(this IGeneratorAccessor accessor, string name, out ResultType result, params object[] args)
         {
-            if (type is null)
-            {
-                throw new ArgumentNullException(nameof(type));
-            }
+            var success = AccessorMethod(accessor, name, out object result2, args);
 
-            return TypeNameFormatter.TypeName.GetFormattedName(type, TypeNameFormatter.TypeNameFormatOptions.Namespaces | TypeNameFormatter.TypeNameFormatOptions.NoKeywords | TypeNameFormatter.TypeNameFormatOptions.NoTuple | TypeNameFormatter.TypeNameFormatOptions.NoAnonymousTypes);
+            result = success ? (ResultType)result2 : default;
+
+            return success;
         }
 
         /// <summary>
-        /// searches for the specified constructor whose parameters match the specified argument types.
+        /// Call the specified method to obtain the return object and out parameters.
         /// </summary>
-        /// <param name="constructors"></param>
-        /// <param name="args"></param>
+        /// <param name="accessor">Own an instance of this method.</param>
+        /// <param name="name">Method name.</param>
+        /// <param name="result">Return value, obtained as an out declaration.</param>
+        /// <param name="args">Method parameter array.</param>
         /// <returns></returns>
-        static (int sign, object[] args) GetConstructor(IEnumerable<Constructor> constructors, params object[] args)
+        /// <exception cref="ArgumentNullException"></exception>
+        public static bool AccessorMethod(this IGeneratorAccessor accessor, string name, out object result, params object[] args)
         {
-            foreach (var item in constructors)
+            if (accessor is null)
             {
-                //if (!string.Equals(item.key, typeName))
-                //{
-                //    continue;
-                //}
+                throw new ArgumentNullException(nameof(accessor));
+            }
 
-                if (item.parameters.Length < args.Length || item.length > args.Length)
-                {
-                    continue;
-                }
+            if (name is null)
+            {
+                throw new ArgumentNullException(nameof(name));
+            }
 
-                if (0 == item.parameters.Length)
-                {
-                    return (item.sign, args);
-                }
+            if (args is null)
+            {
+                args = Array.Empty<object>();
+            }
 
-                var parameters = item.parameters;
+            if (!accessor.AccessorType().Members.TryGetValue(name, out IAccessor meta))
+            {
+                result = default;
+                return default;
+            }
 
-                var argsObject = new object[parameters.Length];
-
-                var skip = false;
-
-                for (int i = 0; i < argsObject.Length; i++)
-                {
-                    var parameter = parameters[i];
-
-                    if (i < args.Length)
+            switch (meta)
+            {
+                case IAccessorMethod method:
                     {
-                        var arg = args[i];
+                        var checkedArgs = CheckedMethod(method, args);
 
-                        if (!typeof(object).Equals(parameter.type))
+                        if (checkedArgs is null || method.Invoke is null)
                         {
-                            if (!Equals(null, arg))
-                            {
-                                var argType = arg.GetType();
+                            break;
+                        }
 
-                                if (!Equals(argType, parameter.type) && !((TypeKind.Class == parameter.kind || TypeKind.Interface == parameter.kind) && parameter.type.IsAssignableFrom(argType)))
-                                {
-                                    skip = true;
-                                    break;
-                                }
+                        result = method.Invoke(accessor, checkedArgs, args);
+                        return true;
+                    }
+                case IAccessorMethodCollection collection:
+                    {
+                        foreach (var method in collection)
+                        {
+                            var checkedArgs = CheckedMethod(method, args);
+
+                            if (checkedArgs is null)
+                            {
+                                continue;
                             }
-                            else if (parameter.isValueType)
+
+                            if (method.Invoke is null)
+                            {
+                                break;
+                            }
+
+                            result = method.Invoke(accessor, checkedArgs, args);
+                            return true;
+                        }
+
+                        break;
+                    }
+                default: break;
+            }
+
+            result = default;
+            return default;
+        }
+
+        /// <summary>
+        /// Gets the method value of a specified object.
+        /// </summary>
+        /// <typeparam name="ResultType">Type of returned object.</typeparam>
+        /// <param name="accessor">Own an instance of this method.</param>
+        /// <param name="name">method name.</param>
+        /// <param name="args">Parameter object of calling method.</param>
+        /// <returns>Specifies the method return value of the object.</returns>
+        public static async Task<ResultType> AccessorMethodAsync<ResultType>(this IGeneratorAccessor accessor, string name, params object[] args) => (ResultType)await AccessorMethodAsync(accessor, name, args);
+
+        /// <summary>
+        /// Gets the method value of a specified object.
+        /// </summary>
+        /// <param name="accessor">Own an instance of this method.</param>
+        /// <param name="name">method name.</param>
+        /// <param name="args">Parameter object of calling method.</param>
+        /// <returns>pecifies the method return value of the object.</returns>
+        public static async Task<object> AccessorMethodAsync(this IGeneratorAccessor accessor, string name, params object[] args)
+        {
+            if (accessor is null)
+            {
+                return await Task.FromException<object>(new ArgumentNullException(nameof(accessor)));
+            }
+
+            if (name is null)
+            {
+                return await Task.FromException<object>(new ArgumentNullException(nameof(name)));
+            }
+
+            if (args is null)
+            {
+                args = Array.Empty<object>();
+            }
+
+            if (!accessor.AccessorType().Members.TryGetValue(name, out IAccessor meta))
+            {
+                return await Task.FromException<object>(new MethodAccessException($"The current method \"{name}\" does not exist."));
+            }
+
+            switch (meta)
+            {
+                case IAccessorMethod method:
+                    {
+                        var checkedArgs = CheckedMethod(method, args);
+
+                        if (checkedArgs is null)
+                        {
+                            return await Task.FromException<object>(new ArgumentOutOfRangeException(nameof(args), "The number of parameters must be less than or equal to the actual total number of parameters for the method."));
+                        }
+
+                        if (method.InvokeAsync is null)
+                        {
+                            return await Task.FromException<object>(new NotImplementedException("This method is not callable."));
+                        }
+
+                        return await method.InvokeAsync(accessor, checkedArgs, args);
+                    }
+                case IAccessorMethodCollection collection:
+                    {
+                        foreach (var method in collection)
+                        {
+                            var checkedArgs = CheckedMethod(method, args);
+
+                            if (checkedArgs is null)
+                            {
+                                continue;
+                            }
+
+                            if (method.InvokeAsync is null)
+                            {
+                                return await Task.FromException<object>(new NotImplementedException("This method is not callable."));
+                            }
+
+                            return await method.InvokeAsync(accessor, checkedArgs, args);
+                        }
+
+                        return await Task.FromException<object>(new ArgumentOutOfRangeException(nameof(args), "The number of parameters must be less than or equal to the actual total number of parameters for the method."));
+                    }
+                default: return await Task.FromException<object>(new MethodAccessException($"The current method \"{name}\" type error."));
+            }
+        }
+
+        #endregion
+
+        static CheckedParameterValue[] CheckedMethod(IMethodMeta method, object[] args)
+        {
+            if (method.ParametersRealLength < args.Length || method.ParametersMustLength > args.Length)
+            {
+                return default;
+            }
+
+            if (0 == method.ParametersRealLength)
+            {
+                return Array.Empty<CheckedParameterValue>();
+            }
+
+            var argsObject = new CheckedParameterValue[method.ParametersRealLength];
+
+            var skip = false;
+
+            foreach (var parameter in method.ParametersMeta)
+            {
+                if (parameter.Ordinal < args.Length)
+                {
+                    var arg = args[parameter.Ordinal];
+                    Type argType;
+
+                    //checked ref, out
+                    if (parameter.RefKind is RefKind.Ref || parameter.RefKind is RefKind.Out)
+                    {
+                        if (!(arg is RefArg refValue && parameter.RefKind == refValue.RefKind))
+                        {
+                            skip = true;
+                            break;
+                        }
+
+                        arg = refValue.Value;
+                        argType = refValue.Type;
+                    }
+                    else
+                    {
+                        argType = arg?.GetType();
+                    }
+
+                    if (!typeof(object).Equals(parameter.RuntimeType))
+                    {
+                        if (!(argType is null))
+                        {
+                            if (!Equals(argType, parameter.RuntimeType) && !((TypeKind.Class == parameter.TypeKind || TypeKind.Interface == parameter.TypeKind || TypeKind.TypeParameter == parameter.TypeKind) && parameter.RuntimeType.IsAssignableFrom(argType)))
                             {
                                 skip = true;
                                 break;
                             }
                         }
+                        else if (parameter.IsValueType)
+                        {
+                            skip = true;
+                            break;
+                        }
+                    }
 
-                        argsObject[i] = arg;
-                    }
-                    else if (parameter.hasDefaultValue)
-                    {
-                        argsObject[i] = parameter.defaultValue;
-                    }
+                    argsObject[parameter.Ordinal] = new CheckedParameterValue(arg, false);
                 }
-
-                if (!skip)
+                //ImplicitDefaultValue is params and value = default
+                else if (parameter.HasExplicitDefaultValue || parameter.ImplicitDefaultValue)
                 {
-                    return (item.sign, argsObject);
+                    argsObject[parameter.Ordinal] = new CheckedParameterValue(parameter.ExplicitDefaultValue, parameter.ImplicitDefaultValue);
                 }
+                else
+                {
+                    skip = true;
+                    break;
+                    //throw new ArgumentOutOfRangeException($"{nameof(args)}[{i}]", "The number of parameters must be less than or equal to the actual total number of parameters for the method.");
+                }
+            }
+
+            if (!skip)
+            {
+                return argsObject;
             }
 
             return default;
         }
 
-        static Func<GeneratorTypeArg, GeneratorTypeOpt, object> GetType(IGeneratorType generatorType, Type type)
-        {
-            if (!generatorType.GeneratorType.TryGetValue(GetGenericType(type), out Func<GeneratorTypeArg, GeneratorTypeOpt, object> value))
-            {
-                if (type.IsGenericType)
-                {
-                    var typeArgument = type.GetGenericArguments();
-
-                    var typeArgumentKey = 1 < typeArgument.Length ? $"<{string.Join(", ", typeArgument.Select(c => GetGenericType(c)))}>" : GetGenericType(typeArgument[0]);
-
-                    if (!generatorType.GeneratorType.TryGetValue(typeArgumentKey, out value))
-                    {
-                        return default;
-                    }
-                }
-                else
-                {
-                    return default;
-                }
-            }
-
-            return value;
-        }
+        #region IGeneratorType
 
         /// <summary>
         /// Substitutes the generic type parameter for the type parameters of the  current generic type definition and returns a System.Type object representing the resulting constructed type.
@@ -407,21 +391,21 @@ namespace Business.SourceGenerator
         public static System.Type GetGenericType<Type>(this IGeneratorType generatorType, System.Type type) => GetGenericType(generatorType, type, typeof(Type));
 
         /// <summary>
-        /// Substitutes the elements of an array of types for the type parameters of the current generic type definition and returns a System.Type object representing the resulting constructed type.
+        /// Substitutes the elements of an type for the type parameters of the current generic type definition and returns a System.Type object representing the resulting constructed type.
         /// </summary>
         /// <param name="type">Current generic type.</param>
-        /// <param name="typeArgument">An array of types to be substituted for the type parameters of the current generic type.</param>
+        /// <param name="typeArgument">An types to be substituted for the type parameters of the current generic type.</param>
         /// <returns>A System.Type object representing the resulting constructed type.</returns>
-        public static Type GetGenericType(this Type type, params Type[] typeArgument) => GetGenericType(GeneratorCode, type, typeArgument);
+        public static Type GetGenericType(this Type type, Type typeArgument) => GetGenericType(GeneratorCode, type, typeArgument);
 
         /// <summary>
-        /// Substitutes the elements of an array of types for the type parameters of the current generic type definition and returns a System.Type object representing the resulting constructed type.
+        /// Substitutes the elements of an type for the type parameters of the current generic type definition and returns a System.Type object representing the resulting constructed type.
         /// </summary>
         /// <param name="generatorType">Target IGeneratorType.</param>
         /// <param name="type">Current generic type.</param>
-        /// <param name="typeArgument">An array of types to be substituted for the type parameters of the current generic type.</param>
+        /// <param name="typeArgument">An types to be substituted for the type parameters of the current generic type.</param>
         /// <returns>A System.Type object representing the resulting constructed type.</returns>
-        public static Type GetGenericType(this IGeneratorType generatorType, Type type, params Type[] typeArgument)
+        public static Type GetGenericType(this IGeneratorType generatorType, Type type, Type typeArgument)
         {
             if (type is null)
             {
@@ -435,7 +419,7 @@ namespace Business.SourceGenerator
 
             if (!type.IsGenericType)
             {
-                throw new ArgumentNullException(nameof(type), "This operation is only valid on generic types.");
+                throw new ArgumentNullException(nameof(type), "This operation is only valid on generic type.");
             }
 
             if (typeArgument is null)
@@ -443,26 +427,24 @@ namespace Business.SourceGenerator
                 throw new ArgumentNullException(nameof(typeArgument));
             }
 
-            if (0 == typeArgument.Length)
-            {
-                return type;
-            }
-
-            var key = 1 < typeArgument.Length ? $"<{string.Join(", ", typeArgument.Select(c => GetGenericType(c)))}>" : GetGenericType(typeArgument[0]);
-
-            if (!generatorType.GeneratorType.TryGetValue(key, out Func<GeneratorTypeArg, GeneratorTypeOpt, object> value))
+            if (!generatorType.GeneratorType.TryGetValue(typeArgument, out GeneratorTypeMeta meta))
             {
                 return default;
             }
 
-            return value(new GeneratorTypeArg(GetGenericType(type.IsGenericTypeDefinition ? type : type.GetGenericTypeDefinition())), GeneratorTypeOpt.MakeGenericType) as Type;
+            if (!meta.MakeGenerics.TryGetValue(type, out Type makeType))
+            {
+                return default;
+            }
+
+            return makeType;
         }
 
         /// <summary>
         /// Create objects of pre built type.
         /// </summary>
         /// <typeparam name="Type"></typeparam>
-        /// <param name="type">Target type</param>
+        /// <param name="type">Target type.</param>
         /// <param name="args">An array of arguments that match in number, order, and type the parameters of the constructor to invoke. If args is an empty array or null, the constructor that takes no parameters (the parameterless constructor) is invoked.</param>
         /// <returns>A reference to the newly created object.</returns>
         public static Type CreateInstance<Type>(this System.Type type, params object[] args) => (Type)CreateInstance(GeneratorCode, type, args);
@@ -470,7 +452,7 @@ namespace Business.SourceGenerator
         /// <summary>
         /// Create objects of pre built type.
         /// </summary>
-        /// <param name="type">Target type</param>
+        /// <param name="type">Target type.</param>
         /// <param name="args">An array of arguments that match in number, order, and type the parameters of the constructor to invoke. If args is an empty array or null, the constructor that takes no parameters (the parameterless constructor) is invoked.</param>
         /// <returns>A reference to the newly created object.</returns>
         public static object CreateInstance(this Type type, params object[] args) => CreateInstance(GeneratorCode, type, args);
@@ -479,9 +461,12 @@ namespace Business.SourceGenerator
         /// Create objects of pre built type.
         /// </summary>
         /// <param name="generatorType">Target IGeneratorType.</param>
-        /// <param name="type">Target type</param>
+        /// <param name="type">Target type.</param>
         /// <param name="args">An array of arguments that match in number, order, and type the parameters of the constructor to invoke. If args is an empty array or null, the constructor that takes no parameters (the parameterless constructor) is invoked.</param>
         /// <returns></returns>
+        /// <exception cref="ArgumentNullException"></exception>
+        /// <exception cref="NotImplementedException"></exception>
+        /// <exception cref="ArgumentOutOfRangeException"></exception>
         public static object CreateInstance(this IGeneratorType generatorType, Type type, params object[] args)
         {
             if (type is null)
@@ -499,31 +484,39 @@ namespace Business.SourceGenerator
                 throw new ArgumentNullException(nameof(type), "This operation is only valid on real generic types.");
             }
 
+            //if (args is null)
+            //{
+            //    throw new ArgumentNullException(nameof(args));
+            //}
+
             if (args is null)
             {
-                throw new ArgumentNullException(nameof(args));
+                args = Array.Empty<object>();
             }
 
-            var value = GetType(generatorType, type);
-
-            if (default == value)
+            if (!generatorType.GeneratorType.TryGetValue(type, out GeneratorTypeMeta meta))
             {
                 return default;
             }
 
-            if (!(value(new GeneratorTypeArg(GetGenericType(type.IsGenericType ? type.GetGenericTypeDefinition() : type)), GeneratorTypeOpt.Constructors) is IEnumerable<Constructor> constructors))
+            foreach (var method in meta.Constructors)
             {
-                return default;
+                var checkedArgs = CheckedMethod(method, args);
+
+                if (checkedArgs is null)
+                {
+                    continue;
+                }
+
+                if (method.Invoke is null)
+                {
+                    throw new NotImplementedException("This method is not callable.");
+                }
+
+                return method.Invoke(default, checkedArgs, args);
             }
 
-            var constructor = GetConstructor(constructors, args);
-
-            if (default == constructor)
-            {
-                return default;
-            }
-
-            return value(new GeneratorTypeArg(constructor.sign, constructor.args), GeneratorTypeOpt.CreateGenericType);
+            throw new ArgumentOutOfRangeException(nameof(args), "The number of parameters must be less than or equal to the actual total number of parameters for the method.");
         }
 
         /// <summary>
@@ -531,7 +524,7 @@ namespace Business.SourceGenerator
         /// </summary>
         /// <param name="type"></param>
         /// <returns></returns>
-        public static bool ContainsType(this Type type) => ContainsType(GeneratorCode, type);
+        public static bool IsDefinition(this Type type) => IsDefinition(GeneratorCode, type);
 
         /// <summary>
         /// Whether to customize the object.
@@ -539,7 +532,7 @@ namespace Business.SourceGenerator
         /// <param name="generatorType">Target IGeneratorType.</param>
         /// <param name="type"></param>
         /// <returns></returns>
-        public static bool ContainsType(this IGeneratorType generatorType, Type type)
+        public static bool IsDefinition(this IGeneratorType generatorType, Type type)
         {
             if (type is null)
             {
@@ -556,14 +549,12 @@ namespace Business.SourceGenerator
                 throw new ArgumentNullException(nameof(type), "This operation is only valid on generic types.");
             }
 
-            var value = GetType(generatorType, type);
-
-            if (default == value)
+            if (!generatorType.GeneratorType.TryGetValue(type, out GeneratorTypeMeta meta))
             {
                 return default;
             }
 
-            return (bool)value(default, GeneratorTypeOpt.ContainsType);
+            return meta.IsDefinition;
         }
 
         #endregion

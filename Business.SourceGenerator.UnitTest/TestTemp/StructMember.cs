@@ -1,4 +1,7 @@
-﻿namespace MyCode
+﻿
+
+
+namespace MyCode
 {
     public partial struct StructMember
     {

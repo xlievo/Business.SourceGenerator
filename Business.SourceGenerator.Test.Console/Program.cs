@@ -12,6 +12,9 @@ using System.Security.Cryptography;
 //using System.Text.Json.Serialization.Metadata;
 using System.Text.Json.Serialization;
 using System.Threading.Tasks;
+using System.Reflection.PortableExecutable;
+using System.Runtime.CompilerServices;
+using System.Reflection;
 
 namespace Business.SourceGenerator.Test.Console
 {
@@ -19,6 +22,8 @@ namespace Business.SourceGenerator.Test.Console
     {
         static async Task<int> Main(string[] args)
         {
+            BusinessSourceGenerator.Generator.SetGeneratorCode();
+
             var result = typeof(MyCode.ClassGeneric<string>)
                     .CreateInstance<IGeneratorAccessor>()
                     .AccessorSet<IGeneratorAccessor>("A", "WWW")
@@ -29,19 +34,29 @@ namespace Business.SourceGenerator.Test.Console
                 .AccessorSet<IGeneratorAccessor>("bbb", 888)
                 .AccessorSet<IGeneratorAccessor>("ccc", DateTimeOffset.Now);
 
-            if (MyStruct111.AccessorGet("StructMember2", out (int c1, string c2) value222, "a", default, (777, "xzzzxx")))
+            //StructMember2(ref string? a, out int* b, ref (int c1, string c2) c, out (int? c1, string? c2) d)
+            if (MyStruct111.AccessorMethod("StructMember2", out (int c1, string c2) value222, "a", (777, "xzzzxx")))
             {
                 System.Console.WriteLine(value222);
             }
 
-            if (MyStruct111.AccessorGet("StructMethod7", out ValueTask<(int c1, string c2)> value7, "a", default, (888, "xzzzxx")))
+            //StructMethod7(ref string? a, out int? b, ref (int c1, string c2) c, out (int? c1, string? c2) d)
+            if (MyStruct111.AccessorMethod("StructMethod7", out ValueTask<(int c1, string c2)> value7, RefArg.Ref("a"), RefArg.Out<int?>(), RefArg.Ref((888, "xzzzxx")), RefArg.Out<(int?, string?)>()))
             {
                 System.Console.WriteLine(await value7);
             }
 
-            var value777 = await MyStruct111.AccessorGetAsync<(int c1, string c2)>("StructMethod7", "a", default, (999, "xzzzxx"));
+            MyStruct111.AccessorMethod<ValueTask<(int c1, string c2)>>("StructMethod7", out var value7772, RefArg.Ref("a"), RefArg.Out<int?>(), RefArg.Ref((999, "xzzzxx")), RefArg.Out<(int?, string?)>());
 
-            System.Console.WriteLine(value777);
+            System.Console.WriteLine(await value7772);
+
+            var args7 = new object[] { RefArg.Ref("a"), RefArg.Out<int?>(), RefArg.Ref((999, "xzzzxx")), RefArg.Out<(int?, string?)>() };
+
+            var value777 = await MyStruct111.AccessorMethodAsync<(int c1, string c2)>("StructMethod7", args7);
+
+            System.Console.WriteLine(((RefArg)args7[1]).Value);
+
+
 
             if (MyStruct111.AccessorGet("aaa", out string value))
             {
@@ -58,13 +73,15 @@ namespace Business.SourceGenerator.Test.Console
                 System.Console.WriteLine(value3);
             }
 
-            var value2 = MyStruct111.AccessorGetAsync("ccc");
+            _ = MyStruct111.AccessorGet("ccc", out object rrr);
+
+            System.Console.WriteLine(rrr);
 
             var data = typeof(ResultObject<>).GetGenericType(typeof(MyStruct)).CreateInstance(MyStruct111, 8888, "message", true);
 
             var data5 = typeof(ResultObject3<>).GetGenericType<MyStruct5>().CreateInstance<ResultObject3<MyStruct5>>(new MyStruct5("```5555555555555555555555~!@#"), 333, "message", true);
 
-            var data6 = typeof(ResultObject3<>).GetGenericType(typeof(MyStruct6)).CreateInstance<ResultObject3<MyStruct6>>(new MyStruct6("```6666666666666666666666~!@#"), 333, "message", true);
+            var data6 = typeof(ResultObject3<>).GetGenericType(typeof(MyStruct6)).CreateInstance<ResultObject3<MyStruct6>>(typeof(MyStruct6).CreateInstance("```6666666666666666666666~!@#"), 333, "message", true);
 
             var data7 = typeof(ResultObject3<>).GetGenericType(typeof(MyStruct7)).CreateInstance<ResultObject3<MyStruct7>>(new MyStruct7("```7777777777777777777777~!@#"), 333, "message", true);
 
@@ -76,12 +93,19 @@ namespace Business.SourceGenerator.Test.Console
 
             System.Console.WriteLine(data);
 
-            System.Console.WriteLine(System.Text.Json.JsonSerializer.Serialize(data5, typeof(ResultObject3<MyStruct5>), SourceGenerationContext2.Default));
-            System.Console.WriteLine(System.Text.Json.JsonSerializer.Serialize(data6, typeof(ResultObject3<MyStruct6>), SourceGenerationContext2.Default));
-            System.Console.WriteLine(System.Text.Json.JsonSerializer.Serialize(data7, typeof(ResultObject3<MyStruct7>), SourceGenerationContext2.Default));
-            System.Console.WriteLine(System.Text.Json.JsonSerializer.Serialize(data8, typeof(ResultObject3<MyStruct8>), SourceGenerationContext2.Default));
-            System.Console.WriteLine(System.Text.Json.JsonSerializer.Serialize(data9, typeof(ResultObject3<MyStruct9>), SourceGenerationContext2.Default));
-            System.Console.WriteLine(System.Text.Json.JsonSerializer.Serialize(data10, typeof(ResultObject3<MyStruct10>), SourceGenerationContext2.Default));
+            System.Console.WriteLine(data5.Data.aaa);
+            System.Console.WriteLine(data6.Data.aaa);
+            System.Console.WriteLine(data7.Data.aaa);
+            System.Console.WriteLine(data8.Data.aaa);
+            System.Console.WriteLine(data9.Data.aaa);
+            System.Console.WriteLine(data10.Data.aaa);
+
+            //System.Console.WriteLine(System.Text.Json.JsonSerializer.Serialize(data5, typeof(ResultObject3<MyStruct5>), SourceGenerationContext2.Default));
+            //System.Console.WriteLine(System.Text.Json.JsonSerializer.Serialize(data6, typeof(ResultObject3<MyStruct6>), SourceGenerationContext2.Default));
+            //System.Console.WriteLine(System.Text.Json.JsonSerializer.Serialize(data7, typeof(ResultObject3<MyStruct7>), SourceGenerationContext2.Default));
+            //System.Console.WriteLine(System.Text.Json.JsonSerializer.Serialize(data8, typeof(ResultObject3<MyStruct8>), SourceGenerationContext2.Default));
+            //System.Console.WriteLine(System.Text.Json.JsonSerializer.Serialize(data9, typeof(ResultObject3<MyStruct9>), SourceGenerationContext2.Default));
+            //System.Console.WriteLine(System.Text.Json.JsonSerializer.Serialize(data10, typeof(ResultObject3<MyStruct10>), SourceGenerationContext2.Default));
 
             System.Console.WriteLine(System.AppContext.BaseDirectory);
 
@@ -92,15 +116,17 @@ namespace Business.SourceGenerator.Test.Console
     }
 }
 
-[JsonSourceGenerationOptions(WriteIndented = true)]
-//[JsonSerializable(typeof(ResultObject<MyStruct>), GenerationMode = JsonSourceGenerationMode.Metadata)]
-[JsonSerializable(typeof(ResultObject2<MyStruct2>), GenerationMode = JsonSourceGenerationMode.Metadata)]
-[JsonSerializable(typeof(ResultObject3<MyStruct3>), GenerationMode = JsonSourceGenerationMode.Metadata)]
-[JsonSerializable(typeof(ResultObject4<MyStruct4>), GenerationMode = JsonSourceGenerationMode.Metadata)]
-[JsonSerializable(typeof(ResultObject3<MyStruct5>), GenerationMode = JsonSourceGenerationMode.Metadata)]
-[JsonSerializable(typeof(ResultObject3<MyStruct6>), GenerationMode = JsonSourceGenerationMode.Metadata)]
-[JsonSerializable(typeof(ResultObject3<MyStruct7>), GenerationMode = JsonSourceGenerationMode.Metadata)]
-[JsonSerializable(typeof(ResultObject3<MyStruct8>), GenerationMode = JsonSourceGenerationMode.Metadata)]
-[JsonSerializable(typeof(ResultObject3<MyStruct9>), GenerationMode = JsonSourceGenerationMode.Metadata)]
-[JsonSerializable(typeof(ResultObject3<MyStruct10>), GenerationMode = JsonSourceGenerationMode.Metadata)]
-internal partial class SourceGenerationContext2 : JsonSerializerContext { }
+//[JsonSerializable(typeof(Type), GenerationMode = JsonSourceGenerationMode.Metadata)]
+//[JsonSerializable(typeof(Assembly), GenerationMode = JsonSourceGenerationMode.Metadata)]
+//[JsonSourceGenerationOptions(WriteIndented = true)]
+////[JsonSerializable(typeof(ResultObject<MyStruct>), GenerationMode = JsonSourceGenerationMode.Metadata)]
+//[JsonSerializable(typeof(ResultObject2<MyStruct2>), GenerationMode = JsonSourceGenerationMode.Metadata)]
+//[JsonSerializable(typeof(ResultObject3<MyStruct3>), GenerationMode = JsonSourceGenerationMode.Metadata)]
+//[JsonSerializable(typeof(ResultObject4<MyStruct4>), GenerationMode = JsonSourceGenerationMode.Metadata)]
+//[JsonSerializable(typeof(ResultObject3<MyStruct5>), GenerationMode = JsonSourceGenerationMode.Metadata)]
+//[JsonSerializable(typeof(ResultObject3<MyStruct6>), GenerationMode = JsonSourceGenerationMode.Metadata)]
+//[JsonSerializable(typeof(ResultObject3<MyStruct7>), GenerationMode = JsonSourceGenerationMode.Metadata)]
+//[JsonSerializable(typeof(ResultObject3<MyStruct8>), GenerationMode = JsonSourceGenerationMode.Metadata)]
+//[JsonSerializable(typeof(ResultObject3<MyStruct9>), GenerationMode = JsonSourceGenerationMode.Metadata)]
+//[JsonSerializable(typeof(ResultObject3<MyStruct10>), GenerationMode = JsonSourceGenerationMode.Metadata)]
+//internal partial class SourceGenerationContext2 : JsonSerializerContext { }

@@ -108,7 +108,7 @@ public struct ResultObject4<Type> : IResult2<Type>
     public byte[] ToBytes(bool dataBytes = true) => throw new NotImplementedException(); //Utils.Help.ProtoBufSerialize(this);
 }
 
-public partial struct MyStruct
+public unsafe partial struct MyStruct
 {
     public string? aaa { get; set; }
 
@@ -116,17 +116,19 @@ public partial struct MyStruct
 
     public DateTimeOffset? ccc { get; set; }
 
+    public int* ddd { get; set; }
+
     public MyStruct(string aaa)
     {
         this.aaa = aaa ?? throw new ArgumentNullException(nameof(aaa));
     }
 
-    public (int c1, string c2) StructMember2(ref string? a, out int? b, ref (int c1, string c2) c, out (int? c1, string? c2) d)
+    public (int c1, string c2) StructMember2(ref string? a, out int b, ref (int c1, string c2) c, out (int? c1, string? c2) d)
     {
         d = default;
         var dd = c.c1 as dynamic;
 
-        b = 9;
+        b = default;
 
         return c;
     }
@@ -135,6 +137,8 @@ public partial struct MyStruct
     {
         d = default;
         var dd = c.c1 as dynamic;
+
+        c.c1 = 66778899;
 
         //this.A = a;
         b = 9;
@@ -240,5 +244,11 @@ namespace MyCode
         public T A { get; set; }
 
         public System.Collections.Generic.Dictionary<T, T> B { get; set; }
+    }
+
+    public partial struct MethodInvoke<T>
+        where T : System.IDisposable
+    {
+        
     }
 }

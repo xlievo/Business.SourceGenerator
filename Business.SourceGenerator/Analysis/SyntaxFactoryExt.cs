@@ -25,6 +25,17 @@ namespace Business.SourceGenerator.Analysis
 
     internal static class SyntaxFactoryExt
     {
+        /*
+        var name1 = named.GetFullNameStandardFormat();
+        var name2 = d2.GetFullNameStandardFormat();
+
+        using (var workspace = new AdhocWorkspace())
+        {
+            var xx = SyntaxGenerator.GetGenerator(workspace, LanguageNames.CSharp).WithTypeArguments(SyntaxFactory.ParseTypeName(name1), SyntaxFactory.ParseTypeName(name2));
+
+            var xxx = xx.ToFullString();
+        }
+        */
         public static ObjectCreationExpressionSyntax ParseObjectCreation(TypeSyntax type, ArgumentListSyntax argumentList, InitializerExpressionSyntax initializer)
         {
             return SyntaxFactory.ObjectCreationExpression(type, argumentList, initializer);

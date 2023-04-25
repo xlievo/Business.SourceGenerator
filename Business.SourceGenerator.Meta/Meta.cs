@@ -17,8 +17,37 @@
 namespace Business.SourceGenerator.Meta
 {
     using System;
+    using System.Collections;
     using System.Collections.Generic;
     using System.Threading.Tasks;
+
+    public readonly struct Global
+    {
+        /// <summary>
+        /// A string containing "\r\n" non-Unix platforms.
+        /// </summary>
+        public const string EnvironmentNewLine = "\r\n";
+
+        /// <summary>
+        /// "BusinessSourceGenerator"
+        /// </summary>
+        public const string GeneratorCodeName = "BusinessSourceGenerator";
+
+        /// <summary>
+        /// GeneratorTypeAttribute
+        /// </summary>
+        public const string GeneratorTypeKey = "Business.SourceGenerator.Meta.GeneratorTypeAttribute";
+
+        /// <summary>
+        /// Business.SourceGenerator.Meta.IGeneratorAccessor
+        /// </summary>
+        public const string AccessorKey = "Business.SourceGenerator.Meta.IGeneratorAccessor";
+
+        /// <summary>
+        /// Business.SourceGenerator.Meta
+        /// </summary>
+        public const string BusinessSourceGeneratorMeta = "Business.SourceGenerator.Meta";
+    }
 
     #region IGeneratorCode, IGeneratorAccessor
 
@@ -30,9 +59,12 @@ namespace Business.SourceGenerator.Meta
         /// <summary>
         /// IGeneratorType
         /// </summary>
-        public IReadOnlyDictionary<string, Func<GeneratorTypeArg, GeneratorTypeOpt, object>> GeneratorType { get; }
+        public IReadOnlyDictionary<Type, GeneratorTypeMeta> GeneratorType { get; }
     }
 
+    /// <summary>
+    /// IGeneratorAccessor.
+    /// </summary>
     public interface IGeneratorAccessor
     {
         /// <summary>
@@ -50,76 +82,318 @@ namespace Business.SourceGenerator.Meta
         public bool AccessorSet(string name, object value);
     }
 
-    public readonly struct GeneratorTypeArg
+    /// <summary>
+    /// GeneratorTypeMeta.
+    /// </summary>
+    public readonly struct GeneratorTypeMeta
     {
-        public GeneratorTypeArg(string makeType, int createType, object[] args)
+        /// <summary>
+        /// MakeGenerics.
+        /// </summary>
+        public readonly IReadOnlyDictionary<Type, Type> MakeGenerics { get; }
+
+        /// <summary>
+        /// Constructors.
+        /// </summary>
+        public readonly IEnumerable<IMethodMeta> Constructors { get; }
+
+        /// <summary>
+        /// IsDefinition.
+        /// </summary>
+        public readonly bool IsDefinition { get; }
+
+        /// <summary>
+        /// GeneratorTypeMeta.
+        /// </summary>
+        /// <param name="makeGenerics"></param>
+        /// <param name="constructors"></param>
+        /// <param name="isDefinition"></param>
+        public GeneratorTypeMeta(IReadOnlyDictionary<Type, Type> makeGenerics, IEnumerable<IMethodMeta> constructors, bool isDefinition)
         {
-            this.makeType = makeType;
-            this.createType = createType;
-            this.args = args;
-        }
-
-        public GeneratorTypeArg(string makeType, params object[] args) : this(makeType, default, args) { }
-
-        public GeneratorTypeArg(int createType, params object[] args) : this(default, createType, args) { }
-
-        public readonly string makeType;
-
-        public readonly int createType;
-
-        public readonly object[] args;
-    }
-
-    public enum GeneratorTypeOpt
-    {
-        MakeGenericType,
-        CreateGenericType,
-        ContainsType,
-        Constructors,
-    }
-
-    public readonly struct Constructor
-    {
-        public readonly string key;
-
-        public readonly int sign;
-
-        public readonly int length;
-
-        public readonly Parameter[] parameters;
-
-        public Constructor(string key, int sign, int length, Parameter[] parameters)
-        {
-            this.key = key;
-            this.sign = sign;
-            this.length = length;
-            this.parameters = parameters;
+            this.MakeGenerics = makeGenerics;
+            this.Constructors = constructors;
+            this.IsDefinition = isDefinition;
         }
     }
 
-    public readonly struct Parameter
+    public readonly struct Constructor : IMethodMeta
     {
-        public readonly Type type;
+        /// <summary>
+        /// Skip the Out type to obtain the parameter count for this method. If the condition is not met, it returns 0.
+        /// </summary>
+        public readonly int ParametersRealLength { get; }
 
-        public readonly TypeKind kind;
+        /// <summary>
+        /// Skip the Out type and default value and Params to obtain the parameter count for this method. If the condition is not met, it returns 0.
+        /// </summary>
+        public readonly int ParametersMustLength { get; }
 
-        public readonly bool isValueType;
+        ///// <summary>
+        ///// The position of the ref parameter in the complete parameter array.
+        ///// </summary>
+        //public int[] ParametersRefOrdinal { get; }
 
-        public readonly bool hasDefaultValue;
+        public readonly IParameterMeta[] ParametersMeta { get; }
 
-        public readonly object defaultValue;
+        /// <summary>
+        /// Call this method.
+        /// </summary>
+        public readonly Func<object, CheckedParameterValue[], object[], object> Invoke { get; }
 
-        public Parameter(Type type, TypeKind kind, bool isValueType, bool hasDefaultValue, object defaultValue)
+        /// <summary>
+        /// Invoke this method asynchronously.
+        /// </summary>
+        public readonly Func<object, CheckedParameterValue[], object[], Task<object>> InvokeAsync { get; }
+
+        public Constructor(int parametersRealLength, int parametersMustLength, IParameterMeta[] parameters, Func<object, CheckedParameterValue[], object[], object> invoke)
         {
-            this.type = type;
-            this.kind = kind;
-            this.isValueType = isValueType;
-            this.hasDefaultValue = hasDefaultValue;
-            this.defaultValue = defaultValue;
+            this.ParametersRealLength = parametersRealLength;
+            this.ParametersMustLength = parametersMustLength;
+            this.ParametersMeta = parameters;
+            this.Invoke = invoke;
+            this.InvokeAsync = default;
+        }
+    }
+
+    public readonly struct Parameter : IParameterMeta
+    {
+        public Parameter(string name, Type runtimeType, TypeKind typeKind, RefKind refKind, bool isValueType, int ordinal, bool hasExplicitDefaultValue, object explicitDefaultValue, bool implicitDefaultValue, bool hasGenericType)
+        {
+            Name = name;
+            RuntimeType = runtimeType;
+            TypeKind = typeKind;
+
+            RefKind = refKind;
+            IsValueType = isValueType;
+            Ordinal = ordinal;
+            HasExplicitDefaultValue = hasExplicitDefaultValue;
+            ExplicitDefaultValue = explicitDefaultValue;
+            ImplicitDefaultValue = implicitDefaultValue;
+            HasGenericType = hasGenericType;
+        }
+
+        /// <summary>
+        /// Gets the symbol name. Returns the empty string if unnamed.
+        /// </summary>
+        public readonly string Name { get; }
+
+        /// <summary>
+        /// Gets the runtime type of the parameter.
+        /// </summary>
+        public readonly Type RuntimeType { get; }
+
+        /// <summary>
+        /// An enumerated value that identifies whether this type is an array, pointer, enum,
+        /// and so on.
+        /// </summary>
+        public readonly TypeKind TypeKind { get; }
+
+        /// <summary>
+        /// Whether the parameter passed by value or by reference.
+        /// </summary>
+        public readonly RefKind RefKind { get; }
+
+        /// <summary>
+        /// True if this type is known to be a value type.
+        /// </summary>
+        public readonly bool IsValueType { get; }
+
+        /// <summary>
+        /// Gets the ordinal position of the parameter. The first parameter has ordinal zero.
+        /// The 'this' parameter ('Me' in Visual Basic) has ordinal -1.
+        /// </summary>
+        public int Ordinal { get; }
+
+        /// <summary>
+        /// Returns true if the parameter specifies a default value to be passed when no
+        /// value is provided as an argument to a call. The default value can be obtained
+        /// with the Microsoft.CodeAnalysis.IParameterSymbol.ExplicitDefaultValue property.
+        /// </summary>
+        public readonly bool HasExplicitDefaultValue { get; }
+
+        /// <summary>
+        /// Returns the default value of the parameter.
+        /// </summary>
+        /// <remarks>
+        /// Returns null if the parameter type is a struct and the default value of the parameter
+        /// is the default value of the struct type.
+        /// </remarks>
+        public readonly object ExplicitDefaultValue { get; }
+
+        /// <summary>
+        /// Whether the default parameter value.
+        /// </summary>
+        public readonly bool ImplicitDefaultValue { get; }
+
+        /// <summary>
+        /// Whether contain generic types.
+        /// </summary>
+        public readonly bool HasGenericType { get; }
+    }
+
+    public interface IMethodMeta
+    {
+        /// <summary>
+        /// Skip the Out type to obtain the parameter count for this method. If the condition is not met, it returns 0.
+        /// </summary>
+        public int ParametersRealLength { get; }
+
+        /// <summary>
+        /// Skip the Out type and default value and Params to obtain the parameter count for this method. If the condition is not met, it returns 0.
+        /// </summary>
+        public int ParametersMustLength { get; }
+
+        ///// <summary>
+        ///// The position of the ref parameter in the complete parameter array.
+        ///// </summary>
+        //public int[] ParametersRefOrdinal { get; }
+
+        /// <summary>
+        /// Gets the parameters of this method. If this method has no parameters, returns
+        /// an empty list.
+        /// </summary>
+        public IParameterMeta[] ParametersMeta { get; }
+
+        /// <summary>
+        /// Call this method.
+        /// </summary>
+        public Func<object, CheckedParameterValue[], object[], object> Invoke { get; }
+
+        /// <summary>
+        /// Invoke this method asynchronously.
+        /// </summary>
+        public Func<object, CheckedParameterValue[], object[], Task<object>> InvokeAsync { get; }
+    }
+
+    public interface IParameterMeta
+    {
+        /// <summary>
+        /// Gets the symbol name. Returns the empty string if unnamed.
+        /// </summary>
+        public string Name { get; }
+
+        /// <summary>
+        /// Gets the runtime type of the parameter.
+        /// </summary>
+        public Type RuntimeType { get; }
+
+        /// <summary>
+        /// An enumerated value that identifies whether this type is an array, pointer, enum,
+        /// and so on.
+        /// </summary>
+        public TypeKind TypeKind { get; }
+
+        /// <summary>
+        /// Whether the parameter passed by value or by reference.
+        /// </summary>
+        public RefKind RefKind { get; }
+
+        /// <summary>
+        /// True if this type is known to be a value type.
+        /// </summary>
+        public bool IsValueType { get; }
+
+        /// <summary>
+        /// Gets the ordinal position of the parameter. The first parameter has ordinal zero.
+        /// The 'this' parameter ('Me' in Visual Basic) has ordinal -1.
+        /// </summary>
+        public int Ordinal { get; }
+
+        /// <summary>
+        /// Returns true if the parameter specifies a default value to be passed when no
+        /// value is provided as an argument to a call. The default value can be obtained
+        /// with the Microsoft.CodeAnalysis.IParameterSymbol.ExplicitDefaultValue property.
+        /// </summary>
+        public bool HasExplicitDefaultValue { get; }
+
+        /// <summary>
+        /// Returns the default value of the parameter.
+        /// </summary>
+        /// <remarks>
+        /// Returns null if the parameter type is a struct and the default value of the parameter
+        /// is the default value of the struct type.
+        /// </remarks>
+        public object ExplicitDefaultValue { get; }
+
+        /// <summary>
+        /// Whether the default parameter value.
+        /// </summary>
+        public bool ImplicitDefaultValue { get; }
+
+        /// <summary>
+        /// Whether contain generic types.
+        /// </summary>
+        public bool HasGenericType { get; }
+    }
+
+    /// <summary>
+    /// Packing a ref or out parameter value.
+    /// </summary>
+    public readonly struct RefArg
+    {
+        /// <summary>
+        /// Packing a ref parameter value.
+        /// </summary>
+        /// <typeparam name="Type"></typeparam>
+        /// <param name="value"></param>
+        /// <returns></returns>
+        public static RefArg Ref<Type>(Type value = default) => new RefArg(value, typeof(Type), RefKind.Ref);
+
+        /// <summary>
+        /// Packing a ref parameter value.
+        /// </summary>
+        /// <param name="value"></param>
+        /// <returns></returns>
+        public static RefArg Ref(object value = default) => new RefArg(value, typeof(object), RefKind.Ref);
+
+        /// <summary>
+        /// Packing a out parameter value.
+        /// </summary>
+        /// <returns></returns>
+        public static RefArg Out<Type>() => new RefArg(default, typeof(Type), RefKind.Out);
+
+        public RefArg Set(object value = default) => new RefArg(value, Type, RefKind);
+
+        /// <summary>
+        /// Original parameter object.
+        /// </summary>
+        public readonly object Value { get; }
+
+        public readonly Type Type { get; }
+
+        /// <summary>
+        /// RefKind.
+        /// </summary>
+        public readonly RefKind RefKind { get; }
+
+        public RefArg(object value, Type type, RefKind refKind)
+        {
+            this.Value = value;
+            this.Type = type;
+            this.RefKind = refKind;
         }
     }
 
     #endregion
+
+    public readonly struct CheckedParameterValue
+    {
+        /// <summary>
+        /// Default value.
+        /// </summary>
+        public readonly object v;
+
+        /// <summary>
+        /// Whether the default parameter value.
+        /// </summary>
+        public readonly bool c;
+
+        public CheckedParameterValue(object v, bool c)
+        {
+            this.v = v;
+            this.c = c;
+        }
+    }
 
     /// <summary>
     /// Represents the nullability of values that can be assigned to an expression used
@@ -853,6 +1127,8 @@ namespace Business.SourceGenerator.Meta
         Other,
     }
 
+    public interface IAccessor { }
+
     /// <summary>
     /// Represents a symbol (namespace, class, method, parameter, etc.) exposed by the
     /// compiler.
@@ -861,7 +1137,7 @@ namespace Business.SourceGenerator.Meta
     /// This interface is reserved for implementation by its associated APIs. We reserve
     /// the right to change it in the future.
     /// </remarks>
-    public interface IAccessorMeta
+    public interface IAccessorMeta : IAccessor
     {
         //Microsoft.CodeAnalysis.IAssemblySymbol ContainingAssembly { get; }
 
@@ -954,8 +1230,6 @@ namespace Business.SourceGenerator.Meta
         /// Whether the syntax node(s) where this symbol was declared in source.
         /// </summary>
         public bool IsDeclaringSyntaxReferences { get; }
-
-        //public string ToCode();
     }
 
     /// <summary>
@@ -989,7 +1263,7 @@ namespace Business.SourceGenerator.Meta
         /// An ImmutableArray containing all the members of this symbol. If this symbol has
         /// no members, returns an empty ImmutableArray. Never returns Null.
         /// </remarks>
-        public IDictionary<string, IAccessorMeta> Members { get; }
+        public IDictionary<string, IAccessor> Members { get; }
 
         /// <summary>
         /// True if this type is known to be a reference type. It is never the case that
@@ -1342,13 +1616,8 @@ namespace Business.SourceGenerator.Meta
     /// This interface is reserved for implementation by its associated APIs. We reserve
     /// the right to change it in the future.
     /// </remarks>
-    public interface IAccessorParameter : IAccessorMeta//, System.IEquatable<IAccessorMeta>
+    public interface IAccessorParameter : IAccessorMeta, IParameterMeta//, System.IEquatable<IAccessorMeta>
     {
-        /// <summary>
-        /// Whether the parameter passed by value or by reference.
-        /// </summary>
-        public RefKind RefKind { get; }
-
         /// <summary>
         /// Returns true if the parameter was declared as a parameter array.
         /// </summary>
@@ -1378,29 +1647,9 @@ namespace Business.SourceGenerator.Meta
         /// Gets the top-level nullability of the parameter.
         /// </summary>
         public NullableAnnotation NullableAnnotation { get; }
-
-        /// <summary>
-        /// Gets the ordinal position of the parameter. The first parameter has ordinal zero.
-        /// The 'this' parameter ('Me' in Visual Basic) has ordinal -1.
-        /// </summary>
-        public int Ordinal { get; }
-
-        /// <summary>
-        /// Returns true if the parameter specifies a default value to be passed when no
-        /// value is provided as an argument to a call. The default value can be obtained
-        /// with the Microsoft.CodeAnalysis.IParameterSymbol.ExplicitDefaultValue property.
-        /// </summary>
-        public bool HasExplicitDefaultValue { get; }
-
-        /// <summary>
-        /// Returns the default value of the parameter.
-        /// </summary>
-        /// <remarks>
-        /// Returns null if the parameter type is a struct and the default value of the parameter
-        /// is the default value of the struct type.
-        /// </remarks>
-        public object ExplicitDefaultValue { get; }
     }
+
+    public interface IAccessorMethodCollection : IAccessor, IEnumerable<IAccessorMethod> { }
 
     /// <summary>
     /// Represents a method or method-like symbol (including constructor, destructor,
@@ -1410,7 +1659,7 @@ namespace Business.SourceGenerator.Meta
     /// This interface is reserved for implementation by its associated APIs. We reserve
     /// the right to change it in the future.
     /// </remarks>
-    public interface IAccessorMethod : IAccessorMeta
+    public interface IAccessorMethod : IAccessorMeta, IMethodMeta
     {
         /// <summary>
         /// Indicates whether the method is readonly, i.e. whether the 'this' receiver parameter
@@ -1428,7 +1677,7 @@ namespace Business.SourceGenerator.Meta
         /// Gets the parameters of this method. If this method has no parameters, returns
         /// an empty list.
         /// </summary>
-        public IEnumerable<IAccessorParameter> Parameters { get; }
+        public IAccessorParameter[] Parameters { get; }
 
         /// <summary>
         /// Return true if this is a partial method definition without a body. If there is
@@ -1533,21 +1782,6 @@ namespace Business.SourceGenerator.Meta
         /// imported from metadata. The equivalent of the "hidebyname" flag in metadata.
         /// </summary>
         public bool HidesBaseMethodsByName { get; }
-
-        /// <summary>
-        /// Is it a clone.
-        /// </summary>
-        public bool IsClone { get; }
-
-        /// <summary>
-        /// Get return value.
-        /// </summary>
-        public Func<object, object[], object> GetValue { get; }
-
-        /// <summary>
-        /// Get return Task value.
-        /// </summary>
-        public Func<object, object[], Task<object>> GetValueAsync { get; }
     }
 
     public delegate void SetValue(ref IGeneratorAccessor obj, object value);
@@ -1581,7 +1815,7 @@ namespace Business.SourceGenerator.Meta
         /// <summary>
         /// Get return value.
         /// </summary>
-        public Func<object, object> GetValue { get; }
+        public Func<IGeneratorAccessor, object> GetValue { get; }
 
         /// <summary>
         /// Set value.
@@ -1759,7 +1993,7 @@ namespace Business.SourceGenerator.Meta
     /// </remarks>
     public readonly struct AccessorType : IAccessorType
     {
-        public AccessorType(Accessibility declaredAccessibility, bool canBeReferencedByName, bool isImplicitlyDeclared, bool isExtern, bool isSealed, bool isAbstract, bool isOverride, bool isVirtual, bool isStatic, bool isDefinition, string name, string fullName, Kind kind, bool isDeclaringSyntaxReferences, bool isNamespace, bool isType, IDictionary<string, IAccessorMeta> members, bool isReferenceType, bool isReadOnly, bool isUnmanagedType, bool isRefLikeType, SpecialType specialType, bool isNativeIntegerType, bool isTupleType, bool isAnonymousType, bool isValueType, NullableAnnotation nullableAnnotation, IEnumerable<string> allInterfaces, string baseType, TypeKind typeKind, bool isRecord, AsyncType asyncType)
+        public AccessorType(Accessibility declaredAccessibility, bool canBeReferencedByName, bool isImplicitlyDeclared, bool isExtern, bool isSealed, bool isAbstract, bool isOverride, bool isVirtual, bool isStatic, bool isDefinition, string name, string fullName, Kind kind, bool isDeclaringSyntaxReferences, bool isNamespace, bool isType, IDictionary<string, IAccessor> members, bool isReferenceType, bool isReadOnly, bool isUnmanagedType, bool isRefLikeType, SpecialType specialType, bool isNativeIntegerType, bool isTupleType, bool isAnonymousType, bool isValueType, NullableAnnotation nullableAnnotation, IEnumerable<string> allInterfaces, string baseType, TypeKind typeKind, bool isRecord, AsyncType asyncType)
         {
             DeclaredAccessibility = declaredAccessibility;
             CanBeReferencedByName = canBeReferencedByName;
@@ -1803,12 +2037,12 @@ namespace Business.SourceGenerator.Meta
         /// Gets a Microsoft.CodeAnalysis.Accessibility indicating the declared accessibility
         /// for the symbol. Returns NotApplicable if no accessibility is declared.
         /// </summary>
-        public Accessibility DeclaredAccessibility { get; }
+        public readonly Accessibility DeclaredAccessibility { get; }
 
         /// <summary>
         /// Returns true if this symbol can be referenced by its name in code.
         /// </summary>
-        public bool CanBeReferencedByName { get; }
+        public readonly bool CanBeReferencedByName { get; }
 
         /// <summary>
         /// Returns true if this symbol was automatically created by the compiler, and does
@@ -1830,64 +2064,64 @@ namespace Business.SourceGenerator.Meta
         /// The class and entry point method for top-level statements are not considered
         /// as implicitly declared.
         /// </remarks>
-        public bool IsImplicitlyDeclared { get; }
+        public readonly bool IsImplicitlyDeclared { get; }
 
         /// <summary>
         /// Gets a value indicating whether the symbol is defined externally.
         /// </summary>
-        public bool IsExtern { get; }
+        public readonly bool IsExtern { get; }
 
         /// <summary>
         /// Gets a value indicating whether the symbol is sealed.
         /// </summary>
-        public bool IsSealed { get; }
+        public readonly bool IsSealed { get; }
 
         /// <summary>
         /// Gets a value indicating whether the symbol is abstract.
         /// </summary>
-        public bool IsAbstract { get; }
+        public readonly bool IsAbstract { get; }
 
         /// <summary>
         /// Gets a value indicating whether the symbol is an override of a base class symbol.
         /// </summary>
-        public bool IsOverride { get; }
+        public readonly bool IsOverride { get; }
 
         /// <summary>
         /// Gets a value indicating whether the symbol is virtual.
         /// </summary>
-        public bool IsVirtual { get; }
+        public readonly bool IsVirtual { get; }
 
         /// <summary>
         /// Gets a value indicating whether the symbol is static.
         /// </summary>
-        public bool IsStatic { get; }
+        public readonly bool IsStatic { get; }
 
         /// <summary>
         /// Gets a value indicating whether the symbol is the original definition. Returns
         /// false if the symbol is derived from another symbol, by type substitution for
         /// instance.
         /// </summary>
-        public bool IsDefinition { get; }
+        public readonly bool IsDefinition { get; }
 
         /// <summary>
         /// Gets the symbol name. Returns the empty string if unnamed.
         /// </summary>
-        public string Name { get; }
+        public readonly string Name { get; }
 
         /// <summary>
         /// Gets the symbol full name. Returns the empty string if unnamed.
         /// </summary>
-        public string FullName { get; }
+        public readonly string FullName { get; }
 
         /// <summary>
         /// Gets the Microsoft.CodeAnalysis.SymbolKind indicating what kind of symbol it is.
         /// </summary>
-        public Kind Kind { get; }
+        public readonly Kind Kind { get; }
 
         /// <summary>
         /// Whether the syntax node(s) where this symbol was declared in source.
         /// </summary>
-        public bool IsDeclaringSyntaxReferences { get; }
+        public readonly bool IsDeclaringSyntaxReferences { get; }
 
         #endregion
 
@@ -1897,12 +2131,12 @@ namespace Business.SourceGenerator.Meta
         /// Returns true if this symbol is a namespace. If it is not a namespace, it must
         /// be a type.
         /// </summary>
-        public bool IsNamespace { get; }
+        public readonly bool IsNamespace { get; }
 
         /// <summary>
         /// Returns true if this symbols is a type. If it is not a type, it must be a namespace.
         /// </summary>
-        public bool IsType { get; }
+        public readonly bool IsType { get; }
 
         /// <summary>
         /// Get all the members of this symbol.
@@ -1911,7 +2145,7 @@ namespace Business.SourceGenerator.Meta
         /// An ImmutableArray containing all the members of this symbol. If this symbol has
         /// no members, returns an empty ImmutableArray. Never returns Null.
         /// </remarks>
-        public IDictionary<string, IAccessorMeta> Members { get; }
+        public readonly IDictionary<string, IAccessor> Members { get; }
 
         /// <summary>
         /// True if this type is known to be a reference type. It is never the case that
@@ -1919,18 +2153,18 @@ namespace Business.SourceGenerator.Meta
         /// both return true. However, for an unconstrained type parameter, Microsoft.CodeAnalysis.ITypeSymbol.IsReferenceType
         /// and Microsoft.CodeAnalysis.ITypeSymbol.IsValueType will both return false.
         /// </summary>
-        public bool IsReferenceType { get; }
+        public readonly bool IsReferenceType { get; }
 
         /// <summary>
         /// True if the type is readonly.
         /// </summary>
-        public bool IsReadOnly { get; }
+        public readonly bool IsReadOnly { get; }
 
         /// <summary>
         /// True if the type is unmanaged according to language rules. False if managed or
         /// if the language has no concept of unmanaged types.
         /// </summary>
-        public bool IsUnmanagedType { get; }
+        public readonly bool IsUnmanagedType { get; }
 
         /// <summary>
         /// True if the type is ref-like, meaning it follows rules similar to CLR by-ref
@@ -1940,29 +2174,29 @@ namespace Business.SourceGenerator.Meta
         /// <remarks>
         /// System.Span`1 is a commonly used ref-like type.
         /// </remarks>
-        public bool IsRefLikeType { get; }
+        public readonly bool IsRefLikeType { get; }
 
         /// <summary>
         /// An enumerated value that identifies certain 'special' types such as System.Object.
         /// Returns Microsoft.CodeAnalysis.SpecialType.None if the type is not special.
         /// </summary>
-        public SpecialType SpecialType { get; }
+        public readonly SpecialType SpecialType { get; }
 
         /// <summary>
         /// True if the type represents a native integer. In C#, the types represented by
         /// language keywords 'nint' and 'nuint'.
         /// </summary>
-        public bool IsNativeIntegerType { get; }
+        public readonly bool IsNativeIntegerType { get; }
 
         /// <summary>
         /// Is this a symbol for a tuple .
         /// </summary>
-        public bool IsTupleType { get; }
+        public readonly bool IsTupleType { get; }
 
         /// <summary>
         /// Is this a symbol for an anonymous type (including anonymous VB delegate).
         /// </summary>
-        public bool IsAnonymousType { get; }
+        public readonly bool IsAnonymousType { get; }
 
         /// <summary>
         /// True if this type is known to be a value type. It is never the case that Microsoft.CodeAnalysis.ITypeSymbol.IsReferenceType
@@ -1970,13 +2204,13 @@ namespace Business.SourceGenerator.Meta
         /// for an unconstrained type parameter, Microsoft.CodeAnalysis.ITypeSymbol.IsReferenceType
         /// and Microsoft.CodeAnalysis.ITypeSymbol.IsValueType will both return false.
         /// </summary>
-        public bool IsValueType { get; }
+        public readonly bool IsValueType { get; }
 
         /// <summary>
         /// Nullable annotation associated with the type, or Microsoft.CodeAnalysis.NullableAnnotation.None
         /// if there are none.
         /// </summary>
-        public NullableAnnotation NullableAnnotation { get; }
+        public readonly NullableAnnotation NullableAnnotation { get; }
 
         /// <summary>
         /// The list of all interfaces of which this type is a declared subtype, excluding
@@ -1989,30 +2223,30 @@ namespace Business.SourceGenerator.Meta
         /// is a proper subtype" because it does not take into account variance: AllInterfaces
         /// for IEnumerable<string> will not include IEnumerable<object>.
         /// </summary>
-        public IEnumerable<string> AllInterfaces { get; }
+        public readonly IEnumerable<string> AllInterfaces { get; }
 
         /// <summary>
         /// The declared base type of this type, or null. The object type, interface types,
         /// and pointer types do not have a base type. The base type of a type parameter
         /// is its effective base class.
         /// </summary>
-        public string BaseType { get; }
+        public readonly string BaseType { get; }
 
         /// <summary>
         /// An enumerated value that identifies whether this type is an array, pointer, enum,
         /// and so on.
         /// </summary>
-        public TypeKind TypeKind { get; }
+        public readonly TypeKind TypeKind { get; }
 
         /// <summary>
         /// True if the type is a record.
         /// </summary>
-        public bool IsRecord { get; }
+        public readonly bool IsRecord { get; }
 
         /// <summary>
         /// Returns asynchronous type if this method is an async method.
         /// </summary>
-        public AsyncType AsyncType { get; }
+        public readonly AsyncType AsyncType { get; }
 
         #endregion
     }
@@ -2026,7 +2260,7 @@ namespace Business.SourceGenerator.Meta
     /// </remarks>
     public readonly struct AccessorNamedType : IAccessorNamedType
     {
-        public AccessorNamedType(Accessibility declaredAccessibility, bool canBeReferencedByName, bool isImplicitlyDeclared, bool isExtern, bool isSealed, bool isAbstract, bool isOverride, bool isVirtual, bool isStatic, bool isDefinition, string name, string fullName, Kind kind, bool isDeclaringSyntaxReferences, bool isNamespace, bool isType, IDictionary<string, IAccessorMeta> members, bool isReferenceType, bool isReadOnly, bool isUnmanagedType, bool isRefLikeType, SpecialType specialType, bool isNativeIntegerType, bool isTupleType, bool isAnonymousType, bool isValueType, NullableAnnotation nullableAnnotation, IEnumerable<string> allInterfaces, string baseType, TypeKind typeKind, bool isRecord, AsyncType asyncType, IEnumerable<NullableAnnotation> typeArgumentNullableAnnotations, IEnumerable<IAccessorField> tupleElements, bool mightContainExtensionMethods, IEnumerable<IAccessorMethod> constructors, IAccessorNamedType enumUnderlyingType, IAccessorMethod delegateInvokeMethod, bool isSerializable, IDictionary<string, IAccessorTypeParameter> typeParameters, bool isComImport, bool isImplicitClass, bool isScriptClass, bool isUnboundGenericType, bool isGeneric, int arity, IEnumerable<IAccessorType> typeArguments)
+        public AccessorNamedType(Accessibility declaredAccessibility, bool canBeReferencedByName, bool isImplicitlyDeclared, bool isExtern, bool isSealed, bool isAbstract, bool isOverride, bool isVirtual, bool isStatic, bool isDefinition, string name, string fullName, Kind kind, bool isDeclaringSyntaxReferences, bool isNamespace, bool isType, IDictionary<string, IAccessor> members, bool isReferenceType, bool isReadOnly, bool isUnmanagedType, bool isRefLikeType, SpecialType specialType, bool isNativeIntegerType, bool isTupleType, bool isAnonymousType, bool isValueType, NullableAnnotation nullableAnnotation, IEnumerable<string> allInterfaces, string baseType, TypeKind typeKind, bool isRecord, AsyncType asyncType, IEnumerable<NullableAnnotation> typeArgumentNullableAnnotations, IEnumerable<IAccessorField> tupleElements, bool mightContainExtensionMethods, IEnumerable<IAccessorMethod> constructors, IAccessorNamedType enumUnderlyingType, IAccessorMethod delegateInvokeMethod, bool isSerializable, IDictionary<string, IAccessorTypeParameter> typeParameters, bool isComImport, bool isImplicitClass, bool isScriptClass, bool isUnboundGenericType, bool isGeneric, int arity, IEnumerable<IAccessorType> typeArguments)
         {
             DeclaredAccessibility = declaredAccessibility;
             CanBeReferencedByName = canBeReferencedByName;
@@ -2086,12 +2320,12 @@ namespace Business.SourceGenerator.Meta
         /// Gets a Microsoft.CodeAnalysis.Accessibility indicating the declared accessibility
         /// for the symbol. Returns NotApplicable if no accessibility is declared.
         /// </summary>
-        public Accessibility DeclaredAccessibility { get; }
+        public readonly Accessibility DeclaredAccessibility { get; }
 
         /// <summary>
         /// Returns true if this symbol can be referenced by its name in code.
         /// </summary>
-        public bool CanBeReferencedByName { get; }
+        public readonly bool CanBeReferencedByName { get; }
 
         /// <summary>
         /// Returns true if this symbol was automatically created by the compiler, and does
@@ -2113,64 +2347,64 @@ namespace Business.SourceGenerator.Meta
         /// The class and entry point method for top-level statements are not considered
         /// as implicitly declared.
         /// </remarks>
-        public bool IsImplicitlyDeclared { get; }
+        public readonly bool IsImplicitlyDeclared { get; }
 
         /// <summary>
         /// Gets a value indicating whether the symbol is defined externally.
         /// </summary>
-        public bool IsExtern { get; }
+        public readonly bool IsExtern { get; }
 
         /// <summary>
         /// Gets a value indicating whether the symbol is sealed.
         /// </summary>
-        public bool IsSealed { get; }
+        public readonly bool IsSealed { get; }
 
         /// <summary>
         /// Gets a value indicating whether the symbol is abstract.
         /// </summary>
-        public bool IsAbstract { get; }
+        public readonly bool IsAbstract { get; }
 
         /// <summary>
         /// Gets a value indicating whether the symbol is an override of a base class symbol.
         /// </summary>
-        public bool IsOverride { get; }
+        public readonly bool IsOverride { get; }
 
         /// <summary>
         /// Gets a value indicating whether the symbol is virtual.
         /// </summary>
-        public bool IsVirtual { get; }
+        public readonly bool IsVirtual { get; }
 
         /// <summary>
         /// Gets a value indicating whether the symbol is static.
         /// </summary>
-        public bool IsStatic { get; }
+        public readonly bool IsStatic { get; }
 
         /// <summary>
         /// Gets a value indicating whether the symbol is the original definition. Returns
         /// false if the symbol is derived from another symbol, by type substitution for
         /// instance.
         /// </summary>
-        public bool IsDefinition { get; }
+        public readonly bool IsDefinition { get; }
 
         /// <summary>
         /// Gets the symbol name. Returns the empty string if unnamed.
         /// </summary>
-        public string Name { get; }
+        public readonly string Name { get; }
 
         /// <summary>
         /// Gets the symbol full name. Returns the empty string if unnamed.
         /// </summary>
-        public string FullName { get; }
+        public readonly string FullName { get; }
 
         /// <summary>
         /// Gets the Microsoft.CodeAnalysis.SymbolKind indicating what kind of symbol it is.
         /// </summary>
-        public Kind Kind { get; }
+        public readonly Kind Kind { get; }
 
         /// <summary>
         /// Whether the syntax node(s) where this symbol was declared in source.
         /// </summary>
-        public bool IsDeclaringSyntaxReferences { get; }
+        public readonly bool IsDeclaringSyntaxReferences { get; }
 
         #endregion
 
@@ -2180,12 +2414,12 @@ namespace Business.SourceGenerator.Meta
         /// Returns true if this symbol is a namespace. If it is not a namespace, it must
         /// be a type.
         /// </summary>
-        public bool IsNamespace { get; }
+        public readonly bool IsNamespace { get; }
 
         /// <summary>
         /// Returns true if this symbols is a type. If it is not a type, it must be a namespace.
         /// </summary>
-        public bool IsType { get; }
+        public readonly bool IsType { get; }
 
         /// <summary>
         /// Get all the members of this symbol.
@@ -2194,7 +2428,7 @@ namespace Business.SourceGenerator.Meta
         /// An ImmutableArray containing all the members of this symbol. If this symbol has
         /// no members, returns an empty ImmutableArray. Never returns Null.
         /// </remarks>
-        public IDictionary<string, IAccessorMeta> Members { get; }
+        public readonly IDictionary<string, IAccessor> Members { get; }
 
         /// <summary>
         /// True if this type is known to be a reference type. It is never the case that
@@ -2202,18 +2436,18 @@ namespace Business.SourceGenerator.Meta
         /// both return true. However, for an unconstrained type parameter, Microsoft.CodeAnalysis.ITypeSymbol.IsReferenceType
         /// and Microsoft.CodeAnalysis.ITypeSymbol.IsValueType will both return false.
         /// </summary>
-        public bool IsReferenceType { get; }
+        public readonly bool IsReferenceType { get; }
 
         /// <summary>
         /// True if the type is readonly.
         /// </summary>
-        public bool IsReadOnly { get; }
+        public readonly bool IsReadOnly { get; }
 
         /// <summary>
         /// True if the type is unmanaged according to language rules. False if managed or
         /// if the language has no concept of unmanaged types.
         /// </summary>
-        public bool IsUnmanagedType { get; }
+        public readonly bool IsUnmanagedType { get; }
 
         /// <summary>
         /// True if the type is ref-like, meaning it follows rules similar to CLR by-ref
@@ -2223,29 +2457,29 @@ namespace Business.SourceGenerator.Meta
         /// <remarks>
         /// System.Span`1 is a commonly used ref-like type.
         /// </remarks>
-        public bool IsRefLikeType { get; }
+        public readonly bool IsRefLikeType { get; }
 
         /// <summary>
         /// An enumerated value that identifies certain 'special' types such as System.Object.
         /// Returns Microsoft.CodeAnalysis.SpecialType.None if the type is not special.
         /// </summary>
-        public SpecialType SpecialType { get; }
+        public readonly SpecialType SpecialType { get; }
 
         /// <summary>
         /// True if the type represents a native integer. In C#, the types represented by
         /// language keywords 'nint' and 'nuint'.
         /// </summary>
-        public bool IsNativeIntegerType { get; }
+        public readonly bool IsNativeIntegerType { get; }
 
         /// <summary>
         /// Is this a symbol for a tuple .
         /// </summary>
-        public bool IsTupleType { get; }
+        public readonly bool IsTupleType { get; }
 
         /// <summary>
         /// Is this a symbol for an anonymous type (including anonymous VB delegate).
         /// </summary>
-        public bool IsAnonymousType { get; }
+        public readonly bool IsAnonymousType { get; }
 
         /// <summary>
         /// True if this type is known to be a value type. It is never the case that Microsoft.CodeAnalysis.ITypeSymbol.IsReferenceType
@@ -2253,13 +2487,13 @@ namespace Business.SourceGenerator.Meta
         /// for an unconstrained type parameter, Microsoft.CodeAnalysis.ITypeSymbol.IsReferenceType
         /// and Microsoft.CodeAnalysis.ITypeSymbol.IsValueType will both return false.
         /// </summary>
-        public bool IsValueType { get; }
+        public readonly bool IsValueType { get; }
 
         /// <summary>
         /// Nullable annotation associated with the type, or Microsoft.CodeAnalysis.NullableAnnotation.None
         /// if there are none.
         /// </summary>
-        public NullableAnnotation NullableAnnotation { get; }
+        public readonly NullableAnnotation NullableAnnotation { get; }
 
         /// <summary>
         /// The list of all interfaces of which this type is a declared subtype, excluding
@@ -2272,30 +2506,30 @@ namespace Business.SourceGenerator.Meta
         /// is a proper subtype" because it does not take into account variance: AllInterfaces
         /// for IEnumerable<string> will not include IEnumerable<object>.
         /// </summary>
-        public IEnumerable<string> AllInterfaces { get; }
+        public readonly IEnumerable<string> AllInterfaces { get; }
 
         /// <summary>
         /// The declared base type of this type, or null. The object type, interface types,
         /// and pointer types do not have a base type. The base type of a type parameter
         /// is its effective base class.
         /// </summary>
-        public string BaseType { get; }
+        public readonly string BaseType { get; }
 
         /// <summary>
         /// An enumerated value that identifies whether this type is an array, pointer, enum,
         /// and so on.
         /// </summary>
-        public TypeKind TypeKind { get; }
+        public readonly TypeKind TypeKind { get; }
 
         /// <summary>
         /// True if the type is a record.
         /// </summary>
-        public bool IsRecord { get; }
+        public readonly bool IsRecord { get; }
 
         /// <summary>
         /// Returns asynchronous type if this method is an async method.
         /// </summary>
-        public AsyncType AsyncType { get; }
+        public readonly AsyncType AsyncType { get; }
 
         #endregion
 
@@ -2307,30 +2541,30 @@ namespace Business.SourceGenerator.Meta
         /// then Microsoft.CodeAnalysis.NullableAnnotation.None is returned for that type
         /// argument.
         /// </summary>
-        public IEnumerable<NullableAnnotation> TypeArgumentNullableAnnotations { get; }
+        public readonly IEnumerable<NullableAnnotation> TypeArgumentNullableAnnotations { get; }
 
         /// <summary>
         /// Returns fields that represent tuple elements for types that are tuples. If this
         /// type is not a tuple, then returns default.
         /// </summary>
-        public IEnumerable<IAccessorField> TupleElements { get; }
+        public readonly IEnumerable<IAccessorField> TupleElements { get; }
 
         /// <summary>
         /// Determines if the symbol might contain extension methods. If false, the symbol
         /// does not contain extension methods.
         /// </summary>
-        public bool MightContainExtensionMethods { get; }
+        public readonly bool MightContainExtensionMethods { get; }
 
         /// <summary>
         /// Get the both instance and static constructors for this type.
         /// </summary>
-        public IEnumerable<IAccessorMethod> Constructors { get; }
+        public readonly IEnumerable<IAccessorMethod> Constructors { get; }
 
         /// <summary>
         /// For enum types, gets the underlying type. Returns null on all other kinds of
         /// types.
         /// </summary>
-        public IAccessorNamedType EnumUnderlyingType { get; }
+        public readonly IAccessorNamedType EnumUnderlyingType { get; }
 
         /// <summary>
         /// For delegate types, gets the delegate's invoke method. Returns null on all other
@@ -2338,36 +2572,36 @@ namespace Business.SourceGenerator.Meta
         /// imported from metadata which does not have an Invoke method. Such a type will
         /// be classified as a delegate but its DelegateInvokeMethod would be null.
         /// </summary>
-        public IAccessorMethod DelegateInvokeMethod { get; }
+        public readonly IAccessorMethod DelegateInvokeMethod { get; }
 
         /// <summary>
         /// True if the type is serializable (has Serializable metadata flag).
         /// </summary>
-        public bool IsSerializable { get; }
+        public readonly bool IsSerializable { get; }
 
         /// <summary>
         /// Returns the type parameters that this type has. If this is a non-generic type,
         /// returns an empty ImmutableArray.
         /// </summary>
-        public IDictionary<string, IAccessorTypeParameter> TypeParameters { get; }
+        public readonly IDictionary<string, IAccessorTypeParameter> TypeParameters { get; }
 
         /// <summary>
         /// Specifies that the class or interface is imported from another module. See System.Reflection.TypeAttributes.Import
         /// and System.Runtime.InteropServices.ComImportAttribute
         /// </summary>
-        public bool IsComImport { get; }
+        public readonly bool IsComImport { get; }
 
         /// <summary>
         /// Returns true if the type is the implicit class that holds onto invalid global
         /// members (like methods or statements in a non script file).
         /// </summary>
-        public bool IsImplicitClass { get; }
+        public readonly bool IsImplicitClass { get; }
 
         /// <summary>
         /// Returns true if the type is a Script class. It might be an interactive submission
         /// class or a Script class in a csx file.
         /// </summary>
-        public bool IsScriptClass { get; }
+        public readonly bool IsScriptClass { get; }
 
         /// <summary>
         /// True if this is a reference to an unbound generic type. A generic type is considered
@@ -2376,25 +2610,25 @@ namespace Business.SourceGenerator.Meta
         /// types because they do not really have type arguments. An unbound generic type
         /// yields null for its BaseType and an empty result for its Interfaces.
         /// </summary>
-        public bool IsUnboundGenericType { get; }
+        public readonly bool IsUnboundGenericType { get; }
 
         /// <summary>
         /// True if this type or some containing type has type parameters.
         /// </summary>
-        public bool IsGeneric { get; }
+        public readonly bool IsGeneric { get; }
 
         /// <summary>
         /// Returns the arity of this type, or the number of type parameters it takes. A
         /// non-generic type has zero arity.
         /// </summary>
-        public int Arity { get; }
+        public readonly int Arity { get; }
 
         /// <summary>
         /// Returns the type arguments that have been substituted for the type parameters.
         /// If nothing has been substituted for a given type parameter, then the type parameter
         /// itself is considered the type argument.
         /// </summary>
-        public IEnumerable<IAccessorType> TypeArguments { get; }
+        public readonly IEnumerable<IAccessorType> TypeArguments { get; }
 
         #endregion
     }
@@ -2408,7 +2642,7 @@ namespace Business.SourceGenerator.Meta
     /// </remarks>
     public readonly struct AccessorTypeParameter : IAccessorTypeParameter
     {
-        public AccessorTypeParameter(Accessibility declaredAccessibility, bool canBeReferencedByName, bool isImplicitlyDeclared, bool isExtern, bool isSealed, bool isAbstract, bool isOverride, bool isVirtual, bool isStatic, bool isDefinition, string name, string fullName, Kind kind, bool isDeclaringSyntaxReferences, bool isNamespace, bool isType, IDictionary<string, IAccessorMeta> members, bool isReferenceType, bool isReadOnly, bool isUnmanagedType, bool isRefLikeType, SpecialType specialType, bool isNativeIntegerType, bool isTupleType, bool isAnonymousType, bool isValueType, NullableAnnotation nullableAnnotation, IEnumerable<string> allInterfaces, string baseType, TypeKind typeKind, bool isRecord, AsyncType asyncType, int ordinal, VarianceKind variance, TypeParameterKind typeParameterKind, bool hasReferenceTypeConstraint, NullableAnnotation referenceTypeConstraintNullableAnnotation, bool hasValueTypeConstraint, bool hasUnmanagedTypeConstraint, bool hasNotNullConstraint, bool hasConstructorConstraint, IEnumerable<IAccessorType> constraintTypes)
+        public AccessorTypeParameter(Accessibility declaredAccessibility, bool canBeReferencedByName, bool isImplicitlyDeclared, bool isExtern, bool isSealed, bool isAbstract, bool isOverride, bool isVirtual, bool isStatic, bool isDefinition, string name, string fullName, Kind kind, bool isDeclaringSyntaxReferences, bool isNamespace, bool isType, IDictionary<string, IAccessor> members, bool isReferenceType, bool isReadOnly, bool isUnmanagedType, bool isRefLikeType, SpecialType specialType, bool isNativeIntegerType, bool isTupleType, bool isAnonymousType, bool isValueType, NullableAnnotation nullableAnnotation, IEnumerable<string> allInterfaces, string baseType, TypeKind typeKind, bool isRecord, AsyncType asyncType, int ordinal, VarianceKind variance, TypeParameterKind typeParameterKind, bool hasReferenceTypeConstraint, NullableAnnotation referenceTypeConstraintNullableAnnotation, bool hasValueTypeConstraint, bool hasUnmanagedTypeConstraint, bool hasNotNullConstraint, bool hasConstructorConstraint, IEnumerable<IAccessorType> constraintTypes)
         {
             DeclaredAccessibility = declaredAccessibility;
             CanBeReferencedByName = canBeReferencedByName;
@@ -2462,12 +2696,12 @@ namespace Business.SourceGenerator.Meta
         /// Gets a Microsoft.CodeAnalysis.Accessibility indicating the declared accessibility
         /// for the symbol. Returns NotApplicable if no accessibility is declared.
         /// </summary>
-        public Accessibility DeclaredAccessibility { get; }
+        public readonly Accessibility DeclaredAccessibility { get; }
 
         /// <summary>
         /// Returns true if this symbol can be referenced by its name in code.
         /// </summary>
-        public bool CanBeReferencedByName { get; }
+        public readonly bool CanBeReferencedByName { get; }
 
         /// <summary>
         /// Returns true if this symbol was automatically created by the compiler, and does
@@ -2489,64 +2723,64 @@ namespace Business.SourceGenerator.Meta
         /// The class and entry point method for top-level statements are not considered
         /// as implicitly declared.
         /// </remarks>
-        public bool IsImplicitlyDeclared { get; }
+        public readonly bool IsImplicitlyDeclared { get; }
 
         /// <summary>
         /// Gets a value indicating whether the symbol is defined externally.
         /// </summary>
-        public bool IsExtern { get; }
+        public readonly bool IsExtern { get; }
 
         /// <summary>
         /// Gets a value indicating whether the symbol is sealed.
         /// </summary>
-        public bool IsSealed { get; }
+        public readonly bool IsSealed { get; }
 
         /// <summary>
         /// Gets a value indicating whether the symbol is abstract.
         /// </summary>
-        public bool IsAbstract { get; }
+        public readonly bool IsAbstract { get; }
 
         /// <summary>
         /// Gets a value indicating whether the symbol is an override of a base class symbol.
         /// </summary>
-        public bool IsOverride { get; }
+        public readonly bool IsOverride { get; }
 
         /// <summary>
         /// Gets a value indicating whether the symbol is virtual.
         /// </summary>
-        public bool IsVirtual { get; }
+        public readonly bool IsVirtual { get; }
 
         /// <summary>
         /// Gets a value indicating whether the symbol is static.
         /// </summary>
-        public bool IsStatic { get; }
+        public readonly bool IsStatic { get; }
 
         /// <summary>
         /// Gets a value indicating whether the symbol is the original definition. Returns
         /// false if the symbol is derived from another symbol, by type substitution for
         /// instance.
         /// </summary>
-        public bool IsDefinition { get; }
+        public readonly bool IsDefinition { get; }
 
         /// <summary>
         /// Gets the symbol name. Returns the empty string if unnamed.
         /// </summary>
-        public string Name { get; }
+        public readonly string Name { get; }
 
         /// <summary>
         /// Gets the symbol full name. Returns the empty string if unnamed.
         /// </summary>
-        public string FullName { get; }
+        public readonly string FullName { get; }
 
         /// <summary>
         /// Gets the Microsoft.CodeAnalysis.SymbolKind indicating what kind of symbol it is.
         /// </summary>
-        public Kind Kind { get; }
+        public readonly Kind Kind { get; }
 
         /// <summary>
         /// Whether the syntax node(s) where this symbol was declared in source.
         /// </summary>
-        public bool IsDeclaringSyntaxReferences { get; }
+        public readonly bool IsDeclaringSyntaxReferences { get; }
 
         #endregion
 
@@ -2556,12 +2790,12 @@ namespace Business.SourceGenerator.Meta
         /// Returns true if this symbol is a namespace. If it is not a namespace, it must
         /// be a type.
         /// </summary>
-        public bool IsNamespace { get; }
+        public readonly bool IsNamespace { get; }
 
         /// <summary>
         /// Returns true if this symbols is a type. If it is not a type, it must be a namespace.
         /// </summary>
-        public bool IsType { get; }
+        public readonly bool IsType { get; }
 
         /// <summary>
         /// Get all the members of this symbol.
@@ -2570,7 +2804,7 @@ namespace Business.SourceGenerator.Meta
         /// An ImmutableArray containing all the members of this symbol. If this symbol has
         /// no members, returns an empty ImmutableArray. Never returns Null.
         /// </remarks>
-        public IDictionary<string, IAccessorMeta> Members { get; }
+        public readonly IDictionary<string, IAccessor> Members { get; }
 
         /// <summary>
         /// True if this type is known to be a reference type. It is never the case that
@@ -2578,18 +2812,18 @@ namespace Business.SourceGenerator.Meta
         /// both return true. However, for an unconstrained type parameter, Microsoft.CodeAnalysis.ITypeSymbol.IsReferenceType
         /// and Microsoft.CodeAnalysis.ITypeSymbol.IsValueType will both return false.
         /// </summary>
-        public bool IsReferenceType { get; }
+        public readonly bool IsReferenceType { get; }
 
         /// <summary>
         /// True if the type is readonly.
         /// </summary>
-        public bool IsReadOnly { get; }
+        public readonly bool IsReadOnly { get; }
 
         /// <summary>
         /// True if the type is unmanaged according to language rules. False if managed or
         /// if the language has no concept of unmanaged types.
         /// </summary>
-        public bool IsUnmanagedType { get; }
+        public readonly bool IsUnmanagedType { get; }
 
         /// <summary>
         /// True if the type is ref-like, meaning it follows rules similar to CLR by-ref
@@ -2599,29 +2833,29 @@ namespace Business.SourceGenerator.Meta
         /// <remarks>
         /// System.Span`1 is a commonly used ref-like type.
         /// </remarks>
-        public bool IsRefLikeType { get; }
+        public readonly bool IsRefLikeType { get; }
 
         /// <summary>
         /// An enumerated value that identifies certain 'special' types such as System.Object.
         /// Returns Microsoft.CodeAnalysis.SpecialType.None if the type is not special.
         /// </summary>
-        public SpecialType SpecialType { get; }
+        public readonly SpecialType SpecialType { get; }
 
         /// <summary>
         /// True if the type represents a native integer. In C#, the types represented by
         /// language keywords 'nint' and 'nuint'.
         /// </summary>
-        public bool IsNativeIntegerType { get; }
+        public readonly bool IsNativeIntegerType { get; }
 
         /// <summary>
         /// Is this a symbol for a tuple .
         /// </summary>
-        public bool IsTupleType { get; }
+        public readonly bool IsTupleType { get; }
 
         /// <summary>
         /// Is this a symbol for an anonymous type (including anonymous VB delegate).
         /// </summary>
-        public bool IsAnonymousType { get; }
+        public readonly bool IsAnonymousType { get; }
 
         /// <summary>
         /// True if this type is known to be a value type. It is never the case that Microsoft.CodeAnalysis.ITypeSymbol.IsReferenceType
@@ -2629,13 +2863,13 @@ namespace Business.SourceGenerator.Meta
         /// for an unconstrained type parameter, Microsoft.CodeAnalysis.ITypeSymbol.IsReferenceType
         /// and Microsoft.CodeAnalysis.ITypeSymbol.IsValueType will both return false.
         /// </summary>
-        public bool IsValueType { get; }
+        public readonly bool IsValueType { get; }
 
         /// <summary>
         /// Nullable annotation associated with the type, or Microsoft.CodeAnalysis.NullableAnnotation.None
         /// if there are none.
         /// </summary>
-        public NullableAnnotation NullableAnnotation { get; }
+        public readonly NullableAnnotation NullableAnnotation { get; }
 
         /// <summary>
         /// The list of all interfaces of which this type is a declared subtype, excluding
@@ -2648,30 +2882,30 @@ namespace Business.SourceGenerator.Meta
         /// is a proper subtype" because it does not take into account variance: AllInterfaces
         /// for IEnumerable<string> will not include IEnumerable<object>.
         /// </summary>
-        public IEnumerable<string> AllInterfaces { get; }
+        public readonly IEnumerable<string> AllInterfaces { get; }
 
         /// <summary>
         /// The declared base type of this type, or null. The object type, interface types,
         /// and pointer types do not have a base type. The base type of a type parameter
         /// is its effective base class.
         /// </summary>
-        public string BaseType { get; }
+        public readonly string BaseType { get; }
 
         /// <summary>
         /// An enumerated value that identifies whether this type is an array, pointer, enum,
         /// and so on.
         /// </summary>
-        public TypeKind TypeKind { get; }
+        public readonly TypeKind TypeKind { get; }
 
         /// <summary>
         /// True if the type is a record.
         /// </summary>
-        public bool IsRecord { get; }
+        public readonly bool IsRecord { get; }
 
         /// <summary>
         /// Returns asynchronous type if this method is an async method.
         /// </summary>
-        public AsyncType AsyncType { get; }
+        public readonly AsyncType AsyncType { get; }
 
         #endregion
 
@@ -2681,56 +2915,56 @@ namespace Business.SourceGenerator.Meta
         /// The ordinal position of the type parameter in the parameter list which declares
         /// it. The first type parameter has ordinal zero.
         /// </summary>
-        public int Ordinal { get; }
+        public readonly int Ordinal { get; }
 
         /// <summary>
         /// The variance annotation, if any, of the type parameter declaration. Type parameters
         /// may be declared as covariant (out), contravariant (in), or neither.
         /// </summary>
-        public VarianceKind Variance { get; }
+        public readonly VarianceKind Variance { get; }
 
         /// <summary>
         /// The type parameter kind of this type parameter.
         /// </summary>
-        public TypeParameterKind TypeParameterKind { get; }
+        public readonly TypeParameterKind TypeParameterKind { get; }
 
         /// <summary>
         /// True if the reference type constraint (class) was specified for the type parameter.
         /// </summary>
-        public bool HasReferenceTypeConstraint { get; }
+        public readonly bool HasReferenceTypeConstraint { get; }
 
         /// <summary>
         /// If Microsoft.CodeAnalysis.ITypeParameterSymbol.HasReferenceTypeConstraint is
         /// true, returns the top-level nullability of the class constraint that was specified
         /// for the type parameter. If there was no class constraint, this returns Microsoft.CodeAnalysis.NullableAnnotation.None.
         /// </summary>
-        public NullableAnnotation ReferenceTypeConstraintNullableAnnotation { get; }
+        public readonly NullableAnnotation ReferenceTypeConstraintNullableAnnotation { get; }
 
         /// <summary>
         /// True if the value type constraint (struct) was specified for the type parameter.
         /// </summary>
-        public bool HasValueTypeConstraint { get; }
+        public readonly bool HasValueTypeConstraint { get; }
 
         /// <summary>
         /// True if the value type constraint (unmanaged) was specified for the type parameter.
         /// </summary>
-        public bool HasUnmanagedTypeConstraint { get; }
+        public readonly bool HasUnmanagedTypeConstraint { get; }
 
         /// <summary>
         /// True if the notnull constraint (notnull) was specified for the type parameter.
         /// </summary>
-        public bool HasNotNullConstraint { get; }
+        public readonly bool HasNotNullConstraint { get; }
 
         /// <summary>
         /// True if the parameterless constructor constraint (new()) was specified for the
         /// type parameter.
         /// </summary>
-        public bool HasConstructorConstraint { get; }
+        public readonly bool HasConstructorConstraint { get; }
 
         /// <summary>
         /// The types that were directly specified as constraints on the type parameter.
         /// </summary>
-        public IEnumerable<IAccessorType> ConstraintTypes { get; }
+        public readonly IEnumerable<IAccessorType> ConstraintTypes { get; }
 
         #endregion
     }
@@ -2744,7 +2978,7 @@ namespace Business.SourceGenerator.Meta
     /// </remarks>
     public readonly struct AccessorParameter : IAccessorParameter
     {
-        public AccessorParameter(Accessibility declaredAccessibility, bool canBeReferencedByName, bool isImplicitlyDeclared, bool isExtern, bool isSealed, bool isAbstract, bool isOverride, bool isVirtual, bool isStatic, bool isDefinition, string name, string fullName, Kind kind, bool isDeclaringSyntaxReferences, RefKind refKind, bool isParams, bool isOptional, bool isThis, bool isDiscard, IAccessorType type, NullableAnnotation nullableAnnotation, int ordinal, bool hasExplicitDefaultValue, object explicitDefaultValue)
+        public AccessorParameter(Accessibility declaredAccessibility, bool canBeReferencedByName, bool isImplicitlyDeclared, bool isExtern, bool isSealed, bool isAbstract, bool isOverride, bool isVirtual, bool isStatic, bool isDefinition, string name, string fullName, Kind kind, bool isDeclaringSyntaxReferences, RefKind refKind, bool isParams, bool isOptional, bool isThis, bool isDiscard, IAccessorType type, NullableAnnotation nullableAnnotation, int ordinal, bool hasExplicitDefaultValue, object explicitDefaultValue, bool implicitDefaultValue, Type runtimeType, TypeKind typeKind, bool isValueType, bool hasGenericType)
         {
             DeclaredAccessibility = declaredAccessibility;
             CanBeReferencedByName = canBeReferencedByName;
@@ -2767,9 +3001,16 @@ namespace Business.SourceGenerator.Meta
             IsDiscard = isDiscard;
             Type = type;
             NullableAnnotation = nullableAnnotation;
+
             Ordinal = ordinal;
             HasExplicitDefaultValue = hasExplicitDefaultValue;
             ExplicitDefaultValue = explicitDefaultValue;
+            ImplicitDefaultValue = implicitDefaultValue;
+
+            RuntimeType = runtimeType;
+            TypeKind = typeKind;
+            IsValueType = isValueType;
+            HasGenericType = hasGenericType;
         }
 
         public override string ToString() => $"{Kind} {FullName}";
@@ -2780,12 +3021,12 @@ namespace Business.SourceGenerator.Meta
         /// Gets a Microsoft.CodeAnalysis.Accessibility indicating the declared accessibility
         /// for the symbol. Returns NotApplicable if no accessibility is declared.
         /// </summary>
-        public Accessibility DeclaredAccessibility { get; }
+        public readonly Accessibility DeclaredAccessibility { get; }
 
         /// <summary>
         /// Returns true if this symbol can be referenced by its name in code.
         /// </summary>
-        public bool CanBeReferencedByName { get; }
+        public readonly bool CanBeReferencedByName { get; }
 
         /// <summary>
         /// Returns true if this symbol was automatically created by the compiler, and does
@@ -2807,64 +3048,64 @@ namespace Business.SourceGenerator.Meta
         /// The class and entry point method for top-level statements are not considered
         /// as implicitly declared.
         /// </remarks>
-        public bool IsImplicitlyDeclared { get; }
+        public readonly bool IsImplicitlyDeclared { get; }
 
         /// <summary>
         /// Gets a value indicating whether the symbol is defined externally.
         /// </summary>
-        public bool IsExtern { get; }
+        public readonly bool IsExtern { get; }
 
         /// <summary>
         /// Gets a value indicating whether the symbol is sealed.
         /// </summary>
-        public bool IsSealed { get; }
+        public readonly bool IsSealed { get; }
 
         /// <summary>
         /// Gets a value indicating whether the symbol is abstract.
         /// </summary>
-        public bool IsAbstract { get; }
+        public readonly bool IsAbstract { get; }
 
         /// <summary>
         /// Gets a value indicating whether the symbol is an override of a base class symbol.
         /// </summary>
-        public bool IsOverride { get; }
+        public readonly bool IsOverride { get; }
 
         /// <summary>
         /// Gets a value indicating whether the symbol is virtual.
         /// </summary>
-        public bool IsVirtual { get; }
+        public readonly bool IsVirtual { get; }
 
         /// <summary>
         /// Gets a value indicating whether the symbol is static.
         /// </summary>
-        public bool IsStatic { get; }
+        public readonly bool IsStatic { get; }
 
         /// <summary>
         /// Gets a value indicating whether the symbol is the original definition. Returns
         /// false if the symbol is derived from another symbol, by type substitution for
         /// instance.
         /// </summary>
-        public bool IsDefinition { get; }
+        public readonly bool IsDefinition { get; }
 
         /// <summary>
         /// Gets the symbol name. Returns the empty string if unnamed.
         /// </summary>
-        public string Name { get; }
+        public readonly string Name { get; }
 
         /// <summary>
         /// Gets the symbol full name. Returns the empty string if unnamed.
         /// </summary>
-        public string FullName { get; }
+        public readonly string FullName { get; }
 
         /// <summary>
         /// Gets the Microsoft.CodeAnalysis.SymbolKind indicating what kind of symbol it is.
         /// </summary>
-        public Kind Kind { get; }
+        public readonly Kind Kind { get; }
 
         /// <summary>
         /// Whether the syntax node(s) where this symbol was declared in source.
         /// </summary>
-        public bool IsDeclaringSyntaxReferences { get; }
+        public readonly bool IsDeclaringSyntaxReferences { get; }
 
         #endregion
 
@@ -2873,50 +3114,50 @@ namespace Business.SourceGenerator.Meta
         /// <summary>
         /// Whether the parameter passed by value or by reference.
         /// </summary>
-        public RefKind RefKind { get; }
+        public readonly RefKind RefKind { get; }
 
         /// <summary>
         /// Returns true if the parameter was declared as a parameter array.
         /// </summary>
-        public bool IsParams { get; }
+        public readonly bool IsParams { get; }
 
         /// <summary>
         /// Returns true if the parameter is optional.
         /// </summary>
-        public bool IsOptional { get; }
+        public readonly bool IsOptional { get; }
 
         /// <summary>
         /// Returns true if the parameter is the hidden 'this' ('Me' in Visual Basic) parameter.
         /// </summary>
-        public bool IsThis { get; }
+        public readonly bool IsThis { get; }
 
         /// <summary>
         /// Returns true if the parameter is a discard parameter.
         /// </summary>
-        public bool IsDiscard { get; }
+        public readonly bool IsDiscard { get; }
 
         /// <summary>
         /// Gets the type of the parameter.
         /// </summary>
-        public IAccessorType Type { get; }
+        public readonly IAccessorType Type { get; }
 
         /// <summary>
         /// Gets the top-level nullability of the parameter.
         /// </summary>
-        public NullableAnnotation NullableAnnotation { get; }
+        public readonly NullableAnnotation NullableAnnotation { get; }
 
         /// <summary>
         /// Gets the ordinal position of the parameter. The first parameter has ordinal zero.
         /// The 'this' parameter ('Me' in Visual Basic) has ordinal -1.
         /// </summary>
-        public int Ordinal { get; }
+        public readonly int Ordinal { get; }
 
         /// <summary>
         /// Returns true if the parameter specifies a default value to be passed when no
         /// value is provided as an argument to a call. The default value can be obtained
         /// with the Microsoft.CodeAnalysis.IParameterSymbol.ExplicitDefaultValue property.
         /// </summary>
-        public bool HasExplicitDefaultValue { get; }
+        public readonly bool HasExplicitDefaultValue { get; }
 
         /// <summary>
         /// Returns the default value of the parameter.
@@ -2925,9 +3166,55 @@ namespace Business.SourceGenerator.Meta
         /// Returns null if the parameter type is a struct and the default value of the parameter
         /// is the default value of the struct type.
         /// </remarks>
-        public object ExplicitDefaultValue { get; }
+        public readonly object ExplicitDefaultValue { get; }
+
+        /// <summary>
+        /// Whether Implicit default value.
+        /// </summary>
+        public readonly bool ImplicitDefaultValue { get; }
 
         #endregion
+
+        #region IParameterMeta
+
+        /// <summary>
+        /// Gets the runtime type of the parameter.
+        /// </summary>
+        public readonly Type RuntimeType { get; }
+
+        /// <summary>
+        /// An enumerated value that identifies whether this type is an array, pointer, enum,
+        /// and so on.
+        /// </summary>
+        public readonly TypeKind TypeKind { get; }
+
+        /// <summary>
+        /// True if this type is known to be a value type.
+        /// </summary>
+        public readonly bool IsValueType { get; }
+
+        /// <summary>
+        /// Whether contain generic types.
+        /// </summary>
+        public readonly bool HasGenericType { get; }
+
+        #endregion
+    }
+
+    /// <summary>
+    /// Represents a method collection.
+    /// </summary>
+    public readonly struct AccessorMethodCollection : IAccessorMethodCollection
+    {
+        readonly IEnumerable<IAccessorMethod> accessorMethod;
+
+        public AccessorMethodCollection(IEnumerable<IAccessorMethod> accessorMethod) => this.accessorMethod = accessorMethod;
+
+        public IEnumerator<IAccessorMethod> GetEnumerator() => accessorMethod?.GetEnumerator();
+
+        IEnumerator IEnumerable.GetEnumerator() => GetEnumerator();
+
+        public override string ToString() => "Business.SourceGenerator.Meta.AccessorMethodCollection";
     }
 
     /// <summary>
@@ -2940,7 +3227,7 @@ namespace Business.SourceGenerator.Meta
     /// </remarks>
     public readonly struct AccessorMethod : IAccessorMethod
     {
-        public AccessorMethod(Accessibility declaredAccessibility, bool canBeReferencedByName, bool isImplicitlyDeclared, bool isExtern, bool isSealed, bool isAbstract, bool isOverride, bool isVirtual, bool isStatic, bool isDefinition, string name, string fullName, Kind kind, bool isDeclaringSyntaxReferences, bool isReadOnly, bool isInitOnly, IEnumerable<IAccessorParameter> parameters, bool isPartialDefinition, IDictionary<string, IAccessorTypeParameter> typeParameters, bool isConditional, MethodKind methodKind, int arity, bool isGeneric, bool isExtension, bool isVararg, bool isCheckedBuiltin, bool isAsync, bool returnsVoid, bool returnsByRef, bool returnsByRefReadonly, RefKind refKind, IAccessorType returnType, NullableAnnotation returnNullableAnnotation, bool hidesBaseMethodsByName, bool isClone, Func<object, object[], object> getValue, Func<object, object[], Task<object>> getValueAsync)
+        public AccessorMethod(Accessibility declaredAccessibility, bool canBeReferencedByName, bool isImplicitlyDeclared, bool isExtern, bool isSealed, bool isAbstract, bool isOverride, bool isVirtual, bool isStatic, bool isDefinition, string name, string fullName, Kind kind, bool isDeclaringSyntaxReferences, bool isReadOnly, bool isInitOnly, IAccessorParameter[] parameters, bool isPartialDefinition, IDictionary<string, IAccessorTypeParameter> typeParameters, bool isConditional, MethodKind methodKind, int arity, bool isGeneric, bool isExtension, bool isVararg, bool isCheckedBuiltin, bool isAsync, bool returnsVoid, bool returnsByRef, bool returnsByRefReadonly, RefKind refKind, IAccessorType returnType, NullableAnnotation returnNullableAnnotation, bool hidesBaseMethodsByName, Func<object, CheckedParameterValue[], object[], object> invoke, Func<object, CheckedParameterValue[], object[], Task<object>> invokeAsync, int parametersRealLength, int parametersMustLength)
         {
             DeclaredAccessibility = declaredAccessibility;
             CanBeReferencedByName = canBeReferencedByName;
@@ -2976,10 +3263,13 @@ namespace Business.SourceGenerator.Meta
             ReturnType = returnType;
             ReturnNullableAnnotation = returnNullableAnnotation;
             HidesBaseMethodsByName = hidesBaseMethodsByName;
-            IsClone = isClone;
+            //IsClone = isClone;
             //ReceiverType = receiverType;
-            GetValue = getValue;
-            GetValueAsync = getValueAsync;
+            Invoke = invoke;
+            InvokeAsync = invokeAsync;
+
+            ParametersRealLength = parametersRealLength;
+            ParametersMustLength = parametersMustLength;
         }
 
         public override string ToString() => $"{Kind} {FullName}";
@@ -2990,12 +3280,12 @@ namespace Business.SourceGenerator.Meta
         /// Gets a Microsoft.CodeAnalysis.Accessibility indicating the declared accessibility
         /// for the symbol. Returns NotApplicable if no accessibility is declared.
         /// </summary>
-        public Accessibility DeclaredAccessibility { get; }
+        public readonly Accessibility DeclaredAccessibility { get; }
 
         /// <summary>
         /// Returns true if this symbol can be referenced by its name in code.
         /// </summary>
-        public bool CanBeReferencedByName { get; }
+        public readonly bool CanBeReferencedByName { get; }
 
         /// <summary>
         /// Returns true if this symbol was automatically created by the compiler, and does
@@ -3017,64 +3307,64 @@ namespace Business.SourceGenerator.Meta
         /// The class and entry point method for top-level statements are not considered
         /// as implicitly declared.
         /// </remarks>
-        public bool IsImplicitlyDeclared { get; }
+        public readonly bool IsImplicitlyDeclared { get; }
 
         /// <summary>
         /// Gets a value indicating whether the symbol is defined externally.
         /// </summary>
-        public bool IsExtern { get; }
+        public readonly bool IsExtern { get; }
 
         /// <summary>
         /// Gets a value indicating whether the symbol is sealed.
         /// </summary>
-        public bool IsSealed { get; }
+        public readonly bool IsSealed { get; }
 
         /// <summary>
         /// Gets a value indicating whether the symbol is abstract.
         /// </summary>
-        public bool IsAbstract { get; }
+        public readonly bool IsAbstract { get; }
 
         /// <summary>
         /// Gets a value indicating whether the symbol is an override of a base class symbol.
         /// </summary>
-        public bool IsOverride { get; }
+        public readonly bool IsOverride { get; }
 
         /// <summary>
         /// Gets a value indicating whether the symbol is virtual.
         /// </summary>
-        public bool IsVirtual { get; }
+        public readonly bool IsVirtual { get; }
 
         /// <summary>
         /// Gets a value indicating whether the symbol is static.
         /// </summary>
-        public bool IsStatic { get; }
+        public readonly bool IsStatic { get; }
 
         /// <summary>
         /// Gets a value indicating whether the symbol is the original definition. Returns
         /// false if the symbol is derived from another symbol, by type substitution for
         /// instance.
         /// </summary>
-        public bool IsDefinition { get; }
+        public readonly bool IsDefinition { get; }
 
         /// <summary>
         /// Gets the symbol name. Returns the empty string if unnamed.
         /// </summary>
-        public string Name { get; }
+        public readonly string Name { get; }
 
         /// <summary>
         /// Gets the symbol full name. Returns the empty string if unnamed.
         /// </summary>
-        public string FullName { get; }
+        public readonly string FullName { get; }
 
         /// <summary>
         /// Gets the Microsoft.CodeAnalysis.SymbolKind indicating what kind of symbol it is.
         /// </summary>
-        public Kind Kind { get; }
+        public readonly Kind Kind { get; }
 
         /// <summary>
         /// Whether the syntax node(s) where this symbol was declared in source.
         /// </summary>
-        public bool IsDeclaringSyntaxReferences { get; }
+        public readonly bool IsDeclaringSyntaxReferences { get; }
 
         #endregion
 
@@ -3085,59 +3375,59 @@ namespace Business.SourceGenerator.Meta
         /// is 'ref readonly'. Returns true for readonly instance methods and accessors and
         /// for reduced extension methods with a 'this in' parameter.
         /// </summary>
-        public bool IsReadOnly { get; }
+        public readonly bool IsReadOnly { get; }
 
         /// <summary>
         /// Returns true for 'init' set accessors, and false otherwise.
         /// </summary>
-        public bool IsInitOnly { get; }
+        public readonly bool IsInitOnly { get; }
 
         /// <summary>
         /// Gets the parameters of this method. If this method has no parameters, returns
         /// an empty list.
         /// </summary>
-        public IEnumerable<IAccessorParameter> Parameters { get; }
+        public readonly IAccessorParameter[] Parameters { get; }
 
         /// <summary>
         /// Return true if this is a partial method definition without a body. If there is
         /// an implementing body, it can be retrieved with Microsoft.CodeAnalysis.IMethodSymbol.PartialImplementationPart.
         /// </summary>
-        public bool IsPartialDefinition { get; }
+        public readonly bool IsPartialDefinition { get; }
 
         /// <summary>
         /// Get the type parameters on this method. If the method has not generic, returns
         /// an empty list.
         /// </summary>
-        public IDictionary<string, IAccessorTypeParameter> TypeParameters { get; }
+        public readonly IDictionary<string, IAccessorTypeParameter> TypeParameters { get; }
 
         /// <summary>
         /// Returns a flag indicating whether this symbol has at least one applied/inherited
         /// conditional attribute.
         /// </summary>
-        public bool IsConditional { get; }
+        public readonly bool IsConditional { get; }
 
         /// <summary>
         /// Gets what kind of method this is. There are several different kinds of things
         /// in the C# language that are represented as methods. This property allow distinguishing
         /// those things without having to decode the name of the method.
         /// </summary>
-        public MethodKind MethodKind { get; }
+        public readonly MethodKind MethodKind { get; }
 
         /// <summary>
         /// Returns the arity of this method, or the number of type parameters it takes.
         /// A non-generic method has zero arity.
         /// </summary>
-        public int Arity { get; }
+        public readonly int Arity { get; }
 
         /// <summary>
         /// Returns whether this method is generic; i.e., does it have any type parameters?
         /// </summary>
-        public bool IsGeneric { get; }
+        public readonly bool IsGeneric { get; }
 
         /// <summary>
         /// Returns true if this method is an extension method.
         /// </summary>
-        public bool IsExtension { get; }
+        public readonly bool IsExtension { get; }
 
         /// <summary>
         /// Returns whether this method is using CLI VARARG calling convention. This is used
@@ -3146,59 +3436,59 @@ namespace Business.SourceGenerator.Meta
         /// with "params" on the last parameter are indicated with the "IsParams" property
         /// on ParameterSymbol, and are not represented with this property.
         /// </summary>
-        public bool IsVararg { get; }
+        public readonly bool IsVararg { get; }
 
         /// <summary>
         /// Returns whether this built-in operator checks for integer overflow.
         /// </summary>
-        public bool IsCheckedBuiltin { get; }
+        public readonly bool IsCheckedBuiltin { get; }
 
         /// <summary>
         /// Returns true if this method is an async method
         /// </summary>
-        public bool IsAsync { get; }
+        public readonly bool IsAsync { get; }
 
         /// <summary>
         /// Returns true if this method has no return type; i.e., returns "void".
         /// </summary>
-        public bool ReturnsVoid { get; }
+        public readonly bool ReturnsVoid { get; }
 
         /// <summary>
         /// Returns true if this method returns by reference.
         /// </summary>
-        public bool ReturnsByRef { get; }
+        public readonly bool ReturnsByRef { get; }
 
         /// <summary>
         /// Returns true if this method returns by ref readonly.
         /// </summary>
-        public bool ReturnsByRefReadonly { get; }
+        public readonly bool ReturnsByRefReadonly { get; }
 
         /// <summary>
         /// Returns the RefKind of the method.
         /// </summary>
-        public RefKind RefKind { get; }
+        public readonly RefKind RefKind { get; }
 
         /// <summary>
         /// Gets the return type of the method.
         /// </summary>
-        public IAccessorType ReturnType { get; }
+        public readonly IAccessorType ReturnType { get; }
 
         /// <summary>
         /// Gets the top-level nullability of the return type of the method.
         /// </summary>
-        public NullableAnnotation ReturnNullableAnnotation { get; }
+        public readonly NullableAnnotation ReturnNullableAnnotation { get; }
 
         /// <summary>
         /// Returns true if this method hides base methods by name. This cannot be specified
         /// directly in the C# language, but can be true for methods defined in other languages
         /// imported from metadata. The equivalent of the "hidebyname" flag in metadata.
         /// </summary>
-        public bool HidesBaseMethodsByName { get; }
+        public readonly bool HidesBaseMethodsByName { get; }
 
-        /// <summary>
-        /// Is it a clone.
-        /// </summary>
-        public bool IsClone { get; }
+        ///// <summary>
+        ///// Is it a clone.
+        ///// </summary>
+        //public bool IsClone { get; }
 
         ///// <summary>
         ///// If this method can be applied to an object, returns the type of object it is
@@ -3206,15 +3496,33 @@ namespace Business.SourceGenerator.Meta
         ///// </summary>
         //public string ReceiverType { get; }
 
-        /// <summary>
-        /// Get return value.
-        /// </summary>
-        public Func<object, object[], object> GetValue { get; }
+
+
+        #endregion
+
+        #region IMethodMeta
 
         /// <summary>
-        /// Get return Task value.
+        /// Skip the Out type to obtain the parameter count for this method. If the condition is not met, it returns 0.
         /// </summary>
-        public Func<object, object[], Task<object>> GetValueAsync { get; }
+        public readonly int ParametersRealLength { get; }
+
+        /// <summary>
+        /// Skip the Out type and default value and Params to obtain the parameter count for this method. If the condition is not met, it returns 0.
+        /// </summary>
+        public readonly int ParametersMustLength { get; }
+
+        public readonly IParameterMeta[] ParametersMeta => Parameters;
+
+        /// <summary>
+        /// Call this method.
+        /// </summary>
+        public readonly Func<object, CheckedParameterValue[], object[], object> Invoke { get; }
+
+        /// <summary>
+        /// Invoke this method asynchronously.
+        /// </summary>
+        public readonly Func<object, CheckedParameterValue[], object[], Task<object>> InvokeAsync { get; }
 
         #endregion
     }
@@ -3228,7 +3536,7 @@ namespace Business.SourceGenerator.Meta
     /// </remarks>
     public readonly struct AccessorField : IAccessorField
     {
-        public AccessorField(Accessibility declaredAccessibility, bool canBeReferencedByName, bool isImplicitlyDeclared, bool isExtern, bool isSealed, bool isAbstract, bool isOverride, bool isVirtual, bool isStatic, bool isDefinition, string name, string fullName, Kind kind, bool isDeclaringSyntaxReferences, bool isReadOnly, IAccessorType type, string typeFullName, bool isRepeat, bool isConst, bool isVolatile, bool isFixedSizeBuffer, int fixedSize, NullableAnnotation nullableAnnotation, bool hasConstantValue, object constantValue, bool isExplicitlyNamedTupleElement, Func<object, object> getValue, SetValue setValue)
+        public AccessorField(Accessibility declaredAccessibility, bool canBeReferencedByName, bool isImplicitlyDeclared, bool isExtern, bool isSealed, bool isAbstract, bool isOverride, bool isVirtual, bool isStatic, bool isDefinition, string name, string fullName, Kind kind, bool isDeclaringSyntaxReferences, bool isReadOnly, IAccessorType type, string typeFullName, bool isRepeat, bool isConst, bool isVolatile, bool isFixedSizeBuffer, int fixedSize, NullableAnnotation nullableAnnotation, bool hasConstantValue, object constantValue, bool isExplicitlyNamedTupleElement, Func<IGeneratorAccessor, object> getValue, SetValue setValue)
         {
             DeclaredAccessibility = declaredAccessibility;
             CanBeReferencedByName = canBeReferencedByName;
@@ -3268,12 +3576,12 @@ namespace Business.SourceGenerator.Meta
         /// Gets a Microsoft.CodeAnalysis.Accessibility indicating the declared accessibility
         /// for the symbol. Returns NotApplicable if no accessibility is declared.
         /// </summary>
-        public Accessibility DeclaredAccessibility { get; }
+        public readonly Accessibility DeclaredAccessibility { get; }
 
         /// <summary>
         /// Returns true if this symbol can be referenced by its name in code.
         /// </summary>
-        public bool CanBeReferencedByName { get; }
+        public readonly bool CanBeReferencedByName { get; }
 
         /// <summary>
         /// Returns true if this symbol was automatically created by the compiler, and does
@@ -3295,64 +3603,64 @@ namespace Business.SourceGenerator.Meta
         /// The class and entry point method for top-level statements are not considered
         /// as implicitly declared.
         /// </remarks>
-        public bool IsImplicitlyDeclared { get; }
+        public readonly bool IsImplicitlyDeclared { get; }
 
         /// <summary>
         /// Gets a value indicating whether the symbol is defined externally.
         /// </summary>
-        public bool IsExtern { get; }
+        public readonly bool IsExtern { get; }
 
         /// <summary>
         /// Gets a value indicating whether the symbol is sealed.
         /// </summary>
-        public bool IsSealed { get; }
+        public readonly bool IsSealed { get; }
 
         /// <summary>
         /// Gets a value indicating whether the symbol is abstract.
         /// </summary>
-        public bool IsAbstract { get; }
+        public readonly bool IsAbstract { get; }
 
         /// <summary>
         /// Gets a value indicating whether the symbol is an override of a base class symbol.
         /// </summary>
-        public bool IsOverride { get; }
+        public readonly bool IsOverride { get; }
 
         /// <summary>
         /// Gets a value indicating whether the symbol is virtual.
         /// </summary>
-        public bool IsVirtual { get; }
+        public readonly bool IsVirtual { get; }
 
         /// <summary>
         /// Gets a value indicating whether the symbol is static.
         /// </summary>
-        public bool IsStatic { get; }
+        public readonly bool IsStatic { get; }
 
         /// <summary>
         /// Gets a value indicating whether the symbol is the original definition. Returns
         /// false if the symbol is derived from another symbol, by type substitution for
         /// instance.
         /// </summary>
-        public bool IsDefinition { get; }
+        public readonly bool IsDefinition { get; }
 
         /// <summary>
         /// Gets the symbol name. Returns the empty string if unnamed.
         /// </summary>
-        public string Name { get; }
+        public readonly string Name { get; }
 
         /// <summary>
         /// Gets the symbol full name. Returns the empty string if unnamed.
         /// </summary>
-        public string FullName { get; }
+        public readonly string FullName { get; }
 
         /// <summary>
         /// Gets the Microsoft.CodeAnalysis.SymbolKind indicating what kind of symbol it is.
         /// </summary>
-        public Kind Kind { get; }
+        public readonly Kind Kind { get; }
 
         /// <summary>
         /// Whether the syntax node(s) where this symbol was declared in source.
         /// </summary>
-        public bool IsDeclaringSyntaxReferences { get; }
+        public readonly bool IsDeclaringSyntaxReferences { get; }
 
         #endregion
 
@@ -3362,32 +3670,32 @@ namespace Business.SourceGenerator.Meta
         /// Returns true if this field was declared as "readonly".
         /// True if this is a read-only property; that is, a property with no set accessor.
         /// </summary>
-        public bool IsReadOnly { get; }
+        public readonly bool IsReadOnly { get; }
 
         /// <summary>
         /// Gets the type of this field.
         /// </summary>
-        public IAccessorType Type { get; }
+        public readonly IAccessorType Type { get; }
 
         /// <summary>
         /// Gets the type full name. Returns the empty string if unnamed.
         /// </summary>
-        public string TypeFullName { get; }
+        public readonly string TypeFullName { get; }
 
         /// <summary>
         /// IsRepeat
         /// </summary>
-        public bool IsRepeat { get; }
+        public readonly bool IsRepeat { get; }
 
         /// <summary>
         /// Get return value.
         /// </summary>
-        public Func<object, object> GetValue { get; }
+        public readonly Func<IGeneratorAccessor, object> GetValue { get; }
 
         /// <summary>
         /// Set value.
         /// </summary>
-        public SetValue SetValue { get; }
+        public readonly SetValue SetValue { get; }
 
         #endregion
 
@@ -3397,19 +3705,19 @@ namespace Business.SourceGenerator.Meta
         /// Returns true if this field was declared as "const" (i.e. is a constant declaration).
         /// Also returns true for an enum member.
         /// </summary>
-        public bool IsConst { get; }
+        public readonly bool IsConst { get; }
 
         /// <summary>
         /// Returns true if this field was declared as "volatile".
         /// </summary>
-        public bool IsVolatile { get; }
+        public readonly bool IsVolatile { get; }
 
         /// <summary>
         /// Returns true if this field was declared as "fixed". Note that for a fixed-size
         /// buffer declaration, this.Type will be a pointer type, of which the pointed-to
         /// type will be the declared element type of the fixed-size buffer.
         /// </summary>
-        public bool IsFixedSizeBuffer { get; }
+        public readonly bool IsFixedSizeBuffer { get; }
 
         /// <summary>
         /// If IsFixedSizeBuffer is true, the value between brackets in the fixed-size-buffer
@@ -3418,29 +3726,29 @@ namespace Business.SourceGenerator.Meta
         /// this.Type will be a pointer type, of which the pointed-to type will be the declared
         /// element type of the fixed-size buffer.
         /// </summary>
-        public int FixedSize { get; }
+        public readonly int FixedSize { get; }
 
         /// <summary>
         /// Gets the top-level nullability of this field.
         /// </summary>
-        public NullableAnnotation NullableAnnotation { get; }
+        public readonly NullableAnnotation NullableAnnotation { get; }
 
         /// <summary>
         /// Returns false if the field wasn't declared as "const", or constant value was
         /// omitted or erroneous. True otherwise.
         /// </summary>
-        public bool HasConstantValue { get; }
+        public readonly bool HasConstantValue { get; }
 
         /// <summary>
         /// Gets the constant value of this field
         /// </summary>
-        public object ConstantValue { get; }
+        public readonly object ConstantValue { get; }
 
         /// <summary>
         /// Returns true if this field represents a tuple element which was given an explicit
         /// name.
         /// </summary>
-        public bool IsExplicitlyNamedTupleElement { get; }
+        public readonly bool IsExplicitlyNamedTupleElement { get; }
 
         #endregion
     }
@@ -3454,7 +3762,7 @@ namespace Business.SourceGenerator.Meta
     /// </remarks>
     public readonly struct AccessorProperty : IAccessorProperty
     {
-        public AccessorProperty(Accessibility declaredAccessibility, bool canBeReferencedByName, bool isImplicitlyDeclared, bool isExtern, bool isSealed, bool isAbstract, bool isOverride, bool isVirtual, bool isStatic, bool isDefinition, string name, string fullName, Kind kind, bool isDeclaringSyntaxReferences, bool isReadOnly, IAccessorType type, string typeFullName, bool isRepeat, bool isIndexer, NullableAnnotation nullableAnnotation, RefKind refKind, bool returnsByRefReadonly, bool returnsByRef, bool isWithEvents, bool isWriteOnly, Func<object, object> getValue, SetValue setValue)
+        public AccessorProperty(Accessibility declaredAccessibility, bool canBeReferencedByName, bool isImplicitlyDeclared, bool isExtern, bool isSealed, bool isAbstract, bool isOverride, bool isVirtual, bool isStatic, bool isDefinition, string name, string fullName, Kind kind, bool isDeclaringSyntaxReferences, bool isReadOnly, IAccessorType type, string typeFullName, bool isRepeat, bool isIndexer, NullableAnnotation nullableAnnotation, RefKind refKind, bool returnsByRefReadonly, bool returnsByRef, bool isWithEvents, bool isWriteOnly, Func<IGeneratorAccessor, object> getValue, SetValue setValue)
         {
             DeclaredAccessibility = declaredAccessibility;
             CanBeReferencedByName = canBeReferencedByName;
@@ -3493,12 +3801,12 @@ namespace Business.SourceGenerator.Meta
         /// Gets a Microsoft.CodeAnalysis.Accessibility indicating the declared accessibility
         /// for the symbol. Returns NotApplicable if no accessibility is declared.
         /// </summary>
-        public Accessibility DeclaredAccessibility { get; }
+        public readonly Accessibility DeclaredAccessibility { get; }
 
         /// <summary>
         /// Returns true if this symbol can be referenced by its name in code.
         /// </summary>
-        public bool CanBeReferencedByName { get; }
+        public readonly bool CanBeReferencedByName { get; }
 
         /// <summary>
         /// Returns true if this symbol was automatically created by the compiler, and does
@@ -3520,64 +3828,64 @@ namespace Business.SourceGenerator.Meta
         /// The class and entry point method for top-level statements are not considered
         /// as implicitly declared.
         /// </remarks>
-        public bool IsImplicitlyDeclared { get; }
+        public readonly bool IsImplicitlyDeclared { get; }
 
         /// <summary>
         /// Gets a value indicating whether the symbol is defined externally.
         /// </summary>
-        public bool IsExtern { get; }
+        public readonly bool IsExtern { get; }
 
         /// <summary>
         /// Gets a value indicating whether the symbol is sealed.
         /// </summary>
-        public bool IsSealed { get; }
+        public readonly bool IsSealed { get; }
 
         /// <summary>
         /// Gets a value indicating whether the symbol is abstract.
         /// </summary>
-        public bool IsAbstract { get; }
+        public readonly bool IsAbstract { get; }
 
         /// <summary>
         /// Gets a value indicating whether the symbol is an override of a base class symbol.
         /// </summary>
-        public bool IsOverride { get; }
+        public readonly bool IsOverride { get; }
 
         /// <summary>
         /// Gets a value indicating whether the symbol is virtual.
         /// </summary>
-        public bool IsVirtual { get; }
+        public readonly bool IsVirtual { get; }
 
         /// <summary>
         /// Gets a value indicating whether the symbol is static.
         /// </summary>
-        public bool IsStatic { get; }
+        public readonly bool IsStatic { get; }
 
         /// <summary>
         /// Gets a value indicating whether the symbol is the original definition. Returns
         /// false if the symbol is derived from another symbol, by type substitution for
         /// instance.
         /// </summary>
-        public bool IsDefinition { get; }
+        public readonly bool IsDefinition { get; }
 
         /// <summary>
         /// Gets the symbol name. Returns the empty string if unnamed.
         /// </summary>
-        public string Name { get; }
+        public readonly string Name { get; }
 
         /// <summary>
         /// Gets the symbol full name. Returns the empty string if unnamed.
         /// </summary>
-        public string FullName { get; }
+        public readonly string FullName { get; }
 
         /// <summary>
         /// Gets the Microsoft.CodeAnalysis.SymbolKind indicating what kind of symbol it is.
         /// </summary>
-        public Kind Kind { get; }
+        public readonly Kind Kind { get; }
 
         /// <summary>
         /// Whether the syntax node(s) where this symbol was declared in source.
         /// </summary>
-        public bool IsDeclaringSyntaxReferences { get; }
+        public readonly bool IsDeclaringSyntaxReferences { get; }
 
         #endregion
 
@@ -3587,32 +3895,32 @@ namespace Business.SourceGenerator.Meta
         /// Returns true if this field was declared as "readonly".
         /// True if this is a read-only property; that is, a property with no set accessor.
         /// </summary>
-        public bool IsReadOnly { get; }
+        public readonly bool IsReadOnly { get; }
 
         /// <summary>
         /// Gets the type of this field.
         /// </summary>
-        public IAccessorType Type { get; }
+        public readonly IAccessorType Type { get; }
 
         /// <summary>
         /// Gets the type full name. Returns the empty string if unnamed.
         /// </summary>
-        public string TypeFullName { get; }
+        public readonly string TypeFullName { get; }
 
         /// <summary>
         /// IsRepeat
         /// </summary>
-        public bool IsRepeat { get; }
+        public readonly bool IsRepeat { get; }
 
         /// <summary>
         /// Get return value.
         /// </summary>
-        public Func<object, object> GetValue { get; }
+        public readonly Func<IGeneratorAccessor, object> GetValue { get; }
 
         /// <summary>
         /// Set value.
         /// </summary>
-        public SetValue SetValue { get; }
+        public readonly SetValue SetValue { get; }
 
         #endregion
 
@@ -3621,39 +3929,39 @@ namespace Business.SourceGenerator.Meta
         /// <summary>
         /// Returns whether the property is really an indexer.
         /// </summary>
-        public bool IsIndexer { get; }
+        public readonly bool IsIndexer { get; }
 
         /// <summary>
         /// Custom modifiers associated with the ref modifier, or an empty array if there
         /// are none.
         /// </summary>
-        public NullableAnnotation NullableAnnotation { get; }
+        public readonly NullableAnnotation NullableAnnotation { get; }
 
         /// <summary>
         /// Returns the RefKind of the property.
         /// </summary>
-        public RefKind RefKind { get; }
+        public readonly RefKind RefKind { get; }
 
         /// <summary>
         /// Returns true if this property returns by reference a readonly variable.
         /// </summary>
-        public bool ReturnsByRefReadonly { get; }
+        public readonly bool ReturnsByRefReadonly { get; }
 
         /// <summary>
         /// Returns true if this property returns by reference.
         /// </summary>
-        public bool ReturnsByRef { get; }
+        public readonly bool ReturnsByRef { get; }
 
         /// <summary>
         /// Returns true if this property is an auto-created WithEvents property that takes
         /// place of a field member when the field is marked as WithEvents.
         /// </summary>
-        public bool IsWithEvents { get; }
+        public readonly bool IsWithEvents { get; }
 
         /// <summary>
         /// True if this is a write-only property; that is, a property with no get accessor.
         /// </summary>
-        public bool IsWriteOnly { get; }
+        public readonly bool IsWriteOnly { get; }
 
         #endregion
     }
@@ -3667,7 +3975,7 @@ namespace Business.SourceGenerator.Meta
     /// </remarks>
     public readonly struct AccessorEvent : IAccessorEvent
     {
-        public AccessorEvent(Accessibility declaredAccessibility, bool canBeReferencedByName, bool isImplicitlyDeclared, bool isExtern, bool isSealed, bool isAbstract, bool isOverride, bool isVirtual, bool isStatic, bool isDefinition, string name, string fullName, Kind kind, bool isDeclaringSyntaxReferences, bool isReadOnly, IAccessorType type, string typeFullName, bool isRepeat, NullableAnnotation nullableAnnotation, bool isWindowsRuntimeEvent, IAccessorMethod addMethod, IAccessorMethod removeMethod, Func<object, object> getValue, SetValue setValue)
+        public AccessorEvent(Accessibility declaredAccessibility, bool canBeReferencedByName, bool isImplicitlyDeclared, bool isExtern, bool isSealed, bool isAbstract, bool isOverride, bool isVirtual, bool isStatic, bool isDefinition, string name, string fullName, Kind kind, bool isDeclaringSyntaxReferences, bool isReadOnly, IAccessorType type, string typeFullName, bool isRepeat, NullableAnnotation nullableAnnotation, bool isWindowsRuntimeEvent, IAccessorMethod addMethod, IAccessorMethod removeMethod, Func<IGeneratorAccessor, object> getValue, SetValue setValue)
         {
             DeclaredAccessibility = declaredAccessibility;
             CanBeReferencedByName = canBeReferencedByName;
@@ -3703,12 +4011,12 @@ namespace Business.SourceGenerator.Meta
         /// Gets a Microsoft.CodeAnalysis.Accessibility indicating the declared accessibility
         /// for the symbol. Returns NotApplicable if no accessibility is declared.
         /// </summary>
-        public Accessibility DeclaredAccessibility { get; }
+        public readonly Accessibility DeclaredAccessibility { get; }
 
         /// <summary>
         /// Returns true if this symbol can be referenced by its name in code.
         /// </summary>
-        public bool CanBeReferencedByName { get; }
+        public readonly bool CanBeReferencedByName { get; }
 
         /// <summary>
         /// Returns true if this symbol was automatically created by the compiler, and does
@@ -3730,64 +4038,64 @@ namespace Business.SourceGenerator.Meta
         /// The class and entry point method for top-level statements are not considered
         /// as implicitly declared.
         /// </remarks>
-        public bool IsImplicitlyDeclared { get; }
+        public readonly bool IsImplicitlyDeclared { get; }
 
         /// <summary>
         /// Gets a value indicating whether the symbol is defined externally.
         /// </summary>
-        public bool IsExtern { get; }
+        public readonly bool IsExtern { get; }
 
         /// <summary>
         /// Gets a value indicating whether the symbol is sealed.
         /// </summary>
-        public bool IsSealed { get; }
+        public readonly bool IsSealed { get; }
 
         /// <summary>
         /// Gets a value indicating whether the symbol is abstract.
         /// </summary>
-        public bool IsAbstract { get; }
+        public readonly bool IsAbstract { get; }
 
         /// <summary>
         /// Gets a value indicating whether the symbol is an override of a base class symbol.
         /// </summary>
-        public bool IsOverride { get; }
+        public readonly bool IsOverride { get; }
 
         /// <summary>
         /// Gets a value indicating whether the symbol is virtual.
         /// </summary>
-        public bool IsVirtual { get; }
+        public readonly bool IsVirtual { get; }
 
         /// <summary>
         /// Gets a value indicating whether the symbol is static.
         /// </summary>
-        public bool IsStatic { get; }
+        public readonly bool IsStatic { get; }
 
         /// <summary>
         /// Gets a value indicating whether the symbol is the original definition. Returns
         /// false if the symbol is derived from another symbol, by type substitution for
         /// instance.
         /// </summary>
-        public bool IsDefinition { get; }
+        public readonly bool IsDefinition { get; }
 
         /// <summary>
         /// Gets the symbol name. Returns the empty string if unnamed.
         /// </summary>
-        public string Name { get; }
+        public readonly string Name { get; }
 
         /// <summary>
         /// Gets the symbol full name. Returns the empty string if unnamed.
         /// </summary>
-        public string FullName { get; }
+        public readonly string FullName { get; }
 
         /// <summary>
         /// Gets the Microsoft.CodeAnalysis.SymbolKind indicating what kind of symbol it is.
         /// </summary>
-        public Kind Kind { get; }
+        public readonly Kind Kind { get; }
 
         /// <summary>
         /// Whether the syntax node(s) where this symbol was declared in source.
         /// </summary>
-        public bool IsDeclaringSyntaxReferences { get; }
+        public readonly bool IsDeclaringSyntaxReferences { get; }
 
         #endregion
 
@@ -3797,32 +4105,32 @@ namespace Business.SourceGenerator.Meta
         /// Returns true if this field was declared as "readonly".
         /// True if this is a read-only property; that is, a property with no set accessor.
         /// </summary>
-        public bool IsReadOnly { get; }
+        public readonly bool IsReadOnly { get; }
 
         /// <summary>
         /// Gets the type of this field, property, event.
         /// </summary>
-        public IAccessorType Type { get; }
+        public readonly IAccessorType Type { get; }
 
         /// <summary>
         /// Gets the type full name. Returns the empty string if unnamed.
         /// </summary>
-        public string TypeFullName { get; }
+        public readonly string TypeFullName { get; }
 
         /// <summary>
         /// IsRepeat
         /// </summary>
-        public bool IsRepeat { get; }
+        public readonly bool IsRepeat { get; }
 
         /// <summary>
         /// Get return value.
         /// </summary>
-        public Func<object, object> GetValue { get; }
+        public readonly Func<IGeneratorAccessor, object> GetValue { get; }
 
         /// <summary>
         /// Set value.
         /// </summary>
-        public SetValue SetValue { get; }
+        public readonly SetValue SetValue { get; }
 
         #endregion
 
@@ -3831,22 +4139,22 @@ namespace Business.SourceGenerator.Meta
         /// <summary>
         /// The top-level nullability of the event.
         /// </summary>
-        public NullableAnnotation NullableAnnotation { get; }
+        public readonly NullableAnnotation NullableAnnotation { get; }
 
         /// <summary>
         /// Returns true if the event is a WinRT type event.
         /// </summary>
-        public bool IsWindowsRuntimeEvent { get; }
+        public readonly bool IsWindowsRuntimeEvent { get; }
 
         /// <summary>
         /// The 'add' accessor of the event. Null only in error scenarios.
         /// </summary>
-        public IAccessorMethod AddMethod { get; }
+        public readonly IAccessorMethod AddMethod { get; }
 
         /// <summary>
         /// The 'remove' accessor of the event. Null only in error scenarios.
         /// </summary>
-        public IAccessorMethod RemoveMethod { get; }
+        public readonly IAccessorMethod RemoveMethod { get; }
 
         #endregion
     }
