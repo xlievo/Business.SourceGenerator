@@ -68,21 +68,23 @@ namespace Business.SourceGenerator
             {
                 AnalysisMeta.Init(context);
 
-                var generatorTypeCode = $"{Expression.GeneratorCode(AnalysisMeta.AnalysisInfo, context.Compilation.AssemblyName, opt, usings)}";
-
-                #region AddSource
+                var generatorType = $"{Expression.GeneratorCode(AnalysisMeta.AnalysisInfo, context.Compilation.AssemblyName, opt, usings)}";
 
                 var accessors = Expression.GeneratorAccessor(AnalysisMeta.AnalysisInfo, context.Compilation.AssemblyName, opt, usings);
 
-                if (!string.IsNullOrEmpty(generatorTypeCode) || !string.IsNullOrEmpty(accessors))
+                if (string.IsNullOrEmpty(generatorType) && string.IsNullOrEmpty(accessors))
                 {
-                    var accessorsCode = $"{format2}{accessors}";
-                    var usings2 = $"{string.Join(Meta.Global.EnvironmentNewLine, usings.Select(c => $"using {c};"))}{format2}";
-
-                    var code = $"{(!opt.Global ? usings2 : default)}{generatorTypeCode}{accessorsCode}";
-
-                    context.AddSource(Meta.Global.GeneratorCodeName, Microsoft.CodeAnalysis.Text.SourceText.From(code, System.Text.Encoding.UTF8));
+                    return;
                 }
+
+                #region AddSource
+
+                var accessorsCode = $"{format2}{accessors}";
+                var usings2 = $"{string.Join(Meta.Global.EnvironmentNewLine, usings.Select(c => $"using {c};"))}{format2}";
+
+                var code = $"{(!opt.Global ? usings2 : default)}{generatorType}{accessorsCode}";
+
+                context.AddSource(Meta.Global.GeneratorCodeName, Microsoft.CodeAnalysis.Text.SourceText.From(code, System.Text.Encoding.UTF8));
 
                 #endregion
             }

@@ -143,68 +143,30 @@ namespace Business.SourceGenerator
         /// <exception cref="ArgumentNullException"></exception>
         public static bool AccessorMethod(this IGeneratorAccessor accessor, string name, out object result, params object[] args)
         {
-            if (accessor is null)
-            {
-                throw new ArgumentNullException(nameof(accessor));
-            }
+            var checkedResult = AccessorMethodPrepar(accessor, name, args);
 
-            if (name is null)
+            switch (checkedResult.Exception)
             {
-                throw new ArgumentNullException(nameof(name));
-            }
-
-            if (args is null)
-            {
-                args = Array.Empty<object>();
-            }
-
-            if (!accessor.AccessorType().Members.TryGetValue(name, out IAccessor meta))
-            {
-                result = default;
-                return default;
-            }
-
-            switch (meta)
-            {
-                case IAccessorMethod method:
+                case AccessorMethodPreparException.AccessorNull:
+                    throw new ArgumentNullException(nameof(accessor));
+                case AccessorMethodPreparException.NameNull:
+                    throw new ArgumentNullException(nameof(name));
+                case AccessorMethodPreparException.ArgsNull:
+                    throw new ArgumentNullException(nameof(args));
+                case AccessorMethodPreparException.MethodNotExist:
+                case AccessorMethodPreparException.ArgumentOutOfRange:
+                    result = default;
+                    return default;
+                default:
+                    if (checkedResult.Method.Invoke is null)
                     {
-                        var checkedArgs = CheckedMethod(method, args);
-
-                        if (checkedArgs is null || method.Invoke is null)
-                        {
-                            break;
-                        }
-
-                        result = method.Invoke(accessor, checkedArgs, args);
-                        return true;
+                        result = default;
+                        return default;
                     }
-                case IAccessorMethodCollection collection:
-                    {
-                        foreach (var method in collection)
-                        {
-                            var checkedArgs = CheckedMethod(method, args);
 
-                            if (checkedArgs is null)
-                            {
-                                continue;
-                            }
-
-                            if (method.Invoke is null)
-                            {
-                                break;
-                            }
-
-                            result = method.Invoke(accessor, checkedArgs, args);
-                            return true;
-                        }
-
-                        break;
-                    }
-                default: break;
+                    result = checkedResult.Method.Invoke(accessor, checkedResult.Parameters, args);
+                    return true;
             }
-
-            result = default;
-            return default;
         }
 
         /// <summary>
@@ -226,14 +188,101 @@ namespace Business.SourceGenerator
         /// <returns>pecifies the method return value of the object.</returns>
         public static async Task<object> AccessorMethodAsync(this IGeneratorAccessor accessor, string name, params object[] args)
         {
+            var checkedResult = AccessorMethodPrepar(accessor, name, args);
+
+            switch (checkedResult.Exception)
+            {
+                case AccessorMethodPreparException.AccessorNull:
+                    return await Task.FromException<object>(new ArgumentNullException(nameof(accessor)));
+                case AccessorMethodPreparException.NameNull:
+                    return await Task.FromException<object>(new ArgumentNullException(nameof(name)));
+                case AccessorMethodPreparException.ArgsNull:
+                    return await Task.FromException<object>(new ArgumentNullException(nameof(args)));
+                case AccessorMethodPreparException.MethodNotExist:
+                    return await Task.FromException<object>(new MethodAccessException($"The current method \"{name}\" does not exist."));
+                case AccessorMethodPreparException.ArgumentOutOfRange:
+                    return await Task.FromException<object>(new ArgumentOutOfRangeException(nameof(args), "The number of parameters must be less than or equal to the actual total number of parameters for the method."));
+                default:
+                    if (checkedResult.Method.InvokeAsync is null)
+                    {
+                        return await Task.FromException<object>(new NotImplementedException("This method is not callable."));
+                    }
+
+                    return await checkedResult.Method.InvokeAsync(accessor, checkedResult.Parameters, args);
+            }
+        }
+
+        #endregion
+
+        /// <summary>
+        /// Method inspection results.
+        /// </summary>
+        public readonly struct AccessorMethodPreparResult
+        {
+            static readonly AccessorMethodPreparResult defaultValue = default;
+
+            public AccessorMethodPreparResult(IAccessorMethod method, CheckedParameterValue[] parameters)
+            {
+                Method = method;
+                Parameters = parameters;
+                Exception = AccessorMethodPreparException.No;
+            }
+
+            public AccessorMethodPreparResult(AccessorMethodPreparException exception)
+            {
+                Method = default;
+                Parameters = default;
+                Exception = exception;
+            }
+
+            public bool IsDefault() => defaultValue.Equals(this);
+
+            /// <summary>
+            /// Accessible method metadata.
+            /// </summary>
+            public readonly IAccessorMethod Method { get; }
+
+            /// <summary>
+            /// Full size parameter array.
+            /// </summary>
+            public readonly CheckedParameterValue[] Parameters { get; }
+
+            /// <summary>
+            /// Checked exception.
+            /// </summary>
+            public readonly AccessorMethodPreparException Exception { get; }
+        }
+
+        /// <summary>
+        /// Method check exception.
+        /// </summary>
+        public enum AccessorMethodPreparException
+        {
+            No,
+            AccessorNull,
+            NameNull,
+            ArgsNull,
+            MethodNotExist,
+            ArgumentOutOfRange,
+        }
+
+        /// <summary>
+        /// Check before accessing the method.
+        /// </summary>
+        /// <param name="accessor">Own an instance of this method.</param>
+        /// <param name="name">method name.</param>
+        /// <param name="args">Parameter object of calling method.</param>
+        /// <returns>Return inspection results.</returns>
+        public static AccessorMethodPreparResult AccessorMethodPrepar(this IGeneratorAccessor accessor, string name, params object[] args)
+        {
             if (accessor is null)
             {
-                return await Task.FromException<object>(new ArgumentNullException(nameof(accessor)));
+                return new AccessorMethodPreparResult(AccessorMethodPreparException.AccessorNull);
             }
 
             if (name is null)
             {
-                return await Task.FromException<object>(new ArgumentNullException(nameof(name)));
+                return new AccessorMethodPreparResult(AccessorMethodPreparException.NameNull);
             }
 
             if (args is null)
@@ -243,7 +292,7 @@ namespace Business.SourceGenerator
 
             if (!accessor.AccessorType().Members.TryGetValue(name, out IAccessor meta))
             {
-                return await Task.FromException<object>(new MethodAccessException($"The current method \"{name}\" does not exist."));
+                return new AccessorMethodPreparResult(AccessorMethodPreparException.MethodNotExist);
             }
 
             switch (meta)
@@ -254,15 +303,10 @@ namespace Business.SourceGenerator
 
                         if (checkedArgs is null)
                         {
-                            return await Task.FromException<object>(new ArgumentOutOfRangeException(nameof(args), "The number of parameters must be less than or equal to the actual total number of parameters for the method."));
+                            return new AccessorMethodPreparResult(AccessorMethodPreparException.ArgumentOutOfRange);
                         }
 
-                        if (method.InvokeAsync is null)
-                        {
-                            return await Task.FromException<object>(new NotImplementedException("This method is not callable."));
-                        }
-
-                        return await method.InvokeAsync(accessor, checkedArgs, args);
+                        return new AccessorMethodPreparResult(method, checkedArgs);
                     }
                 case IAccessorMethodCollection collection:
                     {
@@ -275,21 +319,14 @@ namespace Business.SourceGenerator
                                 continue;
                             }
 
-                            if (method.InvokeAsync is null)
-                            {
-                                return await Task.FromException<object>(new NotImplementedException("This method is not callable."));
-                            }
-
-                            return await method.InvokeAsync(accessor, checkedArgs, args);
+                            return new AccessorMethodPreparResult(method, checkedArgs);
                         }
 
-                        return await Task.FromException<object>(new ArgumentOutOfRangeException(nameof(args), "The number of parameters must be less than or equal to the actual total number of parameters for the method."));
+                        return new AccessorMethodPreparResult(AccessorMethodPreparException.ArgumentOutOfRange);
                     }
-                default: return await Task.FromException<object>(new MethodAccessException($"The current method \"{name}\" type error."));
+                default: return new AccessorMethodPreparResult(AccessorMethodPreparException.MethodNotExist);
             }
         }
-
-        #endregion
 
         static CheckedParameterValue[] CheckedMethod(IMethodMeta method, object[] args)
         {
