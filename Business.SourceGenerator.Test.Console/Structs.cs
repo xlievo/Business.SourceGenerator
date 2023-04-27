@@ -237,6 +237,26 @@ public partial struct MyStruct10
     }
 }
 
+public partial struct MyStruct11
+{
+    public string aaa { get; set; }
+
+    public MyStruct11(string aaa)
+    {
+        this.aaa = aaa ?? throw new ArgumentNullException(nameof(aaa));
+    }
+}
+
+public partial struct MyStruct12
+{
+    public string aaa { get; set; }
+
+    public MyStruct12(string aaa)
+    {
+        this.aaa = aaa ?? throw new ArgumentNullException(nameof(aaa));
+    }
+}
+
 namespace MyCode
 {
     public partial class ClassGeneric<T> : System.Collections.Generic.Dictionary<T, T>

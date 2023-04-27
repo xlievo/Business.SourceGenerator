@@ -198,6 +198,7 @@ namespace Business.SourceGenerator.Analysis
             }
         }
 
+        /*
         /// <summary>
         /// Scale
         /// </summary>
@@ -209,6 +210,7 @@ namespace Business.SourceGenerator.Analysis
             var p = Math.Pow(10, size);
             return (int)(value * (int)p) / p;
         }
+        */
 
         public static string GetName(this Enum value) => null == value ? null : Enum.GetName(value.GetType(), value);
 
@@ -366,8 +368,6 @@ namespace Business.SourceGenerator.Analysis
             return false;
         }
 
-
-
         //static readonly string AccessorKey = TypeNameFormatter.TypeName.GetFormattedName(typeof(IGeneratorAccessor), TypeNameFormatter.TypeNameFormatOptions.Namespaces);
 
         static bool HasGeneratorAccessor(AnalysisMeta.SymbolInfo info)
@@ -415,10 +415,9 @@ namespace Business.SourceGenerator.Analysis
         }
         */
 
-        public static string GeneratorAccessor(AnalysisInfoModel analysisInfo, string assemblyName, SyntaxToCode.ToCodeOpt opt, string[] usings = default)
+        public static IDictionary<string, string> GeneratorAccessor(AnalysisInfoModel analysisInfo, string assemblyName, ToCodeOpt opt, string[] usings = default)
         {
             var format = opt.StandardFormat ? Environment.NewLine : " ";
-            //Func<string, string> typeClean = type => !opt.Global ? TypeNameClean(type, $"{assemblyName}.", "System.Collections.Generic.", "System.Collections.ObjectModel.") : type;
             var usings2 = usings.Select(c => $"{c}.").Concat(new string[] { $"{assemblyName}." }).ToArray();
             string typeClean(string type, bool noGlobal = false) => !opt.Global ? TypeNameClean(type, usings2) : !noGlobal ? $"{GlobalConst.Global}{type}" : type;
 
@@ -427,6 +426,8 @@ namespace Business.SourceGenerator.Analysis
             var sb = new System.Text.StringBuilder(null);
 
             var generatorAccessors = declarations.Where(c => HasGeneratorAccessor(c));
+
+            var dict = new Dictionary<string, string>();
 
             foreach (var item in generatorAccessors)
             {
@@ -437,11 +438,11 @@ namespace Business.SourceGenerator.Analysis
                     continue;
                 }
 
-                if (0 < sb.Length)
-                {
-                    sb.AppendLine();
-                    sb.AppendLine();
-                }
+                //if (0 < sb.Length)
+                //{
+                //    sb.AppendLine();
+                //    sb.AppendLine();
+                //}
 
                 if (!typeSymbol.ContainingNamespace.IsGlobalNamespace)
                 {
@@ -476,13 +477,7 @@ namespace Business.SourceGenerator.Analysis
 
                 sb.AppendLine($"public static {globalMeta}IAccessorNamedType GeneratorAccessorType {{ get => generatorAccessorType.Value; }}");
                 sb.AppendLine($"public {globalMeta}IAccessorNamedType AccessorType() => GeneratorAccessorType;");
-                //sb.AppendFormat(accessorTemp,
-                //    globalMeta,
-                //    $"{(typeSymbol.IsValueType ? $"{format}        this = ({typeSymbol.GetFullName(new GetFullNameOpt(noPrefix: true))})accessor;{format}" : default)}",
-                //    globalSystem,
-                //    globalString,
-                //    globalObject,
-                //    globalBoolean);
+
                 sb.AppendFormat(accessorTemp,
                     globalMeta,
                     $"{(typeSymbol.IsValueType ? $"{format}    this = ({typeSymbol.GetFullNameStandardFormat(typeClean: typeClean)})accessor;{format}" : default)}",
@@ -496,12 +491,15 @@ namespace Business.SourceGenerator.Analysis
                 {
                     sb.AppendFormat("{0}}}", format);
                 }
+
+                dict.Add($"{typeSymbol.GetFullName(GetFullNameOpt.Create(typeParameterBracketLeft: "[", typeParameterBracketRight: "]"))}.Gen", sb.ToString());
+                sb.Clear();
             }
 
-            return sb.ToString();
+            return dict;
         }
 
-        public static string GeneratorCode(AnalysisInfoModel analysisInfo, string assemblyName, SyntaxToCode.ToCodeOpt opt, string[] usings = default)
+        public static string GeneratorCode(AnalysisInfoModel analysisInfo, string assemblyName, ToCodeOpt opt, string[] usings = default)
         {
             var format = opt.StandardFormat ? Environment.NewLine : " ";
             //string typeClean(string type) => !opt.Global ? TypeNameClean(type, $"{assemblyName}.", "System.Collections.Generic.", "System.Collections.ObjectModel.") : $"{Global}{type}";// type;
@@ -670,7 +668,7 @@ namespace Business.SourceGenerator.Analysis
 
             return sb.ToString();
 
-            static void SetGenerics(IEnumerable<INamedTypeSymbol> makeGenerics, List<string> generatorTypes, Func<string, bool, string> typeClean, SyntaxToCode.ToCodeOpt opt, params ITypeSymbol[] typeArgument)
+            static void SetGenerics(IEnumerable<INamedTypeSymbol> makeGenerics, List<string> generatorTypes, Func<string, bool, string> typeClean, ToCodeOpt opt, params ITypeSymbol[] typeArgument)
             {
                 var globalMeta = opt.GetGlobalName(GlobalName.Business_SourceGenerator_Meta);
 
@@ -704,7 +702,7 @@ namespace Business.SourceGenerator.Analysis
             }
         }
 
-        static string SetConstructor(INamedTypeSymbol named, IList<string> result, Func<string, bool, string> typeClean, SyntaxToCode.ToCodeOpt opt, params ITypeSymbol[] typeArgument)
+        static string SetConstructor(INamedTypeSymbol named, IList<string> result, Func<string, bool, string> typeClean, ToCodeOpt opt, params ITypeSymbol[] typeArgument)
         {
             var typeArguments = named.SetTypeArguments(typeArgument);
 
@@ -731,7 +729,7 @@ namespace Business.SourceGenerator.Analysis
             //return (named.IsGenericType && SpecialType.System_Nullable_T != named.OriginalDefinition?.SpecialType) ? named.GetFullNameStandardFormat(GetFullNameOpt.Create(noNullableQuestionMark: true, typeArguments: typeArguments), typeClean) : named.GetFullNameStandardFormat(GetFullNameOpt.Create(noNullableQuestionMark: true), typeClean: typeClean);
         }
 
-        static string SetConstructorArray(IArrayTypeSymbol array, IList<string> result, Func<string, bool, string> typeClean, SyntaxToCode.ToCodeOpt opt)
+        static string SetConstructorArray(IArrayTypeSymbol array, IList<string> result, Func<string, bool, string> typeClean, ToCodeOpt opt)
         {
             var globalSystem = opt.GetGlobalName(GlobalName.System);
             var globalMeta = opt.GetGlobalName(GlobalName.Business_SourceGenerator_Meta);

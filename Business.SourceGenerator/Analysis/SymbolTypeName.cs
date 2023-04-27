@@ -137,9 +137,9 @@ namespace Business.SourceGenerator.Analysis
         {
             public static GetFullNameOpt Create() => new GetFullNameOpt(false);
 
-            public static GetFullNameOpt Create(bool standardFormat = false, bool noNullableQuestionMark = false, AnonymousTypeStyle anonymousTypeStyle = AnonymousTypeStyle.Curly, CaptureStyle captureStyle = CaptureStyle.Pass, ParameterStyle parameterStyle = ParameterStyle.Type, TypeParameterStyle typeParameterStyle = TypeParameterStyle.FullName, string methodParameterVarName = default, string methodParameterRefVarName = default, Func<string, int, string> methodParameterVarNameCallback = default, IDictionary<string, ITypeSymbol> typeArguments = default, bool global = default) => new GetFullNameOpt(standardFormat, noNullableQuestionMark, anonymousTypeStyle, captureStyle, parameterStyle, typeParameterStyle, methodParameterVarName, methodParameterRefVarName, methodParameterVarNameCallback, typeArguments, global);
+            public static GetFullNameOpt Create(bool standardFormat = false, bool noNullableQuestionMark = false, AnonymousTypeStyle anonymousTypeStyle = AnonymousTypeStyle.Curly, CaptureStyle captureStyle = CaptureStyle.Pass, ParameterStyle parameterStyle = ParameterStyle.Type, TypeParameterStyle typeParameterStyle = TypeParameterStyle.FullName, string methodParameterVarName = default, string methodParameterRefVarName = default, Func<string, int, string> methodParameterVarNameCallback = default, IDictionary<string, ITypeSymbol> typeArguments = default, bool global = default, string typeParameterBracketLeft = default, string typeParameterBracketRight = default) => new GetFullNameOpt(standardFormat, noNullableQuestionMark, anonymousTypeStyle, captureStyle, parameterStyle, typeParameterStyle, methodParameterVarName, methodParameterRefVarName, methodParameterVarNameCallback, typeArguments, global, typeParameterBracketLeft, typeParameterBracketRight);
 
-            GetFullNameOpt(bool standardFormat = false, bool noNullableQuestionMark = false, AnonymousTypeStyle anonymousTypeStyle = AnonymousTypeStyle.Curly, CaptureStyle captureStyle = CaptureStyle.Pass, ParameterStyle parameterStyle = ParameterStyle.Type, TypeParameterStyle typeParameterStyle = TypeParameterStyle.FullName, string methodParameterVarName = default, string methodParameterRefVarName = default, Func<string, int, string> methodParameterVarNameCallback = default, IDictionary<string, ITypeSymbol> typeArguments = default, bool global = default)
+            GetFullNameOpt(bool standardFormat = false, bool noNullableQuestionMark = false, AnonymousTypeStyle anonymousTypeStyle = AnonymousTypeStyle.Curly, CaptureStyle captureStyle = CaptureStyle.Pass, ParameterStyle parameterStyle = ParameterStyle.Type, TypeParameterStyle typeParameterStyle = TypeParameterStyle.FullName, string methodParameterVarName = default, string methodParameterRefVarName = default, Func<string, int, string> methodParameterVarNameCallback = default, IDictionary<string, ITypeSymbol> typeArguments = default, bool global = default, string typeParameterBracketLeft = default, string typeParameterBracketRight = default)
             {
                 StandardFormat = standardFormat;
                 NoNullableQuestionMark = noNullableQuestionMark;
@@ -152,9 +152,11 @@ namespace Business.SourceGenerator.Analysis
                 MethodParameterVarNameCallback = methodParameterVarNameCallback;
                 TypeArguments = typeArguments;
                 Global = global;
+                TypeParameterBracketLeft = typeParameterBracketLeft ?? "<";
+                TypeParameterBracketRight = typeParameterBracketRight ?? ">";
             }
 
-            public GetFullNameOpt Set(bool? standardFormat = default, bool? noNullableQuestionMark = default, AnonymousTypeStyle? anonymousTypeStyle = default, CaptureStyle? captureStyle = default, ParameterStyle? parameterStyle = default, TypeParameterStyle? typeParameterStyle = default, string methodParameterVarName = default, string methodParameterRefVarName = default, Func<string, int, string> methodParameterVarNameCallback = default, IDictionary<string, ITypeSymbol> typeArguments = default, bool? global = default) => Create(standardFormat ?? StandardFormat, noNullableQuestionMark ?? NoNullableQuestionMark, anonymousTypeStyle ?? AnonymousTypeStyle, captureStyle ?? CaptureStyle, parameterStyle ?? ParameterStyle, typeParameterStyle ?? TypeParameterStyle, methodParameterVarName ?? MethodParameterVarName, methodParameterRefVarName ?? MethodParameterRefVarName, methodParameterVarNameCallback ?? MethodParameterVarNameCallback, typeArguments ?? TypeArguments, global ?? Global);
+            public GetFullNameOpt Set(bool? standardFormat = default, bool? noNullableQuestionMark = default, AnonymousTypeStyle? anonymousTypeStyle = default, CaptureStyle? captureStyle = default, ParameterStyle? parameterStyle = default, TypeParameterStyle? typeParameterStyle = default, string methodParameterVarName = default, string methodParameterRefVarName = default, Func<string, int, string> methodParameterVarNameCallback = default, IDictionary<string, ITypeSymbol> typeArguments = default, bool? global = default, string typeParameterBracketLeft = default, string typeParameterBracketRight = default) => Create(standardFormat ?? StandardFormat, noNullableQuestionMark ?? NoNullableQuestionMark, anonymousTypeStyle ?? AnonymousTypeStyle, captureStyle ?? CaptureStyle, parameterStyle ?? ParameterStyle, typeParameterStyle ?? TypeParameterStyle, methodParameterVarName ?? MethodParameterVarName, methodParameterRefVarName ?? MethodParameterRefVarName, methodParameterVarNameCallback ?? MethodParameterVarNameCallback, typeArguments ?? TypeArguments, global ?? Global, TypeParameterBracketLeft ?? typeParameterBracketLeft, TypeParameterBracketRight ?? typeParameterBracketRight);
 
             public bool StandardFormat { get; }
 
@@ -177,6 +179,10 @@ namespace Business.SourceGenerator.Analysis
             internal IDictionary<string, ITypeSymbol> TypeArguments { get; }
 
             internal bool Global { get; }
+
+            internal string TypeParameterBracketLeft { get; }
+
+            internal string TypeParameterBracketRight { get; }
         }
 
         static bool In(this AnonymousTypeStyle value, AnonymousTypeStyle flag) => 0 != (value & flag);
@@ -474,7 +480,7 @@ namespace Business.SourceGenerator.Analysis
                 }
             }
 
-            var prefixFullName = !string.IsNullOrEmpty(prefix) ? $"{prefix}.{symbolName}" : symbolName;
+            var prefixFullName = !string.IsNullOrEmpty(prefix) ? $"{prefix}.{symbolName}" : typeClean?.Invoke(symbolName, captureStyleNoPrefix) ?? symbolName;
 
             //CaptureStyle.Pass is the default value and will not be processed.
             if (!opt.CaptureStyle.In(CaptureStyle.Pass))
@@ -592,7 +598,7 @@ namespace Business.SourceGenerator.Analysis
                             //Returns the type parameter of a generic type.
                             if (captureStyleArgs)
                             {
-                                return $"<{args}>";
+                                return $"{opt.TypeParameterBracketLeft}{args}{opt.TypeParameterBracketRight}";
                             }
 
                             //if (System_Nullable.Equals($"{prefix}.{symbol.Name}") && !opt.NoNullableQuestionMark)
@@ -608,7 +614,7 @@ namespace Business.SourceGenerator.Analysis
                                 return prefixFullName;
                             }
 
-                            return $"{prefixFullName}<{args}>";
+                            return $"{prefixFullName}{opt.TypeParameterBracketLeft}{args}{opt.TypeParameterBracketRight}";
                         }
 
                         return prefixFullName;
@@ -676,7 +682,7 @@ namespace Business.SourceGenerator.Analysis
                             //Merge generic parameters
                             var typeArguments = GetTypeArguments(method.TypeArguments, opt);
 
-                            args = $"<{string.Join(", ", typeArguments.Select(c => GetFullName(c, opt.Set(typeParameterStyle: typeParameterStyle), typeClean)))}>";
+                            args = $"{opt.TypeParameterBracketLeft}{string.Join(", ", typeArguments.Select(c => GetFullName(c, opt.Set(typeParameterStyle: typeParameterStyle), typeClean)))}{opt.TypeParameterBracketRight}";
 
                             //Returns the type parameter of a generic method.
                             if (captureStyleArgs)

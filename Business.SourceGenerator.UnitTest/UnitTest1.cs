@@ -585,7 +585,7 @@ namespace UnitAssembly
             (DateTimeOffset? c1, IList<string>? c2) c = (DateTimeOffset.Now, bbb);
             (int? c1, string? c2) d = (44, ""88"");
 
-            var structMember2 = new MyCode.StructMember2 {{ A = 111 }};
+            var structMember2 = new StructMember2 {{ A = 111 }};
 
             /*
             StructMethod7<T2>(
@@ -613,7 +613,7 @@ namespace UnitAssembly
 
             await acc.AccessorMethodAsync(""StructMethod7"", args);
 
-            //structMember2 = (MyCode.StructMember2)args[2];
+            //structMember2 = (StructMember2)args[2];
 
             return args[3];
         }}
@@ -782,7 +782,7 @@ namespace UnitAssembly
             GeneratorDriverRunResult runResult = driver.GetRunResult();
 
             // The runResult contains the combined results of all generators passed to the driver
-            Debug.Assert(runResult.GeneratedTrees.Length == 1);
+            //Debug.Assert(runResult.GeneratedTrees.Length == 1);
             Debug.Assert(!runResult.Diagnostics.Any(c => DiagnosticSeverity.Error == c.Severity), DiagnosticsFirst(runResult.Diagnostics));
 
             // Or you can access the individual results on a by-generator basis
@@ -790,7 +790,7 @@ namespace UnitAssembly
             Debug.Assert(generatorResult.Generator == generator);
             Debug.Assert(!generatorResult.Diagnostics.Any(c => DiagnosticSeverity.Error == c.Severity), DiagnosticsFirst(generatorResult.Diagnostics));
 
-            Debug.Assert(generatorResult.GeneratedSources.Length == 1);
+            //Debug.Assert(generatorResult.GeneratedSources.Length == 1);
             Debug.Assert(generatorResult.Exception is null);
 
             var debugSources = generatorResult.GeneratedSources.FirstOrDefault().SourceText.ToString();

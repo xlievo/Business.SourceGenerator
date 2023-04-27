@@ -9,6 +9,8 @@
 
 
 
+
+
 namespace MyCode
 {
     public partial struct MethodInvoke<T>
@@ -90,7 +92,7 @@ namespace MyCode
         public System.Threading.Tasks.ValueTask<dynamic> StructMethod7<T2>(
         T2? a,
         out int? b,
-        ref (T? c1, T2? c2) c,
+        ref (System.DateTimeOffset? c1, T2? c2) c,
         out (int? c1, string? c2) d,
         ref StructMember2 structMember21,
         string e = "eee",
@@ -100,7 +102,7 @@ namespace MyCode
             where T2 : System.Collections.Generic.IList<string>
         {
             structMember21.A = 333666;
-            d = default;
+            d = (666, "YYY");
             var dd = c.c1 as dynamic;
             b = 9;
             //a = "www";
@@ -126,35 +128,6 @@ namespace MyCode
         //    return System.Threading.Tasks.ValueTask.FromResult(c);
         //}
     }
-    public struct StructMember2
-    {
-        public StructMember2(int? a, System.DateTime? c, object d, dynamic e)
-        {
-            A = a;
-            C = c;
-            D = d;
-            E = e;
-
-            //var methodInvoke = new MethodInvoke<System.IO.MemoryStream>();
-
-            //var aaa = new System.IO.MemoryStream();
-            //IList<string> bbb = new List<string>();
-
-            ////(T? c1, T2? c2)
-            //(System.IO.MemoryStream c1, IList<string> c2) cc = (aaa, bbb);
-
-            //var structMember2 = new MyCode.StructMember2 { A = 111 };
-
-            //methodInvoke.StructMethod7(ref bbb, out int? bb, ref cc, out (int? c1, string c2) ddd, ref structMember2).GetAwaiter().GetResult();
-        }
-
-        public int? A { get; set; }
-
-        public System.DateTime? C { get; set; }
-        public object? D { get; set; }
-
-        public dynamic? E { get; set; }
-    }
 
     // public partial class TTT<T, T2>
     //where T2 : System.Collections.Generic.IDictionary<string, System.IDisposable>
@@ -166,4 +139,34 @@ namespace MyCode
 
     //     public T2 TTT2<T>(T2 t2, T t) where T : System.Collections.Generic.IDictionary<string, System.DateTime> => default;
     // }
+}
+
+public partial struct StructMember2
+{
+    public StructMember2(int? a, System.DateTime? c, object d, dynamic e)
+    {
+        A = a;
+        C = c;
+        D = d;
+        E = e;
+
+        //var methodInvoke = new MethodInvoke<System.IO.MemoryStream>();
+
+        //var aaa = new System.IO.MemoryStream();
+        //IList<string> bbb = new List<string>();
+
+        ////(T? c1, T2? c2)
+        //(System.IO.MemoryStream c1, IList<string> c2) cc = (aaa, bbb);
+
+        //var structMember2 = new MyCode.StructMember2 { A = 111 };
+
+        //methodInvoke.StructMethod7(ref bbb, out int? bb, ref cc, out (int? c1, string c2) ddd, ref structMember2).GetAwaiter().GetResult();
+    }
+
+    public int? A { get; set; }
+
+    public System.DateTime? C { get; set; }
+    public object? D { get; set; }
+
+    public dynamic? E { get; set; }
 }

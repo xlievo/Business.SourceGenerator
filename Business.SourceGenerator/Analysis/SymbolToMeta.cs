@@ -660,7 +660,7 @@ namespace Business.SourceGenerator.Analysis
                         sb.AppendFormat("{0}, ", accessor.IsReadOnly ? "true" : "default");
                         sb.AppendFormat("{0}, ", accessor.IsInitOnly ? "true" : "default");
                         //Parameters
-                        sb.AppendFormat("{0}, ", (skip || !accessor.Parameters.Any()) ? "default" : $"new {globalMeta}IAccessorParameter[] {{ {string.Join(", ", accessor.Parameters.Select(c => c.ToMeta(opt, depth)))} }}");
+                        sb.AppendFormat("{0}, ", (skip || !accessor.Parameters.Any()) ? "default" : $"new {globalMeta}IAccessorParameter[] {{ {string.Join(", ", accessor.Parameters.Select(c => c.ToMeta(opt, depth, typeClean: typeClean)))} }}");
                         sb.AppendFormat("{0}, ", accessor.IsPartialDefinition ? "true" : "default");
                         sb.AppendFormat("{0}, ", (skip || !accessor.TypeParameters.Any()) ? "default" : $"new {globalGeneric}Dictionary<{globalString}, {globalMeta}IAccessorTypeParameter> {{ {string.Join(", ", typeParameters.Select(c => $"{{ \"{c.Key}\", {c.Value.ToMeta(opt, depth)} }}"))} }}");
                         sb.AppendFormat("{0}, ", accessor.IsConditional ? "true" : "default");
