@@ -4,6 +4,15 @@ using System.Collections.Generic;
 
 namespace Business.SourceGenerator.Test
 {
+    [AttributeUsage(AttributeTargets.All, AllowMultiple = true)]
+    public sealed class GeneratorType2Attribute : Attribute
+    {
+        public GeneratorType2Attribute(Type type, string a = default, int b = default)
+        {
+
+        }
+    }
+
     /// <summary>
     /// IResult
     /// </summary>

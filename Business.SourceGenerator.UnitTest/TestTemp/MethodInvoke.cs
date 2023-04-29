@@ -10,7 +10,6 @@
 
 
 
-
 namespace MyCode
 {
     public partial struct MethodInvoke<T>
@@ -66,6 +65,8 @@ namespace MyCode
             return System.Threading.Tasks.Task.FromResult(c);
         }
 
+        [Business.SourceGenerator.Test.GeneratorType2(typeof(System.DateTimeOffset), "999", 333)]
+        [Business.SourceGenerator.Test.GeneratorType2(typeof(System.DateTimeOffset), b: 444)]
         public System.Threading.Tasks.ValueTask<dynamic> StructMethod7<T2>(
         ref T2? a,
         out int? b,

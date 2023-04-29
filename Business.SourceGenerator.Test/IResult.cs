@@ -1,7 +1,14 @@
-﻿using System;
-
-namespace Business.SourceGenerator.Test
+﻿namespace Business.SourceGenerator.Test
 {
+    [System.AttributeUsage(System.AttributeTargets.All, AllowMultiple = true)]
+    public sealed class GeneratorType2Attribute : System.Attribute
+    {
+        public GeneratorType2Attribute(System.Type type, string a = default, int b = default)
+        {
+
+        }
+    }
+
     /// <summary>
     /// IResult
     /// </summary>
@@ -31,7 +38,7 @@ namespace Business.SourceGenerator.Test
         /// <summary>
         /// Data type
         /// </summary>
-        Type DataType { get; }
+        System.Type DataType { get; }
 
         /// <summary>
         /// Gets the token of this result, used for callback
@@ -54,7 +61,7 @@ namespace Business.SourceGenerator.Test
         /// <summary>
         /// System.Type object that represents a generic type definition from which the current generic type can be constructed.
         /// </summary>
-        Type GenericDefinition { get; }
+        System.Type GenericDefinition { get; }
 
         /// <summary>
         /// Return data or not
@@ -181,7 +188,7 @@ namespace Business.SourceGenerator.Test
         /// </summary>
         /// <param name="dataBytes"></param>
         /// <returns></returns>
-        public byte[] ToBytes(bool dataBytes = true) => throw new NotImplementedException(); //Utils.Help.ProtoBufSerialize(this);
+        public byte[] ToBytes(bool dataBytes = true) => throw new System.NotImplementedException(); //Utils.Help.ProtoBufSerialize(this);
     }
 
     /// <summary>
@@ -291,7 +298,7 @@ namespace Business.SourceGenerator.Test
         /// </summary>
         /// <param name="dataBytes"></param>
         /// <returns></returns>
-        public byte[] ToBytes(bool dataBytes = true) => throw new NotImplementedException(); //Utils.Help.ProtoBufSerialize(this);
+        public byte[] ToBytes(bool dataBytes = true) => throw new System.NotImplementedException(); //Utils.Help.ProtoBufSerialize(this);
     }
 
     /// <summary>
@@ -401,6 +408,6 @@ namespace Business.SourceGenerator.Test
         /// </summary>
         /// <param name="dataBytes"></param>
         /// <returns></returns>
-        public byte[] ToBytes(bool dataBytes = true) => throw new NotImplementedException(); //Utils.Help.ProtoBufSerialize(this);
+        public byte[] ToBytes(bool dataBytes = true) => throw new System.NotImplementedException(); //Utils.Help.ProtoBufSerialize(this);
     }
 }

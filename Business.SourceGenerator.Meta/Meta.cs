@@ -1092,6 +1092,18 @@ namespace Business.SourceGenerator.Meta
     }
 
     /// <summary>
+    /// Represents the kind of a TypedConstant.
+    /// </summary>
+    public enum TypedConstantKind
+    {
+        Error = 0, // error should be the default so that default(TypedConstant) is internally consistent
+        Primitive = 1,
+        Enum = 2,
+        Type = 3,
+        Array = 4
+    }
+
+    /// <summary>
     /// AsyncType
     /// </summary>
     public enum AsyncType
@@ -1230,6 +1242,11 @@ namespace Business.SourceGenerator.Meta
         /// Whether the syntax node(s) where this symbol was declared in source.
         /// </summary>
         public bool IsDeclaringSyntaxReferences { get; }
+
+        /// <summary>
+        /// Returns the list of custom attributes, if any, associated with the returned value. 
+        /// </summary>
+        public IEnumerable<AccessorAttribute> Attributes { get; }
     }
 
     /// <summary>
@@ -1993,7 +2010,7 @@ namespace Business.SourceGenerator.Meta
     /// </remarks>
     public readonly struct AccessorType : IAccessorType
     {
-        public AccessorType(Accessibility declaredAccessibility, bool canBeReferencedByName, bool isImplicitlyDeclared, bool isExtern, bool isSealed, bool isAbstract, bool isOverride, bool isVirtual, bool isStatic, bool isDefinition, string name, string fullName, Kind kind, bool isDeclaringSyntaxReferences, bool isNamespace, bool isType, IDictionary<string, IAccessor> members, bool isReferenceType, bool isReadOnly, bool isUnmanagedType, bool isRefLikeType, SpecialType specialType, bool isNativeIntegerType, bool isTupleType, bool isAnonymousType, bool isValueType, NullableAnnotation nullableAnnotation, IEnumerable<string> allInterfaces, string baseType, TypeKind typeKind, bool isRecord, AsyncType asyncType)
+        public AccessorType(Accessibility declaredAccessibility, bool canBeReferencedByName, bool isImplicitlyDeclared, bool isExtern, bool isSealed, bool isAbstract, bool isOverride, bool isVirtual, bool isStatic, bool isDefinition, string name, string fullName, Kind kind, bool isDeclaringSyntaxReferences, IEnumerable<AccessorAttribute> attributes, bool isNamespace, bool isType, IDictionary<string, IAccessor> members, bool isReferenceType, bool isReadOnly, bool isUnmanagedType, bool isRefLikeType, SpecialType specialType, bool isNativeIntegerType, bool isTupleType, bool isAnonymousType, bool isValueType, NullableAnnotation nullableAnnotation, IEnumerable<string> allInterfaces, string baseType, TypeKind typeKind, bool isRecord, AsyncType asyncType)
         {
             DeclaredAccessibility = declaredAccessibility;
             CanBeReferencedByName = canBeReferencedByName;
@@ -2009,6 +2026,7 @@ namespace Business.SourceGenerator.Meta
             FullName = fullName;
             Kind = kind;
             IsDeclaringSyntaxReferences = isDeclaringSyntaxReferences;
+            Attributes = attributes;
             IsNamespace = isNamespace;
             IsType = isType;
             Members = members;
@@ -2122,6 +2140,11 @@ namespace Business.SourceGenerator.Meta
         /// Whether the syntax node(s) where this symbol was declared in source.
         /// </summary>
         public readonly bool IsDeclaringSyntaxReferences { get; }
+
+        /// <summary>
+        /// Returns the list of custom attributes, if any, associated with the returned value. 
+        /// </summary>
+        public IEnumerable<AccessorAttribute> Attributes { get; }
 
         #endregion
 
@@ -2260,7 +2283,7 @@ namespace Business.SourceGenerator.Meta
     /// </remarks>
     public readonly struct AccessorNamedType : IAccessorNamedType
     {
-        public AccessorNamedType(Accessibility declaredAccessibility, bool canBeReferencedByName, bool isImplicitlyDeclared, bool isExtern, bool isSealed, bool isAbstract, bool isOverride, bool isVirtual, bool isStatic, bool isDefinition, string name, string fullName, Kind kind, bool isDeclaringSyntaxReferences, bool isNamespace, bool isType, IDictionary<string, IAccessor> members, bool isReferenceType, bool isReadOnly, bool isUnmanagedType, bool isRefLikeType, SpecialType specialType, bool isNativeIntegerType, bool isTupleType, bool isAnonymousType, bool isValueType, NullableAnnotation nullableAnnotation, IEnumerable<string> allInterfaces, string baseType, TypeKind typeKind, bool isRecord, AsyncType asyncType, IEnumerable<NullableAnnotation> typeArgumentNullableAnnotations, IEnumerable<IAccessorField> tupleElements, bool mightContainExtensionMethods, IEnumerable<IAccessorMethod> constructors, IAccessorNamedType enumUnderlyingType, IAccessorMethod delegateInvokeMethod, bool isSerializable, IDictionary<string, IAccessorTypeParameter> typeParameters, bool isComImport, bool isImplicitClass, bool isScriptClass, bool isUnboundGenericType, bool isGeneric, int arity, IEnumerable<IAccessorType> typeArguments)
+        public AccessorNamedType(Accessibility declaredAccessibility, bool canBeReferencedByName, bool isImplicitlyDeclared, bool isExtern, bool isSealed, bool isAbstract, bool isOverride, bool isVirtual, bool isStatic, bool isDefinition, string name, string fullName, Kind kind, bool isDeclaringSyntaxReferences, IEnumerable<AccessorAttribute> attributes, bool isNamespace, bool isType, IDictionary<string, IAccessor> members, bool isReferenceType, bool isReadOnly, bool isUnmanagedType, bool isRefLikeType, SpecialType specialType, bool isNativeIntegerType, bool isTupleType, bool isAnonymousType, bool isValueType, NullableAnnotation nullableAnnotation, IEnumerable<string> allInterfaces, string baseType, TypeKind typeKind, bool isRecord, AsyncType asyncType, IEnumerable<NullableAnnotation> typeArgumentNullableAnnotations, IEnumerable<IAccessorField> tupleElements, bool mightContainExtensionMethods, IEnumerable<IAccessorMethod> constructors, IAccessorNamedType enumUnderlyingType, IAccessorMethod delegateInvokeMethod, bool isSerializable, IDictionary<string, IAccessorTypeParameter> typeParameters, bool isComImport, bool isImplicitClass, bool isScriptClass, bool isUnboundGenericType, bool isGeneric, int arity, IEnumerable<IAccessorType> typeArguments)
         {
             DeclaredAccessibility = declaredAccessibility;
             CanBeReferencedByName = canBeReferencedByName;
@@ -2276,6 +2299,7 @@ namespace Business.SourceGenerator.Meta
             FullName = fullName;
             Kind = kind;
             IsDeclaringSyntaxReferences = isDeclaringSyntaxReferences;
+            Attributes = attributes;
             IsNamespace = isNamespace;
             IsType = isType;
             Members = members;
@@ -2405,6 +2429,11 @@ namespace Business.SourceGenerator.Meta
         /// Whether the syntax node(s) where this symbol was declared in source.
         /// </summary>
         public readonly bool IsDeclaringSyntaxReferences { get; }
+
+        /// <summary>
+        /// Returns the list of custom attributes, if any, associated with the returned value. 
+        /// </summary>
+        public IEnumerable<AccessorAttribute> Attributes { get; }
 
         #endregion
 
@@ -2642,7 +2671,7 @@ namespace Business.SourceGenerator.Meta
     /// </remarks>
     public readonly struct AccessorTypeParameter : IAccessorTypeParameter
     {
-        public AccessorTypeParameter(Accessibility declaredAccessibility, bool canBeReferencedByName, bool isImplicitlyDeclared, bool isExtern, bool isSealed, bool isAbstract, bool isOverride, bool isVirtual, bool isStatic, bool isDefinition, string name, string fullName, Kind kind, bool isDeclaringSyntaxReferences, bool isNamespace, bool isType, IDictionary<string, IAccessor> members, bool isReferenceType, bool isReadOnly, bool isUnmanagedType, bool isRefLikeType, SpecialType specialType, bool isNativeIntegerType, bool isTupleType, bool isAnonymousType, bool isValueType, NullableAnnotation nullableAnnotation, IEnumerable<string> allInterfaces, string baseType, TypeKind typeKind, bool isRecord, AsyncType asyncType, int ordinal, VarianceKind variance, TypeParameterKind typeParameterKind, bool hasReferenceTypeConstraint, NullableAnnotation referenceTypeConstraintNullableAnnotation, bool hasValueTypeConstraint, bool hasUnmanagedTypeConstraint, bool hasNotNullConstraint, bool hasConstructorConstraint, IEnumerable<IAccessorType> constraintTypes)
+        public AccessorTypeParameter(Accessibility declaredAccessibility, bool canBeReferencedByName, bool isImplicitlyDeclared, bool isExtern, bool isSealed, bool isAbstract, bool isOverride, bool isVirtual, bool isStatic, bool isDefinition, string name, string fullName, Kind kind, bool isDeclaringSyntaxReferences, IEnumerable<AccessorAttribute> attributes, bool isNamespace, bool isType, IDictionary<string, IAccessor> members, bool isReferenceType, bool isReadOnly, bool isUnmanagedType, bool isRefLikeType, SpecialType specialType, bool isNativeIntegerType, bool isTupleType, bool isAnonymousType, bool isValueType, NullableAnnotation nullableAnnotation, IEnumerable<string> allInterfaces, string baseType, TypeKind typeKind, bool isRecord, AsyncType asyncType, int ordinal, VarianceKind variance, TypeParameterKind typeParameterKind, bool hasReferenceTypeConstraint, NullableAnnotation referenceTypeConstraintNullableAnnotation, bool hasValueTypeConstraint, bool hasUnmanagedTypeConstraint, bool hasNotNullConstraint, bool hasConstructorConstraint, IEnumerable<IAccessorType> constraintTypes)
         {
             DeclaredAccessibility = declaredAccessibility;
             CanBeReferencedByName = canBeReferencedByName;
@@ -2658,6 +2687,7 @@ namespace Business.SourceGenerator.Meta
             FullName = fullName;
             Kind = kind;
             IsDeclaringSyntaxReferences = isDeclaringSyntaxReferences;
+            Attributes = attributes;
             IsNamespace = isNamespace;
             IsType = isType;
             Members = members;
@@ -2781,6 +2811,11 @@ namespace Business.SourceGenerator.Meta
         /// Whether the syntax node(s) where this symbol was declared in source.
         /// </summary>
         public readonly bool IsDeclaringSyntaxReferences { get; }
+
+        /// <summary>
+        /// Returns the list of custom attributes, if any, associated with the returned value. 
+        /// </summary>
+        public IEnumerable<AccessorAttribute> Attributes { get; }
 
         #endregion
 
@@ -2978,7 +3013,7 @@ namespace Business.SourceGenerator.Meta
     /// </remarks>
     public readonly struct AccessorParameter : IAccessorParameter
     {
-        public AccessorParameter(Accessibility declaredAccessibility, bool canBeReferencedByName, bool isImplicitlyDeclared, bool isExtern, bool isSealed, bool isAbstract, bool isOverride, bool isVirtual, bool isStatic, bool isDefinition, string name, string fullName, Kind kind, bool isDeclaringSyntaxReferences, RefKind refKind, bool isParams, bool isOptional, bool isThis, bool isDiscard, IAccessorType type, NullableAnnotation nullableAnnotation, int ordinal, bool hasExplicitDefaultValue, object explicitDefaultValue, bool implicitDefaultValue, Type runtimeType, TypeKind typeKind, bool isValueType, bool hasGenericType)
+        public AccessorParameter(Accessibility declaredAccessibility, bool canBeReferencedByName, bool isImplicitlyDeclared, bool isExtern, bool isSealed, bool isAbstract, bool isOverride, bool isVirtual, bool isStatic, bool isDefinition, string name, string fullName, Kind kind, bool isDeclaringSyntaxReferences, IEnumerable<AccessorAttribute> attributes, RefKind refKind, bool isParams, bool isOptional, bool isThis, bool isDiscard, IAccessorType type, NullableAnnotation nullableAnnotation, int ordinal, bool hasExplicitDefaultValue, object explicitDefaultValue, bool implicitDefaultValue, Type runtimeType, TypeKind typeKind, bool isValueType, bool hasGenericType)
         {
             DeclaredAccessibility = declaredAccessibility;
             CanBeReferencedByName = canBeReferencedByName;
@@ -2994,6 +3029,7 @@ namespace Business.SourceGenerator.Meta
             FullName = fullName;
             Kind = kind;
             IsDeclaringSyntaxReferences = isDeclaringSyntaxReferences;
+            Attributes = attributes;
             RefKind = refKind;
             IsParams = isParams;
             IsOptional = isOptional;
@@ -3106,6 +3142,11 @@ namespace Business.SourceGenerator.Meta
         /// Whether the syntax node(s) where this symbol was declared in source.
         /// </summary>
         public readonly bool IsDeclaringSyntaxReferences { get; }
+
+        /// <summary>
+        /// Returns the list of custom attributes, if any, associated with the returned value. 
+        /// </summary>
+        public IEnumerable<AccessorAttribute> Attributes { get; }
 
         #endregion
 
@@ -3227,7 +3268,7 @@ namespace Business.SourceGenerator.Meta
     /// </remarks>
     public readonly struct AccessorMethod : IAccessorMethod
     {
-        public AccessorMethod(Accessibility declaredAccessibility, bool canBeReferencedByName, bool isImplicitlyDeclared, bool isExtern, bool isSealed, bool isAbstract, bool isOverride, bool isVirtual, bool isStatic, bool isDefinition, string name, string fullName, Kind kind, bool isDeclaringSyntaxReferences, bool isReadOnly, bool isInitOnly, IAccessorParameter[] parameters, bool isPartialDefinition, IDictionary<string, IAccessorTypeParameter> typeParameters, bool isConditional, MethodKind methodKind, int arity, bool isGeneric, bool isExtension, bool isVararg, bool isCheckedBuiltin, bool isAsync, bool returnsVoid, bool returnsByRef, bool returnsByRefReadonly, RefKind refKind, IAccessorType returnType, NullableAnnotation returnNullableAnnotation, bool hidesBaseMethodsByName, Func<object, CheckedParameterValue[], object[], object> invoke, Func<object, CheckedParameterValue[], object[], Task<object>> invokeAsync, int parametersRealLength, int parametersMustLength)
+        public AccessorMethod(Accessibility declaredAccessibility, bool canBeReferencedByName, bool isImplicitlyDeclared, bool isExtern, bool isSealed, bool isAbstract, bool isOverride, bool isVirtual, bool isStatic, bool isDefinition, string name, string fullName, Kind kind, bool isDeclaringSyntaxReferences, IEnumerable<AccessorAttribute> attributes, bool isReadOnly, bool isInitOnly, IAccessorParameter[] parameters, bool isPartialDefinition, IDictionary<string, IAccessorTypeParameter> typeParameters, bool isConditional, MethodKind methodKind, int arity, bool isGeneric, bool isExtension, bool isVararg, bool isCheckedBuiltin, bool isAsync, bool returnsVoid, bool returnsByRef, bool returnsByRefReadonly, RefKind refKind, IAccessorType returnType, NullableAnnotation returnNullableAnnotation, bool hidesBaseMethodsByName, Func<object, CheckedParameterValue[], object[], object> invoke, Func<object, CheckedParameterValue[], object[], Task<object>> invokeAsync, int parametersRealLength, int parametersMustLength)
         {
             DeclaredAccessibility = declaredAccessibility;
             CanBeReferencedByName = canBeReferencedByName;
@@ -3243,6 +3284,7 @@ namespace Business.SourceGenerator.Meta
             FullName = fullName;
             Kind = kind;
             IsDeclaringSyntaxReferences = isDeclaringSyntaxReferences;
+            Attributes = attributes;
             IsReadOnly = isReadOnly;
             IsInitOnly = isInitOnly;
             Parameters = parameters;
@@ -3365,6 +3407,11 @@ namespace Business.SourceGenerator.Meta
         /// Whether the syntax node(s) where this symbol was declared in source.
         /// </summary>
         public readonly bool IsDeclaringSyntaxReferences { get; }
+
+        /// <summary>
+        /// Returns the list of custom attributes, if any, associated with the returned value. 
+        /// </summary>
+        public IEnumerable<AccessorAttribute> Attributes { get; }
 
         #endregion
 
@@ -3536,7 +3583,7 @@ namespace Business.SourceGenerator.Meta
     /// </remarks>
     public readonly struct AccessorField : IAccessorField
     {
-        public AccessorField(Accessibility declaredAccessibility, bool canBeReferencedByName, bool isImplicitlyDeclared, bool isExtern, bool isSealed, bool isAbstract, bool isOverride, bool isVirtual, bool isStatic, bool isDefinition, string name, string fullName, Kind kind, bool isDeclaringSyntaxReferences, bool isReadOnly, IAccessorType type, string typeFullName, bool isRepeat, bool isConst, bool isVolatile, bool isFixedSizeBuffer, int fixedSize, NullableAnnotation nullableAnnotation, bool hasConstantValue, object constantValue, bool isExplicitlyNamedTupleElement, Func<IGeneratorAccessor, object> getValue, SetValue setValue)
+        public AccessorField(Accessibility declaredAccessibility, bool canBeReferencedByName, bool isImplicitlyDeclared, bool isExtern, bool isSealed, bool isAbstract, bool isOverride, bool isVirtual, bool isStatic, bool isDefinition, string name, string fullName, Kind kind, bool isDeclaringSyntaxReferences, IEnumerable<AccessorAttribute> attributes, bool isReadOnly, IAccessorType type, string typeFullName, bool isRepeat, bool isConst, bool isVolatile, bool isFixedSizeBuffer, int fixedSize, NullableAnnotation nullableAnnotation, bool hasConstantValue, object constantValue, bool isExplicitlyNamedTupleElement, Func<IGeneratorAccessor, object> getValue, SetValue setValue)
         {
             DeclaredAccessibility = declaredAccessibility;
             CanBeReferencedByName = canBeReferencedByName;
@@ -3552,6 +3599,7 @@ namespace Business.SourceGenerator.Meta
             FullName = fullName;
             Kind = kind;
             IsDeclaringSyntaxReferences = isDeclaringSyntaxReferences;
+            Attributes = attributes;
             IsReadOnly = isReadOnly;
             Type = type;
             TypeFullName = typeFullName;
@@ -3662,6 +3710,11 @@ namespace Business.SourceGenerator.Meta
         /// </summary>
         public readonly bool IsDeclaringSyntaxReferences { get; }
 
+        /// <summary>
+        /// Returns the list of custom attributes, if any, associated with the returned value. 
+        /// </summary>
+        public IEnumerable<AccessorAttribute> Attributes { get; }
+
         #endregion
 
         #region IAccessorMember
@@ -3762,7 +3815,7 @@ namespace Business.SourceGenerator.Meta
     /// </remarks>
     public readonly struct AccessorProperty : IAccessorProperty
     {
-        public AccessorProperty(Accessibility declaredAccessibility, bool canBeReferencedByName, bool isImplicitlyDeclared, bool isExtern, bool isSealed, bool isAbstract, bool isOverride, bool isVirtual, bool isStatic, bool isDefinition, string name, string fullName, Kind kind, bool isDeclaringSyntaxReferences, bool isReadOnly, IAccessorType type, string typeFullName, bool isRepeat, bool isIndexer, NullableAnnotation nullableAnnotation, RefKind refKind, bool returnsByRefReadonly, bool returnsByRef, bool isWithEvents, bool isWriteOnly, Func<IGeneratorAccessor, object> getValue, SetValue setValue)
+        public AccessorProperty(Accessibility declaredAccessibility, bool canBeReferencedByName, bool isImplicitlyDeclared, bool isExtern, bool isSealed, bool isAbstract, bool isOverride, bool isVirtual, bool isStatic, bool isDefinition, string name, string fullName, Kind kind, bool isDeclaringSyntaxReferences, IEnumerable<AccessorAttribute> attributes, bool isReadOnly, IAccessorType type, string typeFullName, bool isRepeat, bool isIndexer, NullableAnnotation nullableAnnotation, RefKind refKind, bool returnsByRefReadonly, bool returnsByRef, bool isWithEvents, bool isWriteOnly, Func<IGeneratorAccessor, object> getValue, SetValue setValue)
         {
             DeclaredAccessibility = declaredAccessibility;
             CanBeReferencedByName = canBeReferencedByName;
@@ -3778,6 +3831,7 @@ namespace Business.SourceGenerator.Meta
             FullName = fullName;
             Kind = kind;
             IsDeclaringSyntaxReferences = isDeclaringSyntaxReferences;
+            Attributes = attributes;
             IsReadOnly = isReadOnly;
             Type = type;
             TypeFullName = typeFullName;
@@ -3887,6 +3941,11 @@ namespace Business.SourceGenerator.Meta
         /// </summary>
         public readonly bool IsDeclaringSyntaxReferences { get; }
 
+        /// <summary>
+        /// Returns the list of custom attributes, if any, associated with the returned value. 
+        /// </summary>
+        public IEnumerable<AccessorAttribute> Attributes { get; }
+
         #endregion
 
         #region IAccessorMember
@@ -3975,7 +4034,7 @@ namespace Business.SourceGenerator.Meta
     /// </remarks>
     public readonly struct AccessorEvent : IAccessorEvent
     {
-        public AccessorEvent(Accessibility declaredAccessibility, bool canBeReferencedByName, bool isImplicitlyDeclared, bool isExtern, bool isSealed, bool isAbstract, bool isOverride, bool isVirtual, bool isStatic, bool isDefinition, string name, string fullName, Kind kind, bool isDeclaringSyntaxReferences, bool isReadOnly, IAccessorType type, string typeFullName, bool isRepeat, NullableAnnotation nullableAnnotation, bool isWindowsRuntimeEvent, IAccessorMethod addMethod, IAccessorMethod removeMethod, Func<IGeneratorAccessor, object> getValue, SetValue setValue)
+        public AccessorEvent(Accessibility declaredAccessibility, bool canBeReferencedByName, bool isImplicitlyDeclared, bool isExtern, bool isSealed, bool isAbstract, bool isOverride, bool isVirtual, bool isStatic, bool isDefinition, string name, string fullName, Kind kind, bool isDeclaringSyntaxReferences, IEnumerable<AccessorAttribute> attributes, bool isReadOnly, IAccessorType type, string typeFullName, bool isRepeat, NullableAnnotation nullableAnnotation, bool isWindowsRuntimeEvent, IAccessorMethod addMethod, IAccessorMethod removeMethod, Func<IGeneratorAccessor, object> getValue, SetValue setValue)
         {
             DeclaredAccessibility = declaredAccessibility;
             CanBeReferencedByName = canBeReferencedByName;
@@ -3991,6 +4050,7 @@ namespace Business.SourceGenerator.Meta
             FullName = fullName;
             Kind = kind;
             IsDeclaringSyntaxReferences = isDeclaringSyntaxReferences;
+            Attributes = attributes;
             IsReadOnly = isReadOnly;
             Type = type;
             TypeFullName = typeFullName;
@@ -4097,6 +4157,11 @@ namespace Business.SourceGenerator.Meta
         /// </summary>
         public readonly bool IsDeclaringSyntaxReferences { get; }
 
+        /// <summary>
+        /// Returns the list of custom attributes, if any, associated with the returned value. 
+        /// </summary>
+        public IEnumerable<AccessorAttribute> Attributes { get; }
+
         #endregion
 
         #region IAccessorMember
@@ -4157,5 +4222,40 @@ namespace Business.SourceGenerator.Meta
         public readonly IAccessorMethod RemoveMethod { get; }
 
         #endregion
+    }
+
+    public readonly struct AccessorAttribute
+    {
+        public AccessorAttribute(string name, IEnumerable<TypedConstant> constructor)
+        {
+            Name = name;
+            Constructor = constructor;
+        }
+
+        public readonly string Name { get; }
+
+        public readonly IEnumerable<TypedConstant> Constructor { get; }
+    }
+
+    public readonly struct TypedConstant
+    {
+        public TypedConstant(string name, Type type, bool isNull, TypedConstantKind kind, object value)
+        {
+            Name = name;
+            Type = type;
+            IsNull = isNull;
+            Kind = kind;
+            Value = value;
+        }
+
+        public readonly string Name { get; }
+
+        public readonly Type Type { get; }
+
+        public readonly bool IsNull { get; }
+
+        public readonly TypedConstantKind Kind { get; }
+
+        public readonly object Value { get; }
     }
 }

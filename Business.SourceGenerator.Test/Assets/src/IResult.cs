@@ -1,5 +1,74 @@
 ﻿namespace Business.SourceGenerator.Test
 {
+    [System.AttributeUsage(System.AttributeTargets.All, AllowMultiple = true)]
+    public sealed class GeneratorType2Attribute : System.Attribute
+    {
+        public GeneratorType2Attribute(System.Type type, string a = default, int b = default)
+        {
+
+        }
+    }
+
+    /// <summary>
+    /// IResult
+    /// </summary>
+    public interface IResult
+    {
+        /// <summary>
+        /// The results of the state is greater than or equal 
+        /// to 1: success, equal to 0: system level exceptions, less than 0: business class error.
+        /// </summary>
+        int State { get; }
+
+        /// <summary>
+        /// Success can be null
+        /// </summary>
+        string Message { get; }
+
+        /// <summary>
+        /// Specific Byte/Json data objects
+        /// </summary>
+        dynamic Data { get; }
+
+        /// <summary>
+        /// Whether there is value
+        /// </summary>
+        bool HasData { get; }
+
+        /// <summary>
+        /// Data type
+        /// </summary>
+        System.Type DataType { get; }
+
+        /// <summary>
+        /// Gets the token of this result, used for callback
+        /// </summary>
+        string Callback { get; set; }
+
+        /// <summary>
+        /// ProtoBuf,MessagePack or Other
+        /// </summary>
+        /// <param name="dataBytes"></param>
+        /// <returns></returns>
+        byte[] ToBytes(bool dataBytes = true);
+
+        /// <summary>
+        /// Json
+        /// </summary>
+        /// <returns></returns>
+        string ToString();
+
+        /// <summary>
+        /// System.Type object that represents a generic type definition from which the current generic type can be constructed.
+        /// </summary>
+        System.Type GenericDefinition { get; }
+
+        /// <summary>
+        /// Return data or not
+        /// </summary>
+        bool HasDataResult { get; }
+    }
+
     /// <summary>
     /// IResult
     /// </summary>
@@ -120,7 +189,7 @@
         /// </summary>
         /// <param name="dataBytes"></param>
         /// <returns></returns>
-        public byte[] ToBytes(bool dataBytes = true) => throw new NotImplementedException(); //Utils.Help.ProtoBufSerialize(this);
+        public byte[] ToBytes(bool dataBytes = true) => throw new System.NotImplementedException(); //Utils.Help.ProtoBufSerialize(this);
     }
 
     /// <summary>
@@ -230,7 +299,7 @@
         /// </summary>
         /// <param name="dataBytes"></param>
         /// <returns></returns>
-        public byte[] ToBytes(bool dataBytes = true) => throw new NotImplementedException(); //Utils.Help.ProtoBufSerialize(this);
+        public byte[] ToBytes(bool dataBytes = true) => throw new System.NotImplementedException(); //Utils.Help.ProtoBufSerialize(this);
     }
 
     /// <summary>
@@ -258,7 +327,7 @@
             this.State = state;
             this.Message = message;
             this.HasData = checkData ? !Equals(null, data) : hasData;
-
+            //typeof(MyObject).MakeGenericType<int>().CreateInstance();
             this.Callback = callback;
             this.GenericDefinition = genericDefinition;
             this.HasDataResult = hasDataResult;
@@ -340,6 +409,6 @@
         /// </summary>
         /// <param name="dataBytes"></param>
         /// <returns></returns>
-        public byte[] ToBytes(bool dataBytes = true) => throw new NotImplementedException(); //Utils.Help.ProtoBufSerialize(this);
+        public byte[] ToBytes(bool dataBytes = true) => throw new System.NotImplementedException(); //Utils.Help.ProtoBufSerialize(this);
     }
 }

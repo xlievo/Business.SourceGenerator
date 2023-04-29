@@ -133,6 +133,8 @@ public unsafe partial struct MyStruct
         return c;
     }
 
+    [GeneratorType2(typeof(DateTimeOffset), "999", 333)]
+    [GeneratorType2(typeof(DateTimeOffset), b: 666)]
     public ValueTask<(int c1, string c2)> StructMethod7(ref string? a, out int? b, ref (int c1, string c2) c, out (int? c1, string? c2) d)
     {
         d = default;
@@ -144,6 +146,11 @@ public unsafe partial struct MyStruct
         b = 9;
 
         return ValueTask.FromResult(c);
+    }
+
+    public ValueTask<(int c1, string c2)> StructMethod7(ref string? a,  ref (int c1, string c2) c)
+    {
+        return default;
     }
 }
 

@@ -31,12 +31,16 @@
     <TrimmerRootDescriptor Include="MyRoots.xml" />
   </ItemGroup>
 
+  <!--<ItemGroup>
+    <TrimmerRootAssembly Include="Business.SourceGenerator.Test.Console" />
+  </ItemGroup>-->
+
   <ItemGroup>
     <Folder Include="Properties\" />
   </ItemGroup>
 
   <ItemGroup>
-    <PackageReference Include="Business.SourceGenerator.Test" Version="1.0.2.5" />
+    <PackageReference Include="Business.SourceGenerator.Test" Version="1.0.2.9" />
   </ItemGroup>
 
   <ItemGroup>

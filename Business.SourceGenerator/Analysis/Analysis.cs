@@ -62,7 +62,6 @@ namespace Business.SourceGenerator.Analysis
                     {
                         var declarationInfo = item.Key.GetSymbolInfo();
 
-                        //var key = declarationInfo.Declared.GetFullNameStandardFormat();
                         var key = declarationInfo.Names.DeclaredStandard;
 
                         if (makeGenericTypes.ContainsKey(key))

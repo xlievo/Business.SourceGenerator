@@ -20,9 +20,16 @@ namespace Business.SourceGenerator.Test.Console
 {
     internal class Program
     {
+        //public static MethodInfo? GetMethod<T>(System.Linq.Expressions.Expression<System.Action<T>> methodSelector) => ((System.Linq.Expressions.MethodCallExpression)methodSelector.Body).Method;
+
         static async Task<int> Main(string[] args)
         {
             BusinessSourceGenerator.Generator.SetGeneratorCode();
+
+            string? a5 = "a5";
+            (int c1, string c2) c5 = (55, "66");
+            //var rrr5 = GetMethod<MyStruct>(c => c.StructMethod7(ref a5, ref c5)).Name;
+            //System.Console.WriteLine(rrr5);
 
             var result = typeof(MyCode.ClassGeneric<string>)
                     .CreateInstance<IGeneratorAccessor>()
@@ -33,6 +40,13 @@ namespace Business.SourceGenerator.Test.Console
                 .CreateInstance<IGeneratorAccessor>("aaa111")
                 .AccessorSet<IGeneratorAccessor>("bbb", 888)
                 .AccessorSet<IGeneratorAccessor>("ccc", DateTimeOffset.Now);
+
+            var structMethod7 = MyStruct111.AccessorType().Members["StructMethod7"] as IAccessorMethodCollection;
+            foreach (var item in structMethod7.First().Attributes)
+            {
+                var arg = item.Constructor;
+                System.Console.WriteLine(item.Name + " " + arg.ElementAt(0).Value + " " + arg.ElementAt(1).Value + " " + arg.ElementAt(2).Value);
+            }
 
             //StructMember2(ref string? a, out int* b, ref (int c1, string c2) c, out (int? c1, string? c2) d)
             if (MyStruct111.AccessorMethod("StructMember2", out (int c1, string c2) value222, "a", (777, "xzzzxx")))
