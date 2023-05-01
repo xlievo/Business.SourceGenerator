@@ -135,7 +135,7 @@ public unsafe partial struct MyStruct
 
     [GeneratorType2(typeof(DateTimeOffset), "999", 333)]
     [GeneratorType2(typeof(DateTimeOffset), b: 666)]
-    public ValueTask<(int c1, string c2)> StructMethod7(ref string? a, out int? b, ref (int c1, string c2) c, out (int? c1, string? c2) d)
+    public ValueTask<(int c1, string c2)> StructMethod7([GeneratorType2(typeof(string), "1", 1)] ref string? a, [GeneratorType2(typeof(int?), "2", 2)] out int? b, ref (int c1, string c2) c, out (int? c1, string? c2) d)
     {
         d = default;
         var dd = c.c1 as dynamic;

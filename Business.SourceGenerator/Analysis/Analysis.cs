@@ -809,9 +809,7 @@ namespace Business.SourceGenerator.Analysis
        {1}
     }}));
 
-    public static {4}IReadOnlyDictionary<{6}, {2}GeneratorTypeMeta> GeneratorTypeSingle {{ get => generatorType.Value; }}
-
-    public {4}IReadOnlyDictionary<{6}, {2}GeneratorTypeMeta> GeneratorType {{ get => GeneratorTypeSingle; }}
+    public {4}IReadOnlyDictionary<{6}, {2}GeneratorTypeMeta> GeneratorType {{ get => generatorType.Value; }}
 }}";
 
         #endregion

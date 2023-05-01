@@ -15,6 +15,9 @@
     <AutoreleasePoolSupport>false</AutoreleasePoolSupport>
     <ILLinkTreatWarningsAsErrors>false</ILLinkTreatWarningsAsErrors>
 
+    <!--<SuppressILLinkTrimAnalysisWarnings>true</SuppressILLinkTrimAnalysisWarnings>
+    <SuppressAOTAnalysisWarnings>true</SuppressAOTAnalysisWarnings>-->
+
     <EnableTrimAnalyzer>true</EnableTrimAnalyzer>
     <PublishReadyToRunEmitSymbols>false</PublishReadyToRunEmitSymbols>
     <DebuggerSupport>false</DebuggerSupport>
@@ -25,6 +28,7 @@
     <UseSystemResourceKeys>true</UseSystemResourceKeys>
     <StartupObject>Business.SourceGenerator.Test.Console.Program</StartupObject>
     <AllowUnsafeBlocks>True</AllowUnsafeBlocks>
+    <AnalysisLevel>latest-recommended</AnalysisLevel>
   </PropertyGroup>
 
   <ItemGroup>
@@ -40,7 +44,7 @@
   </ItemGroup>
 
   <ItemGroup>
-    <PackageReference Include="Business.SourceGenerator.Test" Version="1.0.2.9" />
+    <PackageReference Include="Business.SourceGenerator.Test" Version="1.0.2.10" />
   </ItemGroup>
 
   <ItemGroup>

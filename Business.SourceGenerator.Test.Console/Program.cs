@@ -15,9 +15,16 @@ using System.Threading.Tasks;
 using System.Reflection.PortableExecutable;
 using System.Runtime.CompilerServices;
 using System.Reflection;
+using System.Xml.Serialization;
+
+
+//[module: SuppressMessage("Microsoft.Design", "CS8604:", Scope = "namespace", Target = "Business.SourceGenerator.Test.Console")]
 
 namespace Business.SourceGenerator.Test.Console
 {
+    //[UnconditionalSuppressMessage("AOT", "CS8604")]
+    //[UnconditionalSuppressMessage("Aot", "CS8604:",
+    //Justification = "The unfriendly method is not reachable with AOT")]
     internal class Program
     {
         //public static MethodInfo? GetMethod<T>(System.Linq.Expressions.Expression<System.Action<T>> methodSelector) => ((System.Linq.Expressions.MethodCallExpression)methodSelector.Body).Method;
@@ -41,12 +48,20 @@ namespace Business.SourceGenerator.Test.Console
                 .AccessorSet<IGeneratorAccessor>("bbb", 888)
                 .AccessorSet<IGeneratorAccessor>("ccc", DateTimeOffset.Now);
 
-            var structMethod7 = MyStruct111.AccessorType().Members["StructMethod7"] as IAccessorMethodCollection;
-            foreach (var item in structMethod7.First().Attributes)
+            var structMethod7 = (MyStruct111.AccessorType().Members["StructMethod7"] as IAccessorMethodCollection).First();
+            foreach (var item in structMethod7.Attributes)
             {
                 var arg = item.Constructor;
                 System.Console.WriteLine(item.Name + " " + arg.ElementAt(0).Value + " " + arg.ElementAt(1).Value + " " + arg.ElementAt(2).Value);
             }
+
+            var arr0attr = structMethod7.Parameters[0].Attributes.First();
+            var arg2 = arr0attr.Constructor;
+            System.Console.WriteLine(arr0attr.Name + " " + arg2.ElementAt(0).Value + " " + arg2.ElementAt(1).Value + " " + arg2.ElementAt(2).Value);
+
+            var arr0attr2 = structMethod7.Parameters[1].Attributes.First();
+            var arg3 = arr0attr2.Constructor;
+            System.Console.WriteLine(arr0attr2.Name + " " + arg3.ElementAt(0).Value + " " + arg3.ElementAt(1).Value + " " + arg3.ElementAt(2).Value);
 
             //StructMember2(ref string? a, out int* b, ref (int c1, string c2) c, out (int? c1, string? c2) d)
             if (MyStruct111.AccessorMethod("StructMember2", out (int c1, string c2) value222, "a", (777, "xzzzxx")))
