@@ -11,6 +11,10 @@ using System.Security.Cryptography;
 //using System.Text.Json.Serialization;
 //using System.Text.Json.Serialization.Metadata;
 using System.Text.Json.Serialization;
+
+//using Serde;
+//using Serde.Json;
+
 using System.Threading.Tasks;
 using System.Reflection.PortableExecutable;
 using System.Runtime.CompilerServices;
@@ -32,7 +36,7 @@ namespace Business.SourceGenerator.Test.Console
         static async Task<int> Main(string[] args)
         {
             BusinessSourceGenerator.Generator.SetGeneratorCode();
-
+            
             string? a5 = "a5";
             (int c1, string c2) c5 = (55, "66");
             //var rrr5 = GetMethod<MyStruct>(c => c.StructMethod7(ref a5, ref c5)).Name;
@@ -48,10 +52,17 @@ namespace Business.SourceGenerator.Test.Console
                 .AccessorSet<IGeneratorAccessor>("bbb", 888)
                 .AccessorSet<IGeneratorAccessor>("ccc", DateTimeOffset.Now);
 
-            var structMethod7 = (MyStruct111.AccessorType().Members["StructMethod7"] as IAccessorMethodCollection).First();
+            //var MyStruct222 = typeof(MyStruct2).CreateInstance<MyStruct2>("222");
+
+            //var myStruct = (MyStruct2)(MyStruct222);
+            //System.Console.WriteLine(JsonSerializer.Serialize(MyStruct222));
+            //[Serde.Json.JsonSerializer]
+
+           var structMethod7 = (MyStruct111.AccessorType().Members["StructMethod7"] as IAccessorMethodCollection).First();
             foreach (var item in structMethod7.Attributes)
             {
                 var arg = item.Constructor;
+                
                 System.Console.WriteLine(item.Name + " " + arg.ElementAt(0).Value + " " + arg.ElementAt(1).Value + " " + arg.ElementAt(2).Value);
             }
 

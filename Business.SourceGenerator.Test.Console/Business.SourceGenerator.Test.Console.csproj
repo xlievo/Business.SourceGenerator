@@ -8,6 +8,7 @@
     <PublishAot>true</PublishAot>
     <IlcDisableReflection>true</IlcDisableReflection>
     <StripSymbols>true</StripSymbols>
+    <DebuggerSupport>false</DebuggerSupport>
     <!--<RunAOTCompilation>true</RunAOTCompilation>-->
     <!--<TrimMode>partial</TrimMode>-->
     <TrimmerRemoveSymbols>true</TrimmerRemoveSymbols>
@@ -17,10 +18,13 @@
 
     <!--<SuppressILLinkTrimAnalysisWarnings>true</SuppressILLinkTrimAnalysisWarnings>
     <SuppressAOTAnalysisWarnings>true</SuppressAOTAnalysisWarnings>-->
-
+    <!--<IlcOptimizationPreference>true</IlcOptimizationPreference>-->
+    <IlcOptimizationPreference>Size</IlcOptimizationPreference>
+    <IlcFoldIdenticalMethodBodies>true</IlcFoldIdenticalMethodBodies>
+    <IlcGenerateCompleteTypeMetadata>false</IlcGenerateCompleteTypeMetadata>
+    <IlcGenerateStackTraceData>false</IlcGenerateStackTraceData>
     <EnableTrimAnalyzer>true</EnableTrimAnalyzer>
     <PublishReadyToRunEmitSymbols>false</PublishReadyToRunEmitSymbols>
-    <DebuggerSupport>false</DebuggerSupport>
     <EnableUnsafeUTF7Encoding>true</EnableUnsafeUTF7Encoding>
     <InvariantGlobalization>true</InvariantGlobalization>
     <HttpActivityPropagationSupport>false</HttpActivityPropagationSupport>
@@ -44,7 +48,7 @@
   </ItemGroup>
 
   <ItemGroup>
-    <PackageReference Include="Business.SourceGenerator.Test" Version="1.0.2.10" />
+    <PackageReference Include="Business.SourceGenerator.Test" Version="1.0.2.11" />
   </ItemGroup>
 
   <ItemGroup>

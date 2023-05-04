@@ -148,15 +148,19 @@ public unsafe partial struct MyStruct
         return ValueTask.FromResult(c);
     }
 
-    public ValueTask<(int c1, string c2)> StructMethod7(ref string? a,  ref (int c1, string c2) c)
+    public ValueTask<(int c1, string c2)> StructMethod7(ref string? a, ref (int c1, string c2) c)
     {
         return default;
     }
 }
 
+//[Serde.GenerateSerialize]
+//[Serde.GenerateDeserialize]
 public partial struct MyStruct2
 {
-    public string aaa { get; set; }
+    public string? aaa { get; set; }
+
+    public int? bbb { get; set; }
 
     public MyStruct2(string aaa)
     {
@@ -276,6 +280,6 @@ namespace MyCode
     public partial struct MethodInvoke<T>
         where T : System.IDisposable
     {
-        
+
     }
 }

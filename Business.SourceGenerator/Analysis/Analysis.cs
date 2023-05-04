@@ -553,17 +553,19 @@ namespace Business.SourceGenerator.Analysis
                 string key = default;
 
                 var result = new List<string>();
+                var noParameterConstructor = false;
 
                 switch (typeSymbol.Kind)
                 {
                     case SymbolKind.ArrayType:
                         key = SetConstructorArray(typeSymbol as IArrayTypeSymbol, result, typeClean, opt);
+                        noParameterConstructor = true;
                         break;
                     case SymbolKind.PointerType:
                         break;
                     //case SymbolKind.DynamicType:
                     case SymbolKind.NamedType:
-                        key = SetConstructor(typeSymbol as INamedTypeSymbol, result, typeClean, opt);
+                        key = SetConstructor(typeSymbol as INamedTypeSymbol, result, out noParameterConstructor, typeClean, opt);
                         break;
                     default: continue;
                 }
@@ -623,7 +625,7 @@ namespace Business.SourceGenerator.Analysis
                     globalMeta,
                     definitions2.Any() ? $"new {globalGeneric}Dictionary<{globalSystem}Type, {globalSystem}Type> {{ {makes} }}" : "default",
                     $"new {globalMeta}IMethodMeta[] {{ {string.Join(", ", result)} }}",
-                    info.Value.IsDefinition ? "true" : "default");
+                    info.Value.IsDefinition ? "true" : "default", typeSymbol.IsValueType || noParameterConstructor ? "true" : "default", $"{globalMeta}TypeKind.{typeSymbol.TypeKind.GetName()}");
 
                 sb.AppendLine();
                 sb.AppendLine($"        #endregion");
@@ -681,7 +683,7 @@ namespace Business.SourceGenerator.Analysis
                     var sb = new System.Text.StringBuilder(null);
                     var result = new List<string>();
                     new Dictionary<Type, Type> { [typeof(int)] = typeof(int) };
-                    var key = SetConstructor(makeGeneric, result, typeClean, opt, typeArgument);
+                    var key = SetConstructor(makeGeneric, result, out bool noParameterConstructor, typeClean, opt, typeArgument);
 
                     sb.AppendLine($"#region {key}");
                     sb.AppendFormat("[typeof({0})] = ", key);
@@ -690,7 +692,7 @@ namespace Business.SourceGenerator.Analysis
                         globalMeta,
                         "default",
                         $"new {globalMeta}IMethodMeta[] {{ {string.Join(", ", result)} }}",
-                        makeGeneric.GetSymbolInfo().IsDefinition ? "true" : "default");
+                        makeGeneric.GetSymbolInfo().IsDefinition ? "true" : "default", makeGeneric.IsValueType || noParameterConstructor ? "true" : "default", $"{globalMeta}TypeKind.{makeGeneric.TypeKind.GetName()}");
 
                     sb.AppendLine();
                     sb.AppendLine($"        #endregion");
@@ -701,8 +703,10 @@ namespace Business.SourceGenerator.Analysis
             }
         }
 
-        static string SetConstructor(INamedTypeSymbol named, IList<string> result, Func<string, bool, string> typeClean, ToCodeOpt opt, params ITypeSymbol[] typeArgument)
+        static string SetConstructor(INamedTypeSymbol named, IList<string> result, out bool noParameterConstructor, Func<string, bool, string> typeClean, ToCodeOpt opt, params ITypeSymbol[] typeArgument)
         {
+            noParameterConstructor = default;
+
             var typeArguments = named.SetTypeArguments(typeArgument);
 
             foreach (var constructor in named.InstanceConstructors)
@@ -719,6 +723,11 @@ namespace Business.SourceGenerator.Analysis
                 }))
                 {
                     continue;
+                }
+
+                if (!constructor.Parameters.Any())
+                {
+                    noParameterConstructor = !constructor.Parameters.Any();
                 }
 
                 result.Add(GetConstructor(constructor, typeArguments, typeClean, opt));
@@ -765,6 +774,7 @@ namespace Business.SourceGenerator.Analysis
 }}
 ";
 
+        /*
         const string makeGenericTypeTemp = @"case {1}GeneratorTypeOpt.MakeGenericType:
                 {{ 
                     if (arg.makeType is null) {{ throw new {2}ArgumentNullException(nameof(arg.makeType)); }} 
@@ -795,8 +805,9 @@ namespace Business.SourceGenerator.Analysis
                     }} 
                 }}
                 ";
+        */
 
-        const string generatorTypeTemp = @"new {0}GeneratorTypeMeta({1}, {2}, {3})";
+        const string generatorTypeTemp = @"new {0}GeneratorTypeMeta({1}, {2}, {3}, {4}, {5})";
 
         const string iGeneratorTypeTemp = @"public partial class BusinessSourceGenerator : {2}IGeneratorType
 {{

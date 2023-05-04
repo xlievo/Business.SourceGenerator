@@ -88,6 +88,23 @@ namespace Business.SourceGenerator.Meta
     public readonly struct GeneratorTypeMeta
     {
         /// <summary>
+        /// GeneratorTypeMeta.
+        /// </summary>
+        /// <param name="makeGenerics"></param>
+        /// <param name="constructors"></param>
+        /// <param name="isDefinition"></param>
+        /// <param name="noParameterConstructor"></param>
+        /// <param name="typeKind"></param>
+        public GeneratorTypeMeta(IReadOnlyDictionary<Type, Type> makeGenerics, IEnumerable<IMethodMeta> constructors, bool isDefinition, bool noParameterConstructor, TypeKind typeKind)
+        {
+            MakeGenerics = makeGenerics;
+            Constructors = constructors;
+            IsDefinition = isDefinition;
+            NoParameterConstructor = noParameterConstructor;
+            TypeKind = typeKind;
+        }
+
+        /// <summary>
         /// MakeGenerics.
         /// </summary>
         public readonly IReadOnlyDictionary<Type, Type> MakeGenerics { get; }
@@ -103,17 +120,15 @@ namespace Business.SourceGenerator.Meta
         public readonly bool IsDefinition { get; }
 
         /// <summary>
-        /// GeneratorTypeMeta.
+        /// Is there a parameterless constructor.
         /// </summary>
-        /// <param name="makeGenerics"></param>
-        /// <param name="constructors"></param>
-        /// <param name="isDefinition"></param>
-        public GeneratorTypeMeta(IReadOnlyDictionary<Type, Type> makeGenerics, IEnumerable<IMethodMeta> constructors, bool isDefinition)
-        {
-            this.MakeGenerics = makeGenerics;
-            this.Constructors = constructors;
-            this.IsDefinition = isDefinition;
-        }
+        public readonly bool NoParameterConstructor { get; }
+
+        /// <summary>
+        /// An enumerated value that identifies whether this type is an array, pointer, enum,
+        /// and so on.
+        /// </summary>
+        public readonly TypeKind TypeKind { get; }
     }
 
     public readonly struct Constructor : IMethodMeta
@@ -352,6 +367,11 @@ namespace Business.SourceGenerator.Meta
         /// <returns></returns>
         public static RefArg Out<Type>() => new RefArg(default, typeof(Type), RefKind.Out);
 
+        /// <summary>
+        /// Set value.
+        /// </summary>
+        /// <param name="value"></param>
+        /// <returns></returns>
         public RefArg Set(object value = default) => new RefArg(value, Type, RefKind);
 
         /// <summary>

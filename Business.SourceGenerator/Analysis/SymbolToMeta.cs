@@ -953,13 +953,13 @@ namespace Business.SourceGenerator.Analysis
             var attr = attributes.Select(c =>
             {
                 var args = GetAttributeArguments(c, globalMeta, typeClean);
-                return $"new {globalMeta}AccessorAttribute(\"{c.AttributeClass.Name}\", {(args.Any() ? $"new {globalMeta}TypedConstant[] {{ {string.Join(", ", args)} }}" : "default")})";
+                return $"new {globalMeta}AccessorAttribute(\"{c.AttributeClass.Name}\", {((args?.Any() ?? false) ? $"new {globalMeta}TypedConstant[] {{ {string.Join(", ", args)} }}" : "default")})";
             });
 
             return $"new {globalMeta}AccessorAttribute[] {{ {string.Join(", ", attr)} }}";
         }
 
-        public static IEnumerable<string> GetAttributeArguments(AttributeData attribute, string globalMeta, Func<string, bool, string> typeClean) => attribute.AttributeConstructor.Parameters.Select(c =>
+        public static IEnumerable<string> GetAttributeArguments(AttributeData attribute, string globalMeta, Func<string, bool, string> typeClean) => attribute.AttributeConstructor?.Parameters.Select(c =>
         {
             var v = attribute.ConstructorArguments[c.Ordinal];
 

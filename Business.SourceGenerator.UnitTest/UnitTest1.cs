@@ -653,6 +653,7 @@ namespace UnitAssembly
             testResult = MethodInvoke(compileResult.Compilation, "UnitAssembly.Program.StructMethod7");
             Debug.Assert(testResult is not null);
             testResult2 = testResult.GetAwaiter().GetResult();
+
             //Debug.Assert((bool)6789.Equals(testResult2.Item1));
             //Debug.Assert((bool)"66".Equals(testResult2.Item2));
         }
