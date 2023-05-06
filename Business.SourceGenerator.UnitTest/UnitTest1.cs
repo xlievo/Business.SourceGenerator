@@ -650,9 +650,9 @@ namespace UnitAssembly
             Debug.Assert((bool)33.Equals(testResult2.Item1));
             Debug.Assert((bool)"66".Equals(testResult2.Item2));
 
-            testResult = MethodInvoke(compileResult.Compilation, "UnitAssembly.Program.StructMethod7");
-            Debug.Assert(testResult is not null);
-            testResult2 = testResult.GetAwaiter().GetResult();
+            dynamic testResult22 = MethodInvoke(compileResult.Compilation, "UnitAssembly.Program.StructMethod7");
+            Debug.Assert(testResult22 is not null);
+            var testResult222 = testResult22.GetAwaiter().GetResult();
 
             //Debug.Assert((bool)6789.Equals(testResult2.Item1));
             //Debug.Assert((bool)"66".Equals(testResult2.Item2));
@@ -819,7 +819,7 @@ namespace UnitAssembly
 
             // Create the driver that will control the generation, passing in our generator
             GeneratorDriver driver = CSharpGeneratorDriver.Create(generator);
-            
+
             // Run the generation pass
             // (Note: the generator driver itself is immutable, and all calls return an updated version of the driver that you should use for subsequent calls)
             driver = driver.RunGeneratorsAndUpdateCompilation(inputCompilation, out var outputCompilation, out var diagnostics);

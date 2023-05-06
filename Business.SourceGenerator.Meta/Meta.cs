@@ -1373,25 +1373,25 @@ namespace Business.SourceGenerator.Meta
         /// </summary>
         public NullableAnnotation NullableAnnotation { get; }
 
-        /// <summary>
-        /// The list of all interfaces of which this type is a declared subtype, excluding
-        /// this type itself. This includes all declared base interfaces, all declared base
-        /// interfaces of base types, and all declared base interfaces of those results (recursively).
-        /// This also is the effective interface set of a type parameter. Each result appears
-        /// exactly once in the list. This list is topologically sorted by the inheritance
-        /// relationship: if interface type A extends interface type B, then A precedes B
-        /// in the list. This is not quite the same as "all interfaces of which this type
-        /// is a proper subtype" because it does not take into account variance: AllInterfaces
-        /// for IEnumerable<string> will not include IEnumerable<object>.
-        /// </summary>
-        public IEnumerable<string> AllInterfaces { get; }
+        ///// <summary>
+        ///// The list of all interfaces of which this type is a declared subtype, excluding
+        ///// this type itself. This includes all declared base interfaces, all declared base
+        ///// interfaces of base types, and all declared base interfaces of those results (recursively).
+        ///// This also is the effective interface set of a type parameter. Each result appears
+        ///// exactly once in the list. This list is topologically sorted by the inheritance
+        ///// relationship: if interface type A extends interface type B, then A precedes B
+        ///// in the list. This is not quite the same as "all interfaces of which this type
+        ///// is a proper subtype" because it does not take into account variance: AllInterfaces
+        ///// for IEnumerable<string> will not include IEnumerable<object>.
+        ///// </summary>
+        //public IEnumerable<Type> AllInterfaces { get; }
 
-        /// <summary>
-        /// The declared base type of this type, or null. The object type, interface types,
-        /// and pointer types do not have a base type. The base type of a type parameter
-        /// is its effective base class.
-        /// </summary>
-        public string BaseType { get; }
+        ///// <summary>
+        ///// The declared base type of this type, or null. The object type, interface types,
+        ///// and pointer types do not have a base type. The base type of a type parameter
+        ///// is its effective base class.
+        ///// </summary>
+        //public Type BaseType { get; }
 
         /// <summary>
         /// An enumerated value that identifies whether this type is an array, pointer, enum,
@@ -2050,7 +2050,7 @@ namespace Business.SourceGenerator.Meta
     /// </remarks>
     public readonly struct AccessorType : IAccessorType
     {
-        public AccessorType(Accessibility declaredAccessibility, bool isExtern, bool isSealed, bool isAbstract, bool isOverride, bool isVirtual, bool isStatic, bool isDefinition, string name, string fullName, Kind kind, bool isDeclaringSyntaxReferences, AccessorAttribute[] attributes, IDictionary<string, IAccessor> members, bool isReferenceType, bool isReadOnly, bool isUnmanagedType, bool isRefLikeType, SpecialType specialType, bool isNativeIntegerType, bool isTupleType, bool isAnonymousType, bool isValueType, NullableAnnotation nullableAnnotation, IEnumerable<string> allInterfaces, string baseType, TypeKind typeKind, bool isRecord, AsyncType asyncType)
+        public AccessorType(Accessibility declaredAccessibility, bool isExtern, bool isSealed, bool isAbstract, bool isOverride, bool isVirtual, bool isStatic, bool isDefinition, string name, string fullName, Kind kind, bool isDeclaringSyntaxReferences, AccessorAttribute[] attributes, IDictionary<string, IAccessor> members, bool isReferenceType, bool isReadOnly, bool isUnmanagedType, bool isRefLikeType, SpecialType specialType, bool isNativeIntegerType, bool isTupleType, bool isAnonymousType, bool isValueType, NullableAnnotation nullableAnnotation, TypeKind typeKind, bool isRecord, AsyncType asyncType)
         {
             DeclaredAccessibility = declaredAccessibility;
             IsExtern = isExtern;
@@ -2076,8 +2076,6 @@ namespace Business.SourceGenerator.Meta
             IsAnonymousType = isAnonymousType;
             IsValueType = isValueType;
             NullableAnnotation = nullableAnnotation;
-            AllInterfaces = allInterfaces;
-            BaseType = baseType;
             TypeKind = typeKind;
             IsRecord = isRecord;
             AsyncType = asyncType;
@@ -2234,26 +2232,6 @@ namespace Business.SourceGenerator.Meta
         public readonly NullableAnnotation NullableAnnotation { get; }
 
         /// <summary>
-        /// The list of all interfaces of which this type is a declared subtype, excluding
-        /// this type itself. This includes all declared base interfaces, all declared base
-        /// interfaces of base types, and all declared base interfaces of those results (recursively).
-        /// This also is the effective interface set of a type parameter. Each result appears
-        /// exactly once in the list. This list is topologically sorted by the inheritance
-        /// relationship: if interface type A extends interface type B, then A precedes B
-        /// in the list. This is not quite the same as "all interfaces of which this type
-        /// is a proper subtype" because it does not take into account variance: AllInterfaces
-        /// for IEnumerable<string> will not include IEnumerable<object>.
-        /// </summary>
-        public readonly IEnumerable<string> AllInterfaces { get; }
-
-        /// <summary>
-        /// The declared base type of this type, or null. The object type, interface types,
-        /// and pointer types do not have a base type. The base type of a type parameter
-        /// is its effective base class.
-        /// </summary>
-        public readonly string BaseType { get; }
-
-        /// <summary>
         /// An enumerated value that identifies whether this type is an array, pointer, enum,
         /// and so on.
         /// </summary>
@@ -2281,7 +2259,7 @@ namespace Business.SourceGenerator.Meta
     /// </remarks>
     public readonly struct AccessorNamedType : IAccessorNamedType
     {
-        public AccessorNamedType(Accessibility declaredAccessibility, bool isExtern, bool isSealed, bool isAbstract, bool isOverride, bool isVirtual, bool isStatic, bool isDefinition, string name, string fullName, Kind kind, bool isDeclaringSyntaxReferences, AccessorAttribute[] attributes, IDictionary<string, IAccessor> members, bool isReferenceType, bool isReadOnly, bool isUnmanagedType, bool isRefLikeType, SpecialType specialType, bool isNativeIntegerType, bool isTupleType, bool isAnonymousType, bool isValueType, NullableAnnotation nullableAnnotation, IEnumerable<string> allInterfaces, string baseType, TypeKind typeKind, bool isRecord, AsyncType asyncType, IEnumerable<NullableAnnotation> typeArgumentNullableAnnotations, IEnumerable<IAccessorField> tupleElements, bool mightContainExtensionMethods, IEnumerable<IAccessorMethod> constructors, IAccessorNamedType enumUnderlyingType, IAccessorMethod delegateInvokeMethod, bool isSerializable, IDictionary<string, IAccessorTypeParameter> typeParameters, bool isUnboundGenericType, bool isGeneric, IEnumerable<IAccessorType> typeArguments)
+        public AccessorNamedType(Accessibility declaredAccessibility, bool isExtern, bool isSealed, bool isAbstract, bool isOverride, bool isVirtual, bool isStatic, bool isDefinition, string name, string fullName, Kind kind, bool isDeclaringSyntaxReferences, AccessorAttribute[] attributes, IDictionary<string, IAccessor> members, bool isReferenceType, bool isReadOnly, bool isUnmanagedType, bool isRefLikeType, SpecialType specialType, bool isNativeIntegerType, bool isTupleType, bool isAnonymousType, bool isValueType, NullableAnnotation nullableAnnotation, TypeKind typeKind, bool isRecord, AsyncType asyncType, IEnumerable<NullableAnnotation> typeArgumentNullableAnnotations, IEnumerable<IAccessorField> tupleElements, bool mightContainExtensionMethods, IEnumerable<IAccessorMethod> constructors, IAccessorNamedType enumUnderlyingType, IAccessorMethod delegateInvokeMethod, bool isSerializable, IDictionary<string, IAccessorTypeParameter> typeParameters, bool isUnboundGenericType, bool isGeneric, IEnumerable<IAccessorType> typeArguments)
         {
             DeclaredAccessibility = declaredAccessibility;
             IsExtern = isExtern;
@@ -2307,8 +2285,6 @@ namespace Business.SourceGenerator.Meta
             IsAnonymousType = isAnonymousType;
             IsValueType = isValueType;
             NullableAnnotation = nullableAnnotation;
-            AllInterfaces = allInterfaces;
-            BaseType = baseType;
             TypeKind = typeKind;
             IsRecord = isRecord;
             AsyncType = asyncType;
@@ -2477,26 +2453,6 @@ namespace Business.SourceGenerator.Meta
         public readonly NullableAnnotation NullableAnnotation { get; }
 
         /// <summary>
-        /// The list of all interfaces of which this type is a declared subtype, excluding
-        /// this type itself. This includes all declared base interfaces, all declared base
-        /// interfaces of base types, and all declared base interfaces of those results (recursively).
-        /// This also is the effective interface set of a type parameter. Each result appears
-        /// exactly once in the list. This list is topologically sorted by the inheritance
-        /// relationship: if interface type A extends interface type B, then A precedes B
-        /// in the list. This is not quite the same as "all interfaces of which this type
-        /// is a proper subtype" because it does not take into account variance: AllInterfaces
-        /// for IEnumerable<string> will not include IEnumerable<object>.
-        /// </summary>
-        public readonly IEnumerable<string> AllInterfaces { get; }
-
-        /// <summary>
-        /// The declared base type of this type, or null. The object type, interface types,
-        /// and pointer types do not have a base type. The base type of a type parameter
-        /// is its effective base class.
-        /// </summary>
-        public readonly string BaseType { get; }
-
-        /// <summary>
         /// An enumerated value that identifies whether this type is an array, pointer, enum,
         /// and so on.
         /// </summary>
@@ -2599,7 +2555,7 @@ namespace Business.SourceGenerator.Meta
     /// </remarks>
     public readonly struct AccessorTypeParameter : IAccessorTypeParameter
     {
-        public AccessorTypeParameter(Accessibility declaredAccessibility, bool isExtern, bool isSealed, bool isAbstract, bool isOverride, bool isVirtual, bool isStatic, bool isDefinition, string name, string fullName, Kind kind, bool isDeclaringSyntaxReferences, AccessorAttribute[] attributes, IDictionary<string, IAccessor> members, bool isReferenceType, bool isReadOnly, bool isUnmanagedType, bool isRefLikeType, SpecialType specialType, bool isNativeIntegerType, bool isTupleType, bool isAnonymousType, bool isValueType, NullableAnnotation nullableAnnotation, IEnumerable<string> allInterfaces, string baseType, TypeKind typeKind, bool isRecord, AsyncType asyncType, int ordinal, VarianceKind variance, TypeParameterKind typeParameterKind, bool hasReferenceTypeConstraint, NullableAnnotation referenceTypeConstraintNullableAnnotation, bool hasValueTypeConstraint, bool hasUnmanagedTypeConstraint, bool hasNotNullConstraint, bool hasConstructorConstraint, IEnumerable<IAccessorType> constraintTypes)
+        public AccessorTypeParameter(Accessibility declaredAccessibility, bool isExtern, bool isSealed, bool isAbstract, bool isOverride, bool isVirtual, bool isStatic, bool isDefinition, string name, string fullName, Kind kind, bool isDeclaringSyntaxReferences, AccessorAttribute[] attributes, IDictionary<string, IAccessor> members, bool isReferenceType, bool isReadOnly, bool isUnmanagedType, bool isRefLikeType, SpecialType specialType, bool isNativeIntegerType, bool isTupleType, bool isAnonymousType, bool isValueType, NullableAnnotation nullableAnnotation, TypeKind typeKind, bool isRecord, AsyncType asyncType, int ordinal, VarianceKind variance, TypeParameterKind typeParameterKind, bool hasReferenceTypeConstraint, NullableAnnotation referenceTypeConstraintNullableAnnotation, bool hasValueTypeConstraint, bool hasUnmanagedTypeConstraint, bool hasNotNullConstraint, bool hasConstructorConstraint, IEnumerable<IAccessorType> constraintTypes)
         {
             DeclaredAccessibility = declaredAccessibility;
             IsExtern = isExtern;
@@ -2625,8 +2581,6 @@ namespace Business.SourceGenerator.Meta
             IsAnonymousType = isAnonymousType;
             IsValueType = isValueType;
             NullableAnnotation = nullableAnnotation;
-            AllInterfaces = allInterfaces;
-            BaseType = baseType;
             TypeKind = typeKind;
             IsRecord = isRecord;
             AsyncType = asyncType;
@@ -2791,26 +2745,6 @@ namespace Business.SourceGenerator.Meta
         /// if there are none.
         /// </summary>
         public readonly NullableAnnotation NullableAnnotation { get; }
-
-        /// <summary>
-        /// The list of all interfaces of which this type is a declared subtype, excluding
-        /// this type itself. This includes all declared base interfaces, all declared base
-        /// interfaces of base types, and all declared base interfaces of those results (recursively).
-        /// This also is the effective interface set of a type parameter. Each result appears
-        /// exactly once in the list. This list is topologically sorted by the inheritance
-        /// relationship: if interface type A extends interface type B, then A precedes B
-        /// in the list. This is not quite the same as "all interfaces of which this type
-        /// is a proper subtype" because it does not take into account variance: AllInterfaces
-        /// for IEnumerable<string> will not include IEnumerable<object>.
-        /// </summary>
-        public readonly IEnumerable<string> AllInterfaces { get; }
-
-        /// <summary>
-        /// The declared base type of this type, or null. The object type, interface types,
-        /// and pointer types do not have a base type. The base type of a type parameter
-        /// is its effective base class.
-        /// </summary>
-        public readonly string BaseType { get; }
 
         /// <summary>
         /// An enumerated value that identifies whether this type is an array, pointer, enum,

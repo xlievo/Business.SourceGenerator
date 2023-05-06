@@ -8,8 +8,6 @@
 
 
 
-
-
 namespace MyCode
 {
     public partial struct MethodInvoke<T>
@@ -114,10 +112,10 @@ namespace MyCode
             return System.Threading.Tasks.ValueTask.FromResult<dynamic>(f);
         }
 
-        public MethodInvoke(ref int a, out int b, params string[] c)
-        {
-            b = 0;
-        }
+        //public MethodInvoke(ref int a, out int b, params string[] c)
+        //{
+        //    b = 0;
+        //}
 
         //public System.Threading.Tasks.ValueTask<(T? c1, string? c2)> StructMethod8<Type>(ref string? a, out int? b, ref (T? c1, string? c2) c, out (T? c1, Type? c2) d, Type e, (T? c1, Type? c2) e2, ref T e3, ref Type e4, out T e5, out Type e6)
         //{

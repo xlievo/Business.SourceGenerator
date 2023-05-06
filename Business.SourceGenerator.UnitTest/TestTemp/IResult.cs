@@ -428,3 +428,5 @@ namespace Business.SourceGenerator.Test
         public byte[] ToBytes(bool dataBytes = true) => throw new NotImplementedException(); //Utils.Help.ProtoBufSerialize(this);
     }
 }
+
+

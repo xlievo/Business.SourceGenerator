@@ -247,6 +247,7 @@ namespace Business.SourceGenerator.Analysis
             var globalString = opt.GetGlobalName(GlobalName.System_String);
             var globalInt32 = opt.GetGlobalName(GlobalName.System_Int32);
             var globalObject = opt.GetGlobalName(GlobalName.System_Object);
+            var globalType = opt.GetGlobalName(GlobalName.System_Type);
 
             switch (symbol)
             {
@@ -361,21 +362,38 @@ namespace Business.SourceGenerator.Analysis
                         //==================IAccessorType==================//
                         //sb.AppendFormat("{0}, ", accessor.IsNamespace ? "true" : "default");
                         //sb.AppendFormat("{0}, ", accessor.IsType ? "true" : "default");
+
+                        /* Members */
                         sb.AppendFormat("{0}, ", !(members?.Any() ?? false) ? "default" : $"new {globalGeneric}Dictionary<{globalString}, {globalMeta}IAccessor> {{ {string.Join(", ", members.Select(c => $"{{ \"{c.Key}\", {c.Value} }}"))} }}");
+                        /* IsReferenceType */
                         sb.AppendFormat("{0}, ", accessor.IsReferenceType ? "true" : "default");
+                        /* IsReadOnly */
                         sb.AppendFormat("{0}, ", accessor.IsReadOnly ? "true" : "default");
+                        /* IsUnmanagedType */
                         sb.AppendFormat("{0}, ", accessor.IsUnmanagedType ? "true" : "default");
+                        /* IsRefLikeType */
                         sb.AppendFormat("{0}, ", accessor.IsRefLikeType ? "true" : "default");
+                        /* SpecialType */
                         sb.AppendFormat($"{globalMeta}SpecialType.{{0}}, ", accessor.SpecialType.GetName());
+                        /* IsNativeIntegerType */
                         sb.AppendFormat("{0}, ", accessor.IsNativeIntegerType ? "true" : "default");
+                        /* IsTupleType */
                         sb.AppendFormat("{0}, ", accessor.IsTupleType ? "true" : "default");
+                        /* IsAnonymousType */
                         sb.AppendFormat("{0}, ", accessor.IsAnonymousType ? "true" : "default");
+                        /* IsValueType */
                         sb.AppendFormat("{0}, ", accessor.IsValueType ? "true" : "default");
+                        /* NullableAnnotation */
                         sb.AppendFormat($"{globalMeta}NullableAnnotation.{{0}}, ", accessor.NullableAnnotation.GetName());
-                        sb.AppendFormat("{0}, ", (skip2 || !accessor.AllInterfaces.Any()) ? "default" : $"new string[] {{ {string.Join(", ", accessor.AllInterfaces.Select(c => $"\"{c.GetFullNameStandardFormat()}\""))} }}");
-                        sb.AppendFormat("{0}, ", accessor.BaseType is null ? "default" : $"\"{accessor.BaseType.GetFullNameStandardFormat()}\"");
+                        ///* AllInterfaces */
+                        //sb.AppendFormat("{0}, ", (skip2 || !accessor.AllInterfaces.Any()) ? "default" : $"new {globalType}[] {{ {string.Join(", ", accessor.AllInterfaces.Where(c => c.DeclaredAccessibility is Accessibility.Public).Select(c => $"typeof({(c.TypeChecked(t => t is ITypeParameterSymbol typeParameter && typeParameter.TypeParameterKind is TypeParameterKind.Method) ? c.GetFullNameRealStandardFormat(typeClean: typeClean) : c.GetFullNameStandardFormat(typeClean: typeClean))})"))} }}");
+                        ///* BaseType */
+                        //sb.AppendFormat("{0}, ", accessor.BaseType is null ? "default" : $"typeof({accessor.BaseType.GetFullNameStandardFormat(typeClean: typeClean)})");
+                        /* TypeKind */
                         sb.AppendFormat($"{globalMeta}TypeKind.{{0}}, ", accessor.TypeKind.GetName());
+                        /* IsRecord */
                         sb.AppendFormat("{0}, ", accessor.IsRecord ? "true" : "default");
+                        /* AsyncType */
                         sb.AppendFormat($"{globalMeta}AsyncType.{{0}}, ", GetAsyncType(accessor).GetName());
                         //==================IAccessorNamedType==================//
                         sb.AppendFormat("{0}, ", (skip2 || !accessor.TypeArgumentNullableAnnotations.Any()) ? "default" : $"new {globalMeta}NullableAnnotation[] {{ {string.Join(", ", accessor.TypeArgumentNullableAnnotations.Select(c => $"{globalMeta}NullableAnnotation.{c.GetName()}"))} }}");
@@ -431,8 +449,8 @@ namespace Business.SourceGenerator.Analysis
                         sb.AppendFormat("{0}, ", accessor.IsAnonymousType ? "true" : "default");
                         sb.AppendFormat("{0}, ", accessor.IsValueType ? "true" : "default");
                         sb.AppendFormat($"{globalMeta}NullableAnnotation.{{0}}, ", accessor.NullableAnnotation.GetName());
-                        sb.AppendFormat("{0}, ", (skip2 || !accessor.AllInterfaces.Any()) ? "default" : $"new string[] {{ {string.Join(", ", accessor.AllInterfaces.Select(c => $"\"{c.GetFullNameStandardFormat()}\""))} }}");
-                        sb.AppendFormat("{0}, ", accessor.BaseType is null ? "default" : $"\"{accessor.BaseType.GetFullNameStandardFormat()}\"");
+                        //sb.AppendFormat("{0}, ", (skip2 || !accessor.AllInterfaces.Any()) ? "default" : $"new {globalType}[] {{ {string.Join(", ", accessor.AllInterfaces.Where(c => c.DeclaredAccessibility is Accessibility.Public).Select(c => $"typeof({(c.TypeChecked(t => t is ITypeParameterSymbol typeParameter && typeParameter.TypeParameterKind is TypeParameterKind.Method) ? c.GetFullNameRealStandardFormat(typeClean: typeClean) : c.GetFullNameStandardFormat(typeClean: typeClean))})"))} }}");
+                        //sb.AppendFormat("{0}, ", accessor.BaseType is null ? "default" : $"typeof({accessor.BaseType.GetFullNameStandardFormat(typeClean: typeClean)})");
                         sb.AppendFormat($"{globalMeta}TypeKind.{{0}}, ", accessor.TypeKind.GetName());
                         sb.AppendFormat("{0}, ", accessor.IsRecord ? "true" : "default");
                         sb.AppendFormat($"{globalMeta}AsyncType.{{0}}, ", GetAsyncType(accessor).GetName());
@@ -576,8 +594,8 @@ namespace Business.SourceGenerator.Analysis
                         sb.AppendFormat("{0}, ", accessor.IsAnonymousType ? "true" : "default");
                         sb.AppendFormat("{0}, ", accessor.IsValueType ? "true" : "default");
                         sb.AppendFormat($"{globalMeta}NullableAnnotation.{{0}}, ", accessor.NullableAnnotation.GetName());
-                        sb.AppendFormat("{0}, ", (skip2 || !accessor.AllInterfaces.Any()) ? "default" : $"new string[] {{ {string.Join(", ", accessor.AllInterfaces.Select(c => $"\"{c.GetFullNameStandardFormat()}\""))} }}");
-                        sb.AppendFormat("{0}, ", accessor.BaseType is null ? "default" : $"\"{accessor.BaseType.GetFullNameStandardFormat()}\"");
+                        //sb.AppendFormat("{0}, ", (skip2 || !accessor.AllInterfaces.Any()) ? "default" : $"new {globalType}[] {{ {string.Join(", ", accessor.AllInterfaces.Where(c => c.DeclaredAccessibility is Accessibility.Public).Select(c => $"typeof({(c.TypeChecked(t => t is ITypeParameterSymbol typeParameter && typeParameter.TypeParameterKind is TypeParameterKind.Method) ? c.GetFullNameRealStandardFormat(typeClean: typeClean) : c.GetFullNameStandardFormat(typeClean: typeClean))})"))} }}");
+                        //sb.AppendFormat("{0}, ", accessor.BaseType is null ? "default" : $"typeof({accessor.BaseType.GetFullNameStandardFormat(typeClean: typeClean)})");
                         sb.AppendFormat($"{globalMeta}TypeKind.{{0}}, ", accessor.TypeKind.GetName());
                         sb.AppendFormat("{0}, ", accessor.IsRecord ? "true" : "default");
                         sb.AppendFormat($"{globalMeta}AsyncType.{{0}}", GetAsyncType(accessor).GetName());
