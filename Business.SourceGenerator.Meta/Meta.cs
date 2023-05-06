@@ -2320,7 +2320,7 @@ namespace Business.SourceGenerator.Meta
             DelegateInvokeMethod = delegateInvokeMethod;
             IsSerializable = isSerializable;
             TypeParameters = typeParameters;
-            TypeArguments = typeArguments;
+            //TypeArguments = typeArguments;
             IsUnboundGenericType = isUnboundGenericType;
             IsGeneric = isGeneric;
             TypeArguments = typeArguments;

@@ -385,6 +385,12 @@ namespace Business.SourceGenerator.Analysis
 
             #endregion
 
+            #region checked Null
+
+            var nullable = symbol is ITypeSymbol typeSymbol && typeSymbol.NullableAnnotation is NullableAnnotation.Annotated;
+
+            #endregion
+
             #endregion
 
             var objectNameClean = typeClean?.Invoke(GlobalConst.System_Object, captureStyleNoPrefix) ?? GlobalConst.System_Object;
@@ -397,6 +403,16 @@ namespace Business.SourceGenerator.Analysis
                 switch (opt.TypeParameterStyle)
                 {
                     case TypeParameterStyle.Name:
+                        if (nullable)
+                        {
+                            if (!opt.NoNullableQuestionMark)
+                            {
+                                return $"{symbol.Name}?";
+                            }
+
+                            var nullName = $"System.Nullable<{symbol.Name}>";
+                            return typeClean?.Invoke(nullName, captureStyleNoPrefix) ?? nullName;
+                        }
                         return symbol.Name;
                     case TypeParameterStyle.Real:
                         {
@@ -604,8 +620,11 @@ namespace Business.SourceGenerator.Analysis
                             //if (System_Nullable.Equals($"{prefix}.{symbol.Name}") && !opt.NoNullableQuestionMark)
                             if (SpecialType.System_Nullable_T == named.ConstructedFrom?.SpecialType && !opt.NoNullableQuestionMark)
                             {
-                                //Question mark, otherwise it will be treated as System.Nullable<>.
-                                return $"{args}?";
+                                if (!named.Equals(named.ConstructedFrom, SymbolEqualityComparer.Default))
+                                {
+                                    //Question mark, otherwise it will be treated as System.Nullable<>.
+                                    return $"{args}?";
+                                }
                             }
 
                             //return $"{typeClean?.Invoke(prefixFullName, noPrefix) ?? prefixFullName}<{args}>";
@@ -624,7 +643,19 @@ namespace Business.SourceGenerator.Analysis
                         switch (opt.TypeParameterStyle)
                         {
                             case TypeParameterStyle.Name:
-                                return typeParameter.Name;
+                                {
+                                    if (nullable)
+                                    {
+                                        if (!opt.NoNullableQuestionMark)
+                                        {
+                                            return $"{symbol.Name}?";
+                                        }
+
+                                        var nullName = $"System.Nullable<{symbol.Name}>";
+                                        return typeClean?.Invoke(nullName, captureStyleNoPrefix) ?? nullName;
+                                    }
+                                    return symbol.Name;
+                                }
                             case TypeParameterStyle.Real:
                                 {
                                     var constraintType = TypeParameterSymbolRealType(typeParameter);
@@ -645,7 +676,22 @@ namespace Business.SourceGenerator.Analysis
                             default: break;
                         }
 
-                        return $"{GetFullName(typeParameter.ContainingSymbol, opt.Set(captureStyle: opt.CaptureStyle | CaptureStyle.MethodName), typeClean)}.{typeParameter.Name}";
+                        var name = symbol.Name;
+
+                        if (nullable)
+                        {
+                            if (!opt.NoNullableQuestionMark)
+                            {
+                                name = $"{name}?";
+                            }
+                            else
+                            {
+                                var nullName = $"System.Nullable<{name}>";
+                                name = typeClean?.Invoke(nullName, captureStyleNoPrefix) ?? nullName;
+                            }
+                        }
+
+                        return $"{GetFullName(typeParameter.ContainingSymbol, opt.Set(captureStyle: opt.CaptureStyle | CaptureStyle.MethodName), typeClean)}.{name}";
                     }
                 case IArrayTypeSymbol array:
                     {

@@ -731,6 +731,59 @@ namespace UnitAssembly
             //Debug.Assert((bool)typeof(Dictionary<string, string>).Equals(testResult.B.GetType()));
         }
 
+        [Theory]
+        [InlineData("TypeInfo.cs")]
+        public void TypeInfoTest(string file, bool global = false)
+        {
+            const string assemblyName = "TypeInfoAssembly";
+
+            var testCode = $@"
+using System;
+using System.Threading.Tasks;
+using System.Collections.Generic;
+using Business.SourceGenerator;
+using Business.SourceGenerator.Meta;
+
+namespace UnitAssembly
+{{
+    internal class Program
+    {{
+        static async Task<int> Main(string[] args)
+        {{
+            return 0;
+        }}
+
+        public object Test()
+        {{
+            {assemblyName}.BusinessSourceGenerator.Generator.SetGeneratorCode();
+
+            return 0;
+        }}
+    }}
+}}
+";
+
+
+            var path = System.IO.Path.Combine(AppContext.BaseDirectory, "TestTemp", file);
+
+            Debug.Assert(System.IO.File.Exists(path));
+
+            var iResult = File.ReadAllText(Path.Combine(AppContext.BaseDirectory, "TestTemp", "IResult.cs"));
+
+            var compileResult = Compilation(path, global, OutputKind.ConsoleApplication, assemblyName, testCode);
+            //System.Threading.Tasks.ValueTask
+            var source = compileResult.GeneratorSource;
+
+            var testResult = MethodInvoke(compileResult.Compilation, "UnitAssembly.Program.Test");
+
+
+            Debug.Assert(testResult is not null);
+
+            //Debug.Assert((bool)"WWW".Equals(testResult.A));
+
+            //Debug.Assert((bool)typeof(Dictionary<string, string>).Equals(testResult.B.GetType()));
+        }
+
         static (Compilation Compilation, string GeneratorSource) Compilation(string file, bool global = false, OutputKind outputKind = OutputKind.DynamicallyLinkedLibrary, string assemblyName = "UnitAssembly", params string[] source)
         {
             // Create the 'input' compilation that the generator will act on

@@ -399,7 +399,7 @@ namespace Business.SourceGenerator.Analysis
                         var isDeclaringSyntaxReferences = symbol.DeclaringSyntaxReferences.Any();
                         var skip = accessorDepth < depth || SpecialType.None != accessor.SpecialType;
                         var skip2 = skip || !isDeclaringSyntaxReferences;
-                        var fullName = symbol.GetFullNameStandardFormat();
+                        var fullName = symbol.GetFullName(GetFullNameOpt.Create(true, typeParameterStyle: TypeParameterStyle.FullName));
                         var attrs = accessor.GetAttributes().Where(c => !(c.ApplicationSyntaxReference is null));
 
                         var sb = new System.Text.StringBuilder($"new {globalMeta}AccessorTypeParameter(");
@@ -412,7 +412,7 @@ namespace Business.SourceGenerator.Analysis
                         sb.AppendFormat("{0}, ", accessor.IsVirtual ? "true" : "default");
                         sb.AppendFormat("{0}, ", accessor.IsStatic ? "true" : "default");
                         sb.AppendFormat("{0}, ", accessor.IsDefinition ? "true" : "default");
-                        sb.AppendFormat("\"{0}\", ", accessor.Name);
+                        sb.AppendFormat("\"{0}\", ", accessor.GetFullNameStandardFormat());
                         sb.AppendFormat("\"{0}\", ", fullName);
                         sb.AppendFormat($"{globalMeta}Kind.{{0}}, ", accessor.Kind.GetName());
                         sb.AppendFormat("{0}, ", isDeclaringSyntaxReferences ? "true" : "default");

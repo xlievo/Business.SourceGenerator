@@ -25,7 +25,7 @@ namespace Business.SourceGenerator
     [Generator(LanguageNames.CSharp)]
     public class Generator : ISourceGenerator
     {
-        readonly bool global = true;
+        readonly bool global = false;
 
         //internal Generator(bool global = false)
         //{
