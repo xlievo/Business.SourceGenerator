@@ -365,24 +365,24 @@ namespace Business.SourceGenerator.Analysis
 
                         /* Members */
                         sb.AppendFormat("{0}, ", !(members?.Any() ?? false) ? "default" : $"new {globalGeneric}Dictionary<{globalString}, {globalMeta}IAccessor> {{ {string.Join(", ", members.Select(c => $"{{ \"{c.Key}\", {c.Value} }}"))} }}");
-                        /* IsReferenceType */
-                        sb.AppendFormat("{0}, ", accessor.IsReferenceType ? "true" : "default");
+                        /* IsReferenceType
+                        sb.AppendFormat("{0}, ", accessor.IsReferenceType ? "true" : "default"); */
                         /* IsReadOnly */
                         sb.AppendFormat("{0}, ", accessor.IsReadOnly ? "true" : "default");
                         /* IsUnmanagedType */
                         sb.AppendFormat("{0}, ", accessor.IsUnmanagedType ? "true" : "default");
-                        /* IsRefLikeType */
-                        sb.AppendFormat("{0}, ", accessor.IsRefLikeType ? "true" : "default");
+                        /* IsRefLikeType
+                        sb.AppendFormat("{0}, ", accessor.IsRefLikeType ? "true" : "default"); */
                         /* SpecialType */
                         sb.AppendFormat($"{globalMeta}SpecialType.{{0}}, ", accessor.SpecialType.GetName());
-                        /* IsNativeIntegerType */
-                        sb.AppendFormat("{0}, ", accessor.IsNativeIntegerType ? "true" : "default");
+                        /* IsNativeIntegerType
+                        sb.AppendFormat("{0}, ", accessor.IsNativeIntegerType ? "true" : "default"); */
                         /* IsTupleType */
                         sb.AppendFormat("{0}, ", accessor.IsTupleType ? "true" : "default");
                         /* IsAnonymousType */
                         sb.AppendFormat("{0}, ", accessor.IsAnonymousType ? "true" : "default");
-                        /* IsValueType */
-                        sb.AppendFormat("{0}, ", accessor.IsValueType ? "true" : "default");
+                        /* IsValueType
+                        sb.AppendFormat("{0}, ", accessor.IsValueType ? "true" : "default"); */
                         /* NullableAnnotation */
                         sb.AppendFormat($"{globalMeta}NullableAnnotation.{{0}}, ", accessor.NullableAnnotation.GetName());
                         ///* AllInterfaces */
@@ -439,15 +439,15 @@ namespace Business.SourceGenerator.Analysis
                         //sb.AppendFormat("{0}, ", accessor.IsNamespace ? "true" : "default");
                         //sb.AppendFormat("{0}, ", accessor.IsType ? "true" : "default");
                         sb.Append("default, ");
-                        sb.AppendFormat("{0}, ", accessor.IsReferenceType ? "true" : "default");
+                        /* sb.AppendFormat("{0}, ", accessor.IsReferenceType ? "true" : "default"); */
                         sb.AppendFormat("{0}, ", accessor.IsReadOnly ? "true" : "default");
                         sb.AppendFormat("{0}, ", accessor.IsUnmanagedType ? "true" : "default");
-                        sb.AppendFormat("{0}, ", accessor.IsRefLikeType ? "true" : "default");
+                        /* sb.AppendFormat("{0}, ", accessor.IsRefLikeType ? "true" : "default"); */
                         sb.AppendFormat($"{globalMeta}SpecialType.{{0}}, ", accessor.SpecialType.GetName());
-                        sb.AppendFormat("{0}, ", accessor.IsNativeIntegerType ? "true" : "default");
+                        /* sb.AppendFormat("{0}, ", accessor.IsNativeIntegerType ? "true" : "default"); */
                         sb.AppendFormat("{0}, ", accessor.IsTupleType ? "true" : "default");
                         sb.AppendFormat("{0}, ", accessor.IsAnonymousType ? "true" : "default");
-                        sb.AppendFormat("{0}, ", accessor.IsValueType ? "true" : "default");
+                        /* sb.AppendFormat("{0}, ", accessor.IsValueType ? "true" : "default"); */
                         sb.AppendFormat($"{globalMeta}NullableAnnotation.{{0}}, ", accessor.NullableAnnotation.GetName());
                         //sb.AppendFormat("{0}, ", (skip2 || !accessor.AllInterfaces.Any()) ? "default" : $"new {globalType}[] {{ {string.Join(", ", accessor.AllInterfaces.Where(c => c.DeclaredAccessibility is Accessibility.Public).Select(c => $"typeof({(c.TypeChecked(t => t is ITypeParameterSymbol typeParameter && typeParameter.TypeParameterKind is TypeParameterKind.Method) ? c.GetFullNameRealStandardFormat(typeClean: typeClean) : c.GetFullNameStandardFormat(typeClean: typeClean))})"))} }}");
                         //sb.AppendFormat("{0}, ", accessor.BaseType is null ? "default" : $"typeof({accessor.BaseType.GetFullNameStandardFormat(typeClean: typeClean)})");
@@ -584,15 +584,15 @@ namespace Business.SourceGenerator.Analysis
                         //sb.AppendFormat("{0}, ", accessor.IsNamespace ? "true" : "default");
                         //sb.AppendFormat("{0}, ", accessor.IsType ? "true" : "default");
                         sb.AppendFormat("{0}, ", !(members?.Any() ?? false) ? "default" : $"new {globalGeneric}Dictionary<{globalString}, {globalMeta}IAccessor> {{ {string.Join(", ", members.Select(c => $"{{ \"{c.Key}\", {c.Value} }}"))} }}");
-                        sb.AppendFormat("{0}, ", accessor.IsReferenceType ? "true" : "default");
+                        /* sb.AppendFormat("{0}, ", accessor.IsReferenceType ? "true" : "default"); */
                         sb.AppendFormat("{0}, ", accessor.IsReadOnly ? "true" : "default");
                         sb.AppendFormat("{0}, ", accessor.IsUnmanagedType ? "true" : "default");
-                        sb.AppendFormat("{0}, ", accessor.IsRefLikeType ? "true" : "default");
+                        /* sb.AppendFormat("{0}, ", accessor.IsRefLikeType ? "true" : "default"); */
                         sb.AppendFormat($"{globalMeta}SpecialType.{{0}}, ", accessor.SpecialType.GetName());
-                        sb.AppendFormat("{0}, ", accessor.IsNativeIntegerType ? "true" : "default");
+                        /* sb.AppendFormat("{0}, ", accessor.IsNativeIntegerType ? "true" : "default"); */
                         sb.AppendFormat("{0}, ", accessor.IsTupleType ? "true" : "default");
                         sb.AppendFormat("{0}, ", accessor.IsAnonymousType ? "true" : "default");
-                        sb.AppendFormat("{0}, ", accessor.IsValueType ? "true" : "default");
+                        /* sb.AppendFormat("{0}, ", accessor.IsValueType ? "true" : "default"); */
                         sb.AppendFormat($"{globalMeta}NullableAnnotation.{{0}}, ", accessor.NullableAnnotation.GetName());
                         //sb.AppendFormat("{0}, ", (skip2 || !accessor.AllInterfaces.Any()) ? "default" : $"new {globalType}[] {{ {string.Join(", ", accessor.AllInterfaces.Where(c => c.DeclaredAccessibility is Accessibility.Public).Select(c => $"typeof({(c.TypeChecked(t => t is ITypeParameterSymbol typeParameter && typeParameter.TypeParameterKind is TypeParameterKind.Method) ? c.GetFullNameRealStandardFormat(typeClean: typeClean) : c.GetFullNameStandardFormat(typeClean: typeClean))})"))} }}");
                         //sb.AppendFormat("{0}, ", accessor.BaseType is null ? "default" : $"typeof({accessor.BaseType.GetFullNameStandardFormat(typeClean: typeClean)})");

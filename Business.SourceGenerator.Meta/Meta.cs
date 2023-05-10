@@ -1306,13 +1306,13 @@ namespace Business.SourceGenerator.Meta
         /// </remarks>
         public IDictionary<string, IAccessor> Members { get; }
 
-        /// <summary>
-        /// True if this type is known to be a reference type. It is never the case that
-        /// Microsoft.CodeAnalysis.ITypeSymbol.IsReferenceType and Microsoft.CodeAnalysis.ITypeSymbol.IsValueType
-        /// both return true. However, for an unconstrained type parameter, Microsoft.CodeAnalysis.ITypeSymbol.IsReferenceType
-        /// and Microsoft.CodeAnalysis.ITypeSymbol.IsValueType will both return false.
-        /// </summary>
-        public bool IsReferenceType { get; }
+        ///// <summary>
+        ///// True if this type is known to be a reference type. It is never the case that
+        ///// Microsoft.CodeAnalysis.ITypeSymbol.IsReferenceType and Microsoft.CodeAnalysis.ITypeSymbol.IsValueType
+        ///// both return true. However, for an unconstrained type parameter, Microsoft.CodeAnalysis.ITypeSymbol.IsReferenceType
+        ///// and Microsoft.CodeAnalysis.ITypeSymbol.IsValueType will both return false.
+        ///// </summary>
+        //public bool IsReferenceType { get; }
 
         /// <summary>
         /// True if the type is readonly.
@@ -1325,15 +1325,15 @@ namespace Business.SourceGenerator.Meta
         /// </summary>
         public bool IsUnmanagedType { get; }
 
-        /// <summary>
-        /// True if the type is ref-like, meaning it follows rules similar to CLR by-ref
-        /// variables. False if the type is not ref-like or if the language has no concept
-        /// of ref-like types.
-        /// </summary>
-        /// <remarks>
-        /// System.Span`1 is a commonly used ref-like type.
-        /// </remarks>
-        public bool IsRefLikeType { get; }
+        ///// <summary>
+        ///// True if the type is ref-like, meaning it follows rules similar to CLR by-ref
+        ///// variables. False if the type is not ref-like or if the language has no concept
+        ///// of ref-like types.
+        ///// </summary>
+        ///// <remarks>
+        ///// System.Span`1 is a commonly used ref-like type.
+        ///// </remarks>
+        //public bool IsRefLikeType { get; }
 
         /// <summary>
         /// An enumerated value that identifies certain 'special' types such as System.Object.
@@ -1343,11 +1343,11 @@ namespace Business.SourceGenerator.Meta
 
         //IAccessorType OriginalDefinition { get; }
 
-        /// <summary>
-        /// True if the type represents a native integer. In C#, the types represented by
-        /// language keywords 'nint' and 'nuint'.
-        /// </summary>
-        public bool IsNativeIntegerType { get; }
+        ///// <summary>
+        ///// True if the type represents a native integer. In C#, the types represented by
+        ///// language keywords 'nint' and 'nuint'.
+        ///// </summary>
+        //public bool IsNativeIntegerType { get; }
 
         /// <summary>
         /// Is this a symbol for a tuple .
@@ -1359,13 +1359,13 @@ namespace Business.SourceGenerator.Meta
         /// </summary>
         public bool IsAnonymousType { get; }
 
-        /// <summary>
-        /// True if this type is known to be a value type. It is never the case that Microsoft.CodeAnalysis.ITypeSymbol.IsReferenceType
-        /// and Microsoft.CodeAnalysis.ITypeSymbol.IsValueType both return true. However,
-        /// for an unconstrained type parameter, Microsoft.CodeAnalysis.ITypeSymbol.IsReferenceType
-        /// and Microsoft.CodeAnalysis.ITypeSymbol.IsValueType will both return false.
-        /// </summary>
-        public bool IsValueType { get; }
+        ///// <summary>
+        ///// True if this type is known to be a value type. It is never the case that Microsoft.CodeAnalysis.ITypeSymbol.IsReferenceType
+        ///// and Microsoft.CodeAnalysis.ITypeSymbol.IsValueType both return true. However,
+        ///// for an unconstrained type parameter, Microsoft.CodeAnalysis.ITypeSymbol.IsReferenceType
+        ///// and Microsoft.CodeAnalysis.ITypeSymbol.IsValueType will both return false.
+        ///// </summary>
+        //public bool IsValueType { get; }
 
         /// <summary>
         /// Nullable annotation associated with the type, or Microsoft.CodeAnalysis.NullableAnnotation.None
@@ -2050,7 +2050,7 @@ namespace Business.SourceGenerator.Meta
     /// </remarks>
     public readonly struct AccessorType : IAccessorType
     {
-        public AccessorType(Accessibility declaredAccessibility, bool isExtern, bool isSealed, bool isAbstract, bool isOverride, bool isVirtual, bool isStatic, bool isDefinition, string name, string fullName, Kind kind, bool isDeclaringSyntaxReferences, AccessorAttribute[] attributes, IDictionary<string, IAccessor> members, bool isReferenceType, bool isReadOnly, bool isUnmanagedType, bool isRefLikeType, SpecialType specialType, bool isNativeIntegerType, bool isTupleType, bool isAnonymousType, bool isValueType, NullableAnnotation nullableAnnotation, TypeKind typeKind, bool isRecord, AsyncType asyncType)
+        public AccessorType(Accessibility declaredAccessibility, bool isExtern, bool isSealed, bool isAbstract, bool isOverride, bool isVirtual, bool isStatic, bool isDefinition, string name, string fullName, Kind kind, bool isDeclaringSyntaxReferences, AccessorAttribute[] attributes, IDictionary<string, IAccessor> members, bool isReadOnly, bool isUnmanagedType, SpecialType specialType, bool isTupleType, bool isAnonymousType, NullableAnnotation nullableAnnotation, TypeKind typeKind, bool isRecord, AsyncType asyncType)
         {
             DeclaredAccessibility = declaredAccessibility;
             IsExtern = isExtern;
@@ -2066,15 +2066,15 @@ namespace Business.SourceGenerator.Meta
             IsDeclaringSyntaxReferences = isDeclaringSyntaxReferences;
             Attributes = attributes;
             Members = members;
-            IsReferenceType = isReferenceType;
+            //IsReferenceType = isReferenceType;
             IsReadOnly = isReadOnly;
             IsUnmanagedType = isUnmanagedType;
-            IsRefLikeType = isRefLikeType;
+            //IsRefLikeType = isRefLikeType;
             SpecialType = specialType;
-            IsNativeIntegerType = isNativeIntegerType;
+            //IsNativeIntegerType = isNativeIntegerType;
             IsTupleType = isTupleType;
             IsAnonymousType = isAnonymousType;
-            IsValueType = isValueType;
+            //IsValueType = isValueType;
             NullableAnnotation = nullableAnnotation;
             TypeKind = typeKind;
             IsRecord = isRecord;
@@ -2167,14 +2167,6 @@ namespace Business.SourceGenerator.Meta
         public readonly IDictionary<string, IAccessor> Members { get; }
 
         /// <summary>
-        /// True if this type is known to be a reference type. It is never the case that
-        /// Microsoft.CodeAnalysis.ITypeSymbol.IsReferenceType and Microsoft.CodeAnalysis.ITypeSymbol.IsValueType
-        /// both return true. However, for an unconstrained type parameter, Microsoft.CodeAnalysis.ITypeSymbol.IsReferenceType
-        /// and Microsoft.CodeAnalysis.ITypeSymbol.IsValueType will both return false.
-        /// </summary>
-        public readonly bool IsReferenceType { get; }
-
-        /// <summary>
         /// True if the type is readonly.
         /// </summary>
         public readonly bool IsReadOnly { get; }
@@ -2186,26 +2178,10 @@ namespace Business.SourceGenerator.Meta
         public readonly bool IsUnmanagedType { get; }
 
         /// <summary>
-        /// True if the type is ref-like, meaning it follows rules similar to CLR by-ref
-        /// variables. False if the type is not ref-like or if the language has no concept
-        /// of ref-like types.
-        /// </summary>
-        /// <remarks>
-        /// System.Span`1 is a commonly used ref-like type.
-        /// </remarks>
-        public readonly bool IsRefLikeType { get; }
-
-        /// <summary>
         /// An enumerated value that identifies certain 'special' types such as System.Object.
         /// Returns Microsoft.CodeAnalysis.SpecialType.None if the type is not special.
         /// </summary>
         public readonly SpecialType SpecialType { get; }
-
-        /// <summary>
-        /// True if the type represents a native integer. In C#, the types represented by
-        /// language keywords 'nint' and 'nuint'.
-        /// </summary>
-        public readonly bool IsNativeIntegerType { get; }
 
         /// <summary>
         /// Is this a symbol for a tuple .
@@ -2216,14 +2192,6 @@ namespace Business.SourceGenerator.Meta
         /// Is this a symbol for an anonymous type (including anonymous VB delegate).
         /// </summary>
         public readonly bool IsAnonymousType { get; }
-
-        /// <summary>
-        /// True if this type is known to be a value type. It is never the case that Microsoft.CodeAnalysis.ITypeSymbol.IsReferenceType
-        /// and Microsoft.CodeAnalysis.ITypeSymbol.IsValueType both return true. However,
-        /// for an unconstrained type parameter, Microsoft.CodeAnalysis.ITypeSymbol.IsReferenceType
-        /// and Microsoft.CodeAnalysis.ITypeSymbol.IsValueType will both return false.
-        /// </summary>
-        public readonly bool IsValueType { get; }
 
         /// <summary>
         /// Nullable annotation associated with the type, or Microsoft.CodeAnalysis.NullableAnnotation.None
@@ -2259,7 +2227,7 @@ namespace Business.SourceGenerator.Meta
     /// </remarks>
     public readonly struct AccessorNamedType : IAccessorNamedType
     {
-        public AccessorNamedType(Accessibility declaredAccessibility, bool isExtern, bool isSealed, bool isAbstract, bool isOverride, bool isVirtual, bool isStatic, bool isDefinition, string name, string fullName, Kind kind, bool isDeclaringSyntaxReferences, AccessorAttribute[] attributes, IDictionary<string, IAccessor> members, bool isReferenceType, bool isReadOnly, bool isUnmanagedType, bool isRefLikeType, SpecialType specialType, bool isNativeIntegerType, bool isTupleType, bool isAnonymousType, bool isValueType, NullableAnnotation nullableAnnotation, TypeKind typeKind, bool isRecord, AsyncType asyncType, IEnumerable<NullableAnnotation> typeArgumentNullableAnnotations, IEnumerable<IAccessorField> tupleElements, bool mightContainExtensionMethods, IEnumerable<IAccessorMethod> constructors, IAccessorNamedType enumUnderlyingType, IAccessorMethod delegateInvokeMethod, bool isSerializable, IDictionary<string, IAccessorTypeParameter> typeParameters, bool isUnboundGenericType, bool isGeneric, IEnumerable<IAccessorType> typeArguments)
+        public AccessorNamedType(Accessibility declaredAccessibility, bool isExtern, bool isSealed, bool isAbstract, bool isOverride, bool isVirtual, bool isStatic, bool isDefinition, string name, string fullName, Kind kind, bool isDeclaringSyntaxReferences, AccessorAttribute[] attributes, IDictionary<string, IAccessor> members, bool isReadOnly, bool isUnmanagedType, SpecialType specialType, bool isTupleType, bool isAnonymousType, NullableAnnotation nullableAnnotation, TypeKind typeKind, bool isRecord, AsyncType asyncType, IEnumerable<NullableAnnotation> typeArgumentNullableAnnotations, IEnumerable<IAccessorField> tupleElements, bool mightContainExtensionMethods, IEnumerable<IAccessorMethod> constructors, IAccessorNamedType enumUnderlyingType, IAccessorMethod delegateInvokeMethod, bool isSerializable, IDictionary<string, IAccessorTypeParameter> typeParameters, bool isUnboundGenericType, bool isGeneric, IEnumerable<IAccessorType> typeArguments)
         {
             DeclaredAccessibility = declaredAccessibility;
             IsExtern = isExtern;
@@ -2275,15 +2243,11 @@ namespace Business.SourceGenerator.Meta
             IsDeclaringSyntaxReferences = isDeclaringSyntaxReferences;
             Attributes = attributes;
             Members = members;
-            IsReferenceType = isReferenceType;
             IsReadOnly = isReadOnly;
             IsUnmanagedType = isUnmanagedType;
-            IsRefLikeType = isRefLikeType;
             SpecialType = specialType;
-            IsNativeIntegerType = isNativeIntegerType;
             IsTupleType = isTupleType;
             IsAnonymousType = isAnonymousType;
-            IsValueType = isValueType;
             NullableAnnotation = nullableAnnotation;
             TypeKind = typeKind;
             IsRecord = isRecord;
@@ -2388,14 +2352,6 @@ namespace Business.SourceGenerator.Meta
         public readonly IDictionary<string, IAccessor> Members { get; }
 
         /// <summary>
-        /// True if this type is known to be a reference type. It is never the case that
-        /// Microsoft.CodeAnalysis.ITypeSymbol.IsReferenceType and Microsoft.CodeAnalysis.ITypeSymbol.IsValueType
-        /// both return true. However, for an unconstrained type parameter, Microsoft.CodeAnalysis.ITypeSymbol.IsReferenceType
-        /// and Microsoft.CodeAnalysis.ITypeSymbol.IsValueType will both return false.
-        /// </summary>
-        public readonly bool IsReferenceType { get; }
-
-        /// <summary>
         /// True if the type is readonly.
         /// </summary>
         public readonly bool IsReadOnly { get; }
@@ -2407,26 +2363,10 @@ namespace Business.SourceGenerator.Meta
         public readonly bool IsUnmanagedType { get; }
 
         /// <summary>
-        /// True if the type is ref-like, meaning it follows rules similar to CLR by-ref
-        /// variables. False if the type is not ref-like or if the language has no concept
-        /// of ref-like types.
-        /// </summary>
-        /// <remarks>
-        /// System.Span`1 is a commonly used ref-like type.
-        /// </remarks>
-        public readonly bool IsRefLikeType { get; }
-
-        /// <summary>
         /// An enumerated value that identifies certain 'special' types such as System.Object.
         /// Returns Microsoft.CodeAnalysis.SpecialType.None if the type is not special.
         /// </summary>
         public readonly SpecialType SpecialType { get; }
-
-        /// <summary>
-        /// True if the type represents a native integer. In C#, the types represented by
-        /// language keywords 'nint' and 'nuint'.
-        /// </summary>
-        public readonly bool IsNativeIntegerType { get; }
 
         /// <summary>
         /// Is this a symbol for a tuple .
@@ -2437,14 +2377,6 @@ namespace Business.SourceGenerator.Meta
         /// Is this a symbol for an anonymous type (including anonymous VB delegate).
         /// </summary>
         public readonly bool IsAnonymousType { get; }
-
-        /// <summary>
-        /// True if this type is known to be a value type. It is never the case that Microsoft.CodeAnalysis.ITypeSymbol.IsReferenceType
-        /// and Microsoft.CodeAnalysis.ITypeSymbol.IsValueType both return true. However,
-        /// for an unconstrained type parameter, Microsoft.CodeAnalysis.ITypeSymbol.IsReferenceType
-        /// and Microsoft.CodeAnalysis.ITypeSymbol.IsValueType will both return false.
-        /// </summary>
-        public readonly bool IsValueType { get; }
 
         /// <summary>
         /// Nullable annotation associated with the type, or Microsoft.CodeAnalysis.NullableAnnotation.None
@@ -2555,7 +2487,7 @@ namespace Business.SourceGenerator.Meta
     /// </remarks>
     public readonly struct AccessorTypeParameter : IAccessorTypeParameter
     {
-        public AccessorTypeParameter(Accessibility declaredAccessibility, bool isExtern, bool isSealed, bool isAbstract, bool isOverride, bool isVirtual, bool isStatic, bool isDefinition, string name, string fullName, Kind kind, bool isDeclaringSyntaxReferences, AccessorAttribute[] attributes, IDictionary<string, IAccessor> members, bool isReferenceType, bool isReadOnly, bool isUnmanagedType, bool isRefLikeType, SpecialType specialType, bool isNativeIntegerType, bool isTupleType, bool isAnonymousType, bool isValueType, NullableAnnotation nullableAnnotation, TypeKind typeKind, bool isRecord, AsyncType asyncType, int ordinal, VarianceKind variance, TypeParameterKind typeParameterKind, bool hasReferenceTypeConstraint, NullableAnnotation referenceTypeConstraintNullableAnnotation, bool hasValueTypeConstraint, bool hasUnmanagedTypeConstraint, bool hasNotNullConstraint, bool hasConstructorConstraint, IEnumerable<IAccessorType> constraintTypes)
+        public AccessorTypeParameter(Accessibility declaredAccessibility, bool isExtern, bool isSealed, bool isAbstract, bool isOverride, bool isVirtual, bool isStatic, bool isDefinition, string name, string fullName, Kind kind, bool isDeclaringSyntaxReferences, AccessorAttribute[] attributes, IDictionary<string, IAccessor> members, bool isReadOnly, bool isUnmanagedType, SpecialType specialType, bool isTupleType, bool isAnonymousType, NullableAnnotation nullableAnnotation, TypeKind typeKind, bool isRecord, AsyncType asyncType, int ordinal, VarianceKind variance, TypeParameterKind typeParameterKind, bool hasReferenceTypeConstraint, NullableAnnotation referenceTypeConstraintNullableAnnotation, bool hasValueTypeConstraint, bool hasUnmanagedTypeConstraint, bool hasNotNullConstraint, bool hasConstructorConstraint, IEnumerable<IAccessorType> constraintTypes)
         {
             DeclaredAccessibility = declaredAccessibility;
             IsExtern = isExtern;
@@ -2571,15 +2503,11 @@ namespace Business.SourceGenerator.Meta
             IsDeclaringSyntaxReferences = isDeclaringSyntaxReferences;
             Attributes = attributes;
             Members = members;
-            IsReferenceType = isReferenceType;
             IsReadOnly = isReadOnly;
             IsUnmanagedType = isUnmanagedType;
-            IsRefLikeType = isRefLikeType;
             SpecialType = specialType;
-            IsNativeIntegerType = isNativeIntegerType;
             IsTupleType = isTupleType;
             IsAnonymousType = isAnonymousType;
-            IsValueType = isValueType;
             NullableAnnotation = nullableAnnotation;
             TypeKind = typeKind;
             IsRecord = isRecord;
@@ -2682,14 +2610,6 @@ namespace Business.SourceGenerator.Meta
         public readonly IDictionary<string, IAccessor> Members { get; }
 
         /// <summary>
-        /// True if this type is known to be a reference type. It is never the case that
-        /// Microsoft.CodeAnalysis.ITypeSymbol.IsReferenceType and Microsoft.CodeAnalysis.ITypeSymbol.IsValueType
-        /// both return true. However, for an unconstrained type parameter, Microsoft.CodeAnalysis.ITypeSymbol.IsReferenceType
-        /// and Microsoft.CodeAnalysis.ITypeSymbol.IsValueType will both return false.
-        /// </summary>
-        public readonly bool IsReferenceType { get; }
-
-        /// <summary>
         /// True if the type is readonly.
         /// </summary>
         public readonly bool IsReadOnly { get; }
@@ -2701,26 +2621,10 @@ namespace Business.SourceGenerator.Meta
         public readonly bool IsUnmanagedType { get; }
 
         /// <summary>
-        /// True if the type is ref-like, meaning it follows rules similar to CLR by-ref
-        /// variables. False if the type is not ref-like or if the language has no concept
-        /// of ref-like types.
-        /// </summary>
-        /// <remarks>
-        /// System.Span`1 is a commonly used ref-like type.
-        /// </remarks>
-        public readonly bool IsRefLikeType { get; }
-
-        /// <summary>
         /// An enumerated value that identifies certain 'special' types such as System.Object.
         /// Returns Microsoft.CodeAnalysis.SpecialType.None if the type is not special.
         /// </summary>
         public readonly SpecialType SpecialType { get; }
-
-        /// <summary>
-        /// True if the type represents a native integer. In C#, the types represented by
-        /// language keywords 'nint' and 'nuint'.
-        /// </summary>
-        public readonly bool IsNativeIntegerType { get; }
 
         /// <summary>
         /// Is this a symbol for a tuple .
@@ -2731,14 +2635,6 @@ namespace Business.SourceGenerator.Meta
         /// Is this a symbol for an anonymous type (including anonymous VB delegate).
         /// </summary>
         public readonly bool IsAnonymousType { get; }
-
-        /// <summary>
-        /// True if this type is known to be a value type. It is never the case that Microsoft.CodeAnalysis.ITypeSymbol.IsReferenceType
-        /// and Microsoft.CodeAnalysis.ITypeSymbol.IsValueType both return true. However,
-        /// for an unconstrained type parameter, Microsoft.CodeAnalysis.ITypeSymbol.IsReferenceType
-        /// and Microsoft.CodeAnalysis.ITypeSymbol.IsValueType will both return false.
-        /// </summary>
-        public readonly bool IsValueType { get; }
 
         /// <summary>
         /// Nullable annotation associated with the type, or Microsoft.CodeAnalysis.NullableAnnotation.None

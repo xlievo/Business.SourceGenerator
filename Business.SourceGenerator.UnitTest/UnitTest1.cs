@@ -757,7 +757,7 @@ namespace UnitAssembly
         {{
             {assemblyName}.BusinessSourceGenerator.Generator.SetGeneratorCode();
 
-            var result = typeof(MyCode.TypeInfo<System.Func<int, object>>)
+            var result = typeof(MyCode.TypeInfo<Func<string, bool?>>)
                     .CreateInstance<IGeneratorAccessor>();
 
             return 0;
@@ -765,7 +765,6 @@ namespace UnitAssembly
     }}
 }}
 ";
-
 
             var path = System.IO.Path.Combine(AppContext.BaseDirectory, "TestTemp", file);
 
