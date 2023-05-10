@@ -1537,6 +1537,7 @@ namespace Business.SourceGenerator.Meta
         public bool IsScriptClass { get; }
         */
 
+        /*
         /// <summary>
         /// True if this is a reference to an unbound generic type. A generic type is considered
         /// unbound if all of the type argument lists in its fully qualified name are empty.
@@ -1550,7 +1551,7 @@ namespace Business.SourceGenerator.Meta
         /// True if this type or some containing type has type parameters.
         /// </summary>
         public bool IsGeneric { get; }
-
+        */
         ///// <summary>
         ///// Returns the arity of this type, or the number of type parameters it takes. A
         ///// non-generic type has zero arity.
@@ -2227,7 +2228,7 @@ namespace Business.SourceGenerator.Meta
     /// </remarks>
     public readonly struct AccessorNamedType : IAccessorNamedType
     {
-        public AccessorNamedType(Accessibility declaredAccessibility, bool isExtern, bool isSealed, bool isAbstract, bool isOverride, bool isVirtual, bool isStatic, bool isDefinition, string name, string fullName, Kind kind, bool isDeclaringSyntaxReferences, AccessorAttribute[] attributes, IDictionary<string, IAccessor> members, bool isReadOnly, bool isUnmanagedType, SpecialType specialType, bool isTupleType, bool isAnonymousType, NullableAnnotation nullableAnnotation, TypeKind typeKind, bool isRecord, AsyncType asyncType, IEnumerable<NullableAnnotation> typeArgumentNullableAnnotations, IEnumerable<IAccessorField> tupleElements, bool mightContainExtensionMethods, IEnumerable<IAccessorMethod> constructors, IAccessorNamedType enumUnderlyingType, IAccessorMethod delegateInvokeMethod, bool isSerializable, IDictionary<string, IAccessorTypeParameter> typeParameters, bool isUnboundGenericType, bool isGeneric, IEnumerable<IAccessorType> typeArguments)
+        public AccessorNamedType(Accessibility declaredAccessibility, bool isExtern, bool isSealed, bool isAbstract, bool isOverride, bool isVirtual, bool isStatic, bool isDefinition, string name, string fullName, Kind kind, bool isDeclaringSyntaxReferences, AccessorAttribute[] attributes, IDictionary<string, IAccessor> members, bool isReadOnly, bool isUnmanagedType, SpecialType specialType, bool isTupleType, bool isAnonymousType, NullableAnnotation nullableAnnotation, TypeKind typeKind, bool isRecord, AsyncType asyncType, IEnumerable<NullableAnnotation> typeArgumentNullableAnnotations, IEnumerable<IAccessorField> tupleElements, bool mightContainExtensionMethods, IEnumerable<IAccessorMethod> constructors, IAccessorNamedType enumUnderlyingType, IAccessorMethod delegateInvokeMethod, bool isSerializable, IDictionary<string, IAccessorTypeParameter> typeParameters, IEnumerable<IAccessorType> typeArguments)
         {
             DeclaredAccessibility = declaredAccessibility;
             IsExtern = isExtern;
@@ -2260,9 +2261,6 @@ namespace Business.SourceGenerator.Meta
             DelegateInvokeMethod = delegateInvokeMethod;
             IsSerializable = isSerializable;
             TypeParameters = typeParameters;
-            //TypeArguments = typeArguments;
-            IsUnboundGenericType = isUnboundGenericType;
-            IsGeneric = isGeneric;
             TypeArguments = typeArguments;
         }
 
@@ -2453,20 +2451,6 @@ namespace Business.SourceGenerator.Meta
         /// returns an empty ImmutableArray.
         /// </summary>
         public readonly IDictionary<string, IAccessorTypeParameter> TypeParameters { get; }
-
-        /// <summary>
-        /// True if this is a reference to an unbound generic type. A generic type is considered
-        /// unbound if all of the type argument lists in its fully qualified name are empty.
-        /// Note that the type arguments of an unbound generic type will be returned as error
-        /// types because they do not really have type arguments. An unbound generic type
-        /// yields null for its BaseType and an empty result for its Interfaces.
-        /// </summary>
-        public readonly bool IsUnboundGenericType { get; }
-
-        /// <summary>
-        /// True if this type or some containing type has type parameters.
-        /// </summary>
-        public readonly bool IsGeneric { get; }
 
         /// <summary>
         /// Returns the type arguments that have been substituted for the type parameters.

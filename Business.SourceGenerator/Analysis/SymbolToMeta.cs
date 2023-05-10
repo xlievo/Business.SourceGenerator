@@ -406,8 +406,8 @@ namespace Business.SourceGenerator.Analysis
 
                         sb.AppendFormat("{0}, ", (skip || !accessor.TypeParameters.Any()) ? "default" : $"new {globalGeneric}Dictionary<{globalString}, {globalMeta}IAccessorTypeParameter> {{ {string.Join(", ", accessor.TypeParameters.Select(c => $"{{ \"{c.GetFullNameStandardFormat()}\", {c.ToMeta(opt, depth, typeClean: typeClean)} }}"))} }}");
                         //sb.Append((MemberNames?.Any() ?? false) ? $"new string[] {{ {string.Join(", ", MemberNames.Select(c => $"\"{c}\""))} }}, " : "default, ");
-                        sb.AppendFormat("{0}, ", accessor.IsUnboundGenericType ? "true" : "default");
-                        sb.AppendFormat("{0}, ", accessor.IsGenericType ? "true" : "default");
+                        //sb.AppendFormat("{0}, ", accessor.IsUnboundGenericType ? "true" : "default");
+                        //sb.AppendFormat("{0}, ", accessor.IsGenericType ? "true" : "default");
                         sb.AppendFormat("{0}", (skip || !accessor.TypeArguments.Any()) ? "default" : $"new {globalMeta}IAccessorType[] {{ {string.Join(", ", accessor.TypeArguments.Select(c => c.ToMeta(opt, depth, typeClean: typeClean)))} }}");
                         return sb.Append(")").ToString();
                     }
