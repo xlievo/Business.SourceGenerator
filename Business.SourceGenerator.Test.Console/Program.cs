@@ -47,6 +47,61 @@ namespace Business.SourceGenerator.Test.Console
                     .AccessorSet<IGeneratorAccessor>("A", "WWW")
                     .AccessorSet<IGeneratorAccessor>("B", new Dictionary<string, string>());
 
+            var type = result.GetType();
+            try
+            {
+                System.Console.WriteLine("IsValueType：" + type.IsValueType);
+            }
+            catch (Exception ex)
+            {
+                System.Console.WriteLine(ex.Message);
+            }
+
+            try
+            {
+                System.Console.WriteLine("IsSealed：" + type.IsSealed);
+            }
+            catch (Exception ex)
+            {
+                System.Console.WriteLine(ex.Message);
+            }
+
+            try
+            {
+                System.Console.WriteLine("IsAbstract：" + type.IsAbstract);
+            }
+            catch (Exception ex)
+            {
+                System.Console.WriteLine(ex.Message);
+            }
+
+            try
+            {
+                System.Console.WriteLine("IsDefinition：" + type.IsDefinition());
+            }
+            catch (Exception ex)
+            {
+                System.Console.WriteLine(ex.Message);
+            }
+
+            try
+            {
+                System.Console.WriteLine("IsSealed：" + type.IsSealed);
+            }
+            catch (Exception ex)
+            {
+                System.Console.WriteLine(ex.Message);
+            }
+
+            //System.Console.WriteLine(type.IsValueType);
+            ////System.Console.WriteLine(type.IsSealed);
+            //System.Console.WriteLine(type.IsAbstract);
+            ////System.Console.WriteLine(type.IsOverride);
+            ////System.Console.WriteLine(type.IsVirtual);
+            ////System.Console.WriteLine(type.IsStatic);
+            //System.Console.WriteLine(type.IsDefinition());
+
+
             var MyStruct111 = typeof(MyStruct)
                 .CreateInstance<IGeneratorAccessor>("aaa111")
                 .AccessorSet<IGeneratorAccessor>("bbb", 888)
