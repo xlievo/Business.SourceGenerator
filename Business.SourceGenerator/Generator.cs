@@ -20,7 +20,10 @@ namespace Business.SourceGenerator
     using Microsoft.CodeAnalysis;
     using System;
     using System.Collections.Generic;
+    using System.IO;
     using System.Linq;
+    using System.Reflection.Metadata;
+    using System.Reflection.PortableExecutable;
 
     [Generator(LanguageNames.CSharp)]
     public class Generator : ISourceGenerator
@@ -34,6 +37,32 @@ namespace Business.SourceGenerator
 
         public void Execute(GeneratorExecutionContext context)
         {
+            //try
+            //{
+            //    using (FileStream moduleStream = File.OpenRead(""))
+            //    using (var module = new PEReader(moduleStream))
+            //    {
+            //        if (module.HasMetadata)
+            //        {
+            //            MetadataReader moduleMetadataReader = module.GetMetadataReader();
+            //            if (moduleMetadataReader.IsAssembly)
+            //            {
+            //                string culture = moduleMetadataReader.GetString(moduleMetadataReader.GetAssemblyDefinition().Culture);
+
+            //                //assembliesToSkipPublish.Add(taskItem);
+            //                if (culture == "" || culture.Equals("neutral", StringComparison.OrdinalIgnoreCase))
+            //                {
+            //                    // NativeAOT doesn't consume resource assemblies yet so skip them
+            //                    //list.Add(taskItem);
+            //                }
+            //            }
+            //        }
+            //    }
+            //}
+            //catch (BadImageFormatException)
+            //{
+            //}
+
             var watchCount = new System.Diagnostics.Stopwatch();
             watchCount.Start();
 

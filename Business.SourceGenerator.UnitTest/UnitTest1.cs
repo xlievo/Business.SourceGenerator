@@ -757,6 +757,9 @@ namespace UnitAssembly
         {{
             {assemblyName}.BusinessSourceGenerator.Generator.SetGeneratorCode();
 
+            var result = typeof(MyCode.TypeInfo<System.Func<int, object>>)
+                    .CreateInstance<IGeneratorAccessor>();
+
             return 0;
         }}
     }}
