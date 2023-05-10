@@ -1500,6 +1500,11 @@ namespace Business.SourceGenerator.Meta
         /// </summary>
         public bool IsSerializable { get; }
 
+        /// <summary>
+        /// Is the partial keyword declared
+        /// </summary>
+        public bool IsPartial { get; }
+
         ///// <summary>
         ///// If this is a native integer, returns the symbol for the underlying type, either
         ///// System.IntPtr or System.UIntPtr. Otherwise, returns null.
@@ -2228,7 +2233,7 @@ namespace Business.SourceGenerator.Meta
     /// </remarks>
     public readonly struct AccessorNamedType : IAccessorNamedType
     {
-        public AccessorNamedType(Accessibility declaredAccessibility, bool isExtern, bool isSealed, bool isAbstract, bool isOverride, bool isVirtual, bool isStatic, bool isDefinition, string name, string fullName, Kind kind, bool isDeclaringSyntaxReferences, AccessorAttribute[] attributes, IDictionary<string, IAccessor> members, bool isReadOnly, bool isUnmanagedType, SpecialType specialType, bool isTupleType, bool isAnonymousType, NullableAnnotation nullableAnnotation, TypeKind typeKind, bool isRecord, AsyncType asyncType, IEnumerable<NullableAnnotation> typeArgumentNullableAnnotations, IEnumerable<IAccessorField> tupleElements, bool mightContainExtensionMethods, IEnumerable<IAccessorMethod> constructors, IAccessorNamedType enumUnderlyingType, IAccessorMethod delegateInvokeMethod, bool isSerializable, IDictionary<string, IAccessorTypeParameter> typeParameters, IEnumerable<IAccessorType> typeArguments)
+        public AccessorNamedType(Accessibility declaredAccessibility, bool isExtern, bool isSealed, bool isAbstract, bool isOverride, bool isVirtual, bool isStatic, bool isDefinition, string name, string fullName, Kind kind, bool isDeclaringSyntaxReferences, AccessorAttribute[] attributes, IDictionary<string, IAccessor> members, bool isReadOnly, bool isUnmanagedType, SpecialType specialType, bool isTupleType, bool isAnonymousType, NullableAnnotation nullableAnnotation, TypeKind typeKind, bool isRecord, AsyncType asyncType, IEnumerable<NullableAnnotation> typeArgumentNullableAnnotations, IEnumerable<IAccessorField> tupleElements, bool mightContainExtensionMethods, IEnumerable<IAccessorMethod> constructors, IAccessorNamedType enumUnderlyingType, IAccessorMethod delegateInvokeMethod, bool isSerializable, bool isPartial, IDictionary<string, IAccessorTypeParameter> typeParameters, IEnumerable<IAccessorType> typeArguments)
         {
             DeclaredAccessibility = declaredAccessibility;
             IsExtern = isExtern;
@@ -2260,6 +2265,7 @@ namespace Business.SourceGenerator.Meta
             EnumUnderlyingType = enumUnderlyingType;
             DelegateInvokeMethod = delegateInvokeMethod;
             IsSerializable = isSerializable;
+            IsPartial = isPartial;
             TypeParameters = typeParameters;
             TypeArguments = typeArguments;
         }
@@ -2445,6 +2451,11 @@ namespace Business.SourceGenerator.Meta
         /// True if the type is serializable (has Serializable metadata flag).
         /// </summary>
         public readonly bool IsSerializable { get; }
+
+        /// <summary>
+        /// Is the partial keyword declared
+        /// </summary>
+        public readonly bool IsPartial { get; }
 
         /// <summary>
         /// Returns the type parameters that this type has. If this is a non-generic type,

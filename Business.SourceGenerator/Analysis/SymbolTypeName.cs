@@ -17,6 +17,7 @@
 namespace Business.SourceGenerator.Analysis
 {
     using Microsoft.CodeAnalysis;
+    using Microsoft.CodeAnalysis.CSharp.Syntax;
     using System;
     using System.Collections.Generic;
     using System.Linq;
@@ -1068,6 +1069,14 @@ namespace Business.SourceGenerator.Analysis
 
             return false;
         }
+
+        public static bool IsPartial(this MemberDeclarationSyntax syntax)
+        {
+            const string partialKey = "partial";
+            return syntax.Modifiers.Any(c => c.ValueText.Equals(partialKey));
+        }
+
+        public static bool IsPartial(this INamedTypeSymbol accessor) => accessor.IsDefinition && accessor.DeclaringSyntaxReferences.FirstOrDefault()?.GetSyntax() is MemberDeclarationSyntax declarationSyntax && IsPartial(declarationSyntax);
 
         /*
         static string TypeParameterSymbolRealName(ITypeParameterSymbol typeParameter, GetFullNameOpt opt, Func<string, string> typeClean)

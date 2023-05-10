@@ -403,7 +403,7 @@ namespace Business.SourceGenerator.Analysis
                         sb.AppendFormat("{0}, ", (skip2 || accessor.EnumUnderlyingType is null) ? "default" : accessor.EnumUnderlyingType.ToMeta(opt, depth, typeClean: typeClean));
                         sb.AppendFormat("{0}, ", (skip2 || accessor.DelegateInvokeMethod is null) ? "default" : accessor.DelegateInvokeMethod.ToMeta(opt, depth, typeClean: typeClean));
                         sb.AppendFormat("{0}, ", accessor.IsSerializable ? "true" : "default");
-
+                        sb.AppendFormat("{0}, ", accessor.IsPartial() ? "true" : "default");
                         sb.AppendFormat("{0}, ", (skip || !accessor.TypeParameters.Any()) ? "default" : $"new {globalGeneric}Dictionary<{globalString}, {globalMeta}IAccessorTypeParameter> {{ {string.Join(", ", accessor.TypeParameters.Select(c => $"{{ \"{c.GetFullNameStandardFormat()}\", {c.ToMeta(opt, depth, typeClean: typeClean)} }}"))} }}");
                         //sb.Append((MemberNames?.Any() ?? false) ? $"new string[] {{ {string.Join(", ", MemberNames.Select(c => $"\"{c}\""))} }}, " : "default, ");
                         //sb.AppendFormat("{0}, ", accessor.IsUnboundGenericType ? "true" : "default");
