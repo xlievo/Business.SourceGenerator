@@ -371,14 +371,12 @@ namespace Business.SourceGenerator.Analysis
 
         static bool HasGeneratorAccessor(AnalysisMeta.SymbolInfo info)
         {
-            const string partialKey = "partial";
-
             if (!(info.Syntax is TypeDeclarationSyntax member))
             {
                 return false;
             }
 
-            if (!member.Modifiers.Any(c => partialKey.Equals(c.ValueText)))
+            if (!member.IsPartial())
             {
                 return false;
             }

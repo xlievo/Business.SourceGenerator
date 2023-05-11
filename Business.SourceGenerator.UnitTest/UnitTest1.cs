@@ -757,6 +757,7 @@ namespace UnitAssembly
         {{
             {assemblyName}.BusinessSourceGenerator.Generator.SetGeneratorCode();
 
+            var r = typeof(MyCode.TypeInfo<>);
             var result = typeof(MyCode.TypeInfo<Func<string, bool?>>)
                     .CreateInstance<IGeneratorAccessor>();
 
