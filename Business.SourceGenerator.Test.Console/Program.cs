@@ -59,7 +59,7 @@ namespace Business.SourceGenerator.Test.Console
 
             try
             {
-                System.Console.WriteLine("IsSealed：" + type.IsSealed);
+                System.Console.WriteLine("IsGenericType：" + type.IsGenericType);
             }
             catch (Exception ex)
             {
@@ -68,30 +68,30 @@ namespace Business.SourceGenerator.Test.Console
 
             try
             {
-                System.Console.WriteLine("IsAbstract：" + type.IsAbstract);
+                System.Console.WriteLine("IsGenericTypeDefinition：" + type.IsGenericTypeDefinition);
             }
             catch (Exception ex)
             {
                 System.Console.WriteLine(ex.Message);
             }
 
-            try
-            {
-                System.Console.WriteLine("IsDefinition：" + type.IsDefinition());
-            }
-            catch (Exception ex)
-            {
-                System.Console.WriteLine(ex.Message);
-            }
+            //try
+            //{
+            //    System.Console.WriteLine("IsDefinition：" + type.IsDefinition());
+            //}
+            //catch (Exception ex)
+            //{
+            //    System.Console.WriteLine(ex.Message);
+            //}
 
-            try
-            {
-                System.Console.WriteLine("IsSealed：" + type.IsSealed);
-            }
-            catch (Exception ex)
-            {
-                System.Console.WriteLine(ex.Message);
-            }
+            //try
+            //{
+            //    System.Console.WriteLine("IsSealed：" + type.IsSealed);
+            //}
+            //catch (Exception ex)
+            //{
+            //    System.Console.WriteLine(ex.Message);
+            //}
 
             //System.Console.WriteLine(type.IsValueType);
             ////System.Console.WriteLine(type.IsSealed);
