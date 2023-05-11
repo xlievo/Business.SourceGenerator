@@ -522,7 +522,12 @@ namespace Business.SourceGenerator.Analysis
 
             var definitions = makeGenerics.Where(c => !c.TypeArguments.Any(c => !(c.TypeKind is TypeKind.TypeParameter)) && c.IsGenericType && !c.IsAbstract);
 
-            //types = types.Where(c => c.Names.DeclaredStandard.Contains("MethodInvoke"));
+            var types = analysisInfo.TypeSymbols.Where(c =>
+            {
+                var typeSymbol = c.Value.Declared as ITypeSymbol;
+
+                return !typeSymbol.TypeChecked(t => t.TypeKind is TypeKind.TypeParameter);
+            }).ToArray();
 
             foreach (var info in analysisInfo.TypeSymbols)
             {

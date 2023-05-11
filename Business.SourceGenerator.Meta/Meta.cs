@@ -1732,7 +1732,7 @@ namespace Business.SourceGenerator.Meta
         /// Return true if this is a partial method definition without a body. If there is
         /// an implementing body, it can be retrieved with Microsoft.CodeAnalysis.IMethodSymbol.PartialImplementationPart.
         /// </summary>
-        public bool IsPartialDefinition { get; }
+        public bool IsPartial { get; }
 
         /// <summary>
         /// Get the type parameters on this method. If the method has not generic, returns
@@ -2950,7 +2950,7 @@ namespace Business.SourceGenerator.Meta
     /// </remarks>
     public readonly struct AccessorMethod : IAccessorMethod
     {
-        public AccessorMethod(Accessibility declaredAccessibility, bool isExtern, bool isSealed, bool isAbstract, bool isOverride, bool isVirtual, bool isStatic, bool isDefinition, string name, string fullName, Kind kind, bool isDeclaringSyntaxReferences, AccessorAttribute[] attributes, bool isReadOnly, bool isInitOnly, IAccessorParameter[] parameters, bool isPartialDefinition, IDictionary<string, IAccessorTypeParameter> typeParameters, bool isConditional, MethodKind methodKind, bool isGeneric, bool isExtension, bool isAsync, bool returnsVoid, bool returnsByRef, bool returnsByRefReadonly, RefKind refKind, IAccessorType returnType, bool hidesBaseMethodsByName, Func<object, CheckedParameterValue[], object[], object> invoke, Func<object, CheckedParameterValue[], object[], Task<object>> invokeAsync, int parametersRealLength, int parametersMustLength)
+        public AccessorMethod(Accessibility declaredAccessibility, bool isExtern, bool isSealed, bool isAbstract, bool isOverride, bool isVirtual, bool isStatic, bool isDefinition, string name, string fullName, Kind kind, bool isDeclaringSyntaxReferences, AccessorAttribute[] attributes, bool isReadOnly, bool isInitOnly, IAccessorParameter[] parameters, bool isPartial, IDictionary<string, IAccessorTypeParameter> typeParameters, bool isConditional, MethodKind methodKind, bool isGeneric, bool isExtension, bool isAsync, bool returnsVoid, bool returnsByRef, bool returnsByRefReadonly, RefKind refKind, IAccessorType returnType, bool hidesBaseMethodsByName, Func<object, CheckedParameterValue[], object[], object> invoke, Func<object, CheckedParameterValue[], object[], Task<object>> invokeAsync, int parametersRealLength, int parametersMustLength)
         {
             DeclaredAccessibility = declaredAccessibility;
             IsExtern = isExtern;
@@ -2968,7 +2968,7 @@ namespace Business.SourceGenerator.Meta
             IsReadOnly = isReadOnly;
             IsInitOnly = isInitOnly;
             Parameters = parameters;
-            IsPartialDefinition = isPartialDefinition;
+            IsPartial = isPartial;
             TypeParameters = typeParameters;
             IsConditional = isConditional;
             MethodKind = methodKind;
@@ -3088,7 +3088,7 @@ namespace Business.SourceGenerator.Meta
         /// Return true if this is a partial method definition without a body. If there is
         /// an implementing body, it can be retrieved with Microsoft.CodeAnalysis.IMethodSymbol.PartialImplementationPart.
         /// </summary>
-        public readonly bool IsPartialDefinition { get; }
+        public readonly bool IsPartial { get; }
 
         /// <summary>
         /// Get the type parameters on this method. If the method has not generic, returns
