@@ -95,11 +95,11 @@ namespace Business.SourceGenerator.Meta
         /// <param name="isDefinition"></param>
         /// <param name="noParameterConstructor"></param>
         /// <param name="typeKind"></param>
-        public GeneratorTypeMeta(IReadOnlyDictionary<Type, Type> makeGenerics, IEnumerable<IMethodMeta> constructors, bool isDefinition, bool noParameterConstructor, TypeKind typeKind)
+        public GeneratorTypeMeta(IReadOnlyDictionary<Type, Type> makeGenerics, IEnumerable<IMethodMeta> constructors, bool isCustom, bool noParameterConstructor, TypeKind typeKind)
         {
             MakeGenerics = makeGenerics;
             Constructors = constructors;
-            IsDefinition = isDefinition;
+            IsCustom = isCustom;
             NoParameterConstructor = noParameterConstructor;
             TypeKind = typeKind;
         }
@@ -115,9 +115,9 @@ namespace Business.SourceGenerator.Meta
         public readonly IEnumerable<IMethodMeta> Constructors { get; }
 
         /// <summary>
-        /// IsDefinition.
+        /// Whether to customize the object.
         /// </summary>
-        public readonly bool IsDefinition { get; }
+        public readonly bool IsCustom { get; }
 
         /// <summary>
         /// Is there a parameterless constructor.

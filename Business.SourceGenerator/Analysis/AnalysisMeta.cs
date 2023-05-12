@@ -86,7 +86,7 @@ namespace Business.SourceGenerator.Analysis
 
             public override string ToString() => SyntaxToCode.ToCode(Syntax);
 
-            public SymbolInfo(SyntaxNode syntax, ISymbol symbol, ISymbol declared, ISymbol source, SyntaxNode references, bool isDefinition, ConcurrentDictionary<string, ConcurrentDictionary<string, AttributeSyntax>> attributes, Names names, IEnumerable<ITypeSymbol> genericArguments = default)
+            public SymbolInfo(SyntaxNode syntax, ISymbol symbol, ISymbol declared, ISymbol source, SyntaxNode references, bool isCustom, ConcurrentDictionary<string, ConcurrentDictionary<string, AttributeSyntax>> attributes, Names names, IEnumerable<ITypeSymbol> genericArguments = default)
             {
                 Syntax = syntax;
                 Symbol = symbol;
@@ -95,7 +95,7 @@ namespace Business.SourceGenerator.Analysis
                 //Type = type;
                 Source = source;
                 References = references;// symbol?.DeclaringSyntaxReferences.FirstOrDefault()?.GetSyntax();
-                IsDefinition = isDefinition;
+                IsCustom = isCustom;
 
                 //Assignment = assignme-+nt;
                 //Model = model;
@@ -107,11 +107,11 @@ namespace Business.SourceGenerator.Analysis
             public SymbolInfo(SyntaxNode syntax, ISymbol symbol, ISymbol declared, ISymbol source, ConcurrentDictionary<string, ConcurrentDictionary<string, AttributeSyntax>> attributes, string assemblyName = default, IEnumerable<ITypeSymbol> genericArguments = default) : this(syntax, symbol, declared, source, default, default, attributes, default, genericArguments)
             {
                 References = symbol?.DeclaringSyntaxReferences.FirstOrDefault()?.GetSyntax() ?? declared.DeclaringSyntaxReferences.FirstOrDefault()?.GetSyntax();
-                IsDefinition = !(References is null || !declared.DeclaringSyntaxReferences.Any());
+                IsCustom = !(References is null || !declared.DeclaringSyntaxReferences.Any());
                 Names = new Names(syntax.GetFullName(), symbol?.GetFullName(), declared.GetFullName(), declared.GetFullNameStandardFormat(), assemblyName);
             }
 
-            public SymbolInfo Set(SyntaxNode syntax = default, ISymbol symbol = default, ISymbol declared = default, ISymbol source = default, SyntaxNode references = default, bool? isDefinition = default, Names? names = default, ConcurrentDictionary<string, ConcurrentDictionary<string, AttributeSyntax>> attributes = default, IEnumerable<ITypeSymbol> genericArguments = default) => new SymbolInfo(syntax ?? Syntax, symbol ?? Symbol, declared ?? Declared, source ?? Source, references ?? References, isDefinition ?? IsDefinition, attributes ?? Attributes, names ?? Names, genericArguments);
+            public SymbolInfo Set(SyntaxNode syntax = default, ISymbol symbol = default, ISymbol declared = default, ISymbol source = default, SyntaxNode references = default, bool? isCustom = default, Names? names = default, ConcurrentDictionary<string, ConcurrentDictionary<string, AttributeSyntax>> attributes = default, IEnumerable<ITypeSymbol> genericArguments = default) => new SymbolInfo(syntax ?? Syntax, symbol ?? Symbol, declared ?? Declared, source ?? Source, references ?? References, isCustom ?? IsCustom, attributes ?? Attributes, names ?? Names, genericArguments);
 
             public string GetFullName() => null != GenericArguments ? $"{Declared.GetFullName()}<{string.Join(", ", GenericArguments.Select(c => c.GetFullName()))}>" : null;
 
@@ -128,7 +128,7 @@ namespace Business.SourceGenerator.Analysis
             /// <summary>
             /// !(References is null || !declared.DeclaringSyntaxReferences.Any())
             /// </summary>
-            public bool IsDefinition { get; }
+            public bool IsCustom { get; }
 
             public ConcurrentDictionary<string, ConcurrentDictionary<string, AttributeSyntax>> Attributes { get; }
 

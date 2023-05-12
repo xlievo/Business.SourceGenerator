@@ -418,7 +418,7 @@ namespace Business.SourceGenerator.Analysis
             var usings2 = usings.Select(c => $"{c}.").Concat(new string[] { $"{assemblyName}." }).ToArray();
             string typeClean(string type, bool noGlobal = false) => !opt.Global ? TypeNameClean(type, usings2) : !noGlobal ? $"{GlobalConst.Global}{type}" : type;
 
-            var declarations = analysisInfo.TypeSymbols.Values.Where(c => c.Names.AssemblyName.Equals(assemblyName) && c.IsDefinition && (c.Syntax.IsKind(SyntaxKind.ClassDeclaration) || c.Syntax.IsKind(SyntaxKind.StructDeclaration)));
+            var declarations = analysisInfo.TypeSymbols.Values.Where(c => c.Names.AssemblyName.Equals(assemblyName) && c.IsCustom && (c.Syntax.IsKind(SyntaxKind.ClassDeclaration) || c.Syntax.IsKind(SyntaxKind.StructDeclaration)));
 
             var sb = new System.Text.StringBuilder(null);
 
@@ -522,12 +522,12 @@ namespace Business.SourceGenerator.Analysis
 
             var definitions = makeGenerics.Where(c => !c.TypeArguments.Any(c => !(c.TypeKind is TypeKind.TypeParameter)) && c.IsGenericType && !c.IsAbstract);
 
-            var types = analysisInfo.TypeSymbols.Where(c =>
-            {
-                var typeSymbol = c.Value.Declared as ITypeSymbol;
+            //var types = analysisInfo.TypeSymbols.Where(c =>
+            //{
+            //    var typeSymbol = c.Value.Declared as ITypeSymbol;
 
-                return !typeSymbol.IsDefinition && !typeSymbol.TypeChecked(t => t.TypeKind is TypeKind.TypeParameter);
-            }).ToArray();
+            //    return !typeSymbol.IsDefinition && !typeSymbol.TypeChecked(t => t.TypeKind is TypeKind.TypeParameter);
+            //}).ToArray();
 
             foreach (var info in analysisInfo.TypeSymbols)
             {
@@ -628,7 +628,7 @@ namespace Business.SourceGenerator.Analysis
                     globalMeta,
                     definitions2.Any() ? $"new {globalGeneric}Dictionary<{globalSystem}Type, {globalSystem}Type> {{ {makes} }}" : "default",
                     $"new {globalMeta}IMethodMeta[] {{ {string.Join(", ", result)} }}",
-                    info.Value.IsDefinition ? "true" : "default", typeSymbol.IsValueType || noParameterConstructor ? "true" : "default", $"{globalMeta}TypeKind.{typeSymbol.TypeKind.GetName()}");
+                    info.Value.IsCustom ? "true" : "default", typeSymbol.IsValueType || noParameterConstructor ? "true" : "default", $"{globalMeta}TypeKind.{typeSymbol.TypeKind.GetName()}");
 
                 sb.AppendLine();
                 sb.AppendLine($"        #endregion");
@@ -695,7 +695,7 @@ namespace Business.SourceGenerator.Analysis
                         globalMeta,
                         "default",
                         $"new {globalMeta}IMethodMeta[] {{ {string.Join(", ", result)} }}",
-                        makeGeneric.GetSymbolInfo().IsDefinition ? "true" : "default", makeGeneric.IsValueType || noParameterConstructor ? "true" : "default", $"{globalMeta}TypeKind.{makeGeneric.TypeKind.GetName()}");
+                        makeGeneric.GetSymbolInfo().IsCustom ? "true" : "default", makeGeneric.IsValueType || noParameterConstructor ? "true" : "default", $"{globalMeta}TypeKind.{makeGeneric.TypeKind.GetName()}");
 
                     sb.AppendLine();
                     sb.AppendLine($"        #endregion");

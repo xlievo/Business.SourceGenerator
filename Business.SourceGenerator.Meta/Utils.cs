@@ -561,7 +561,7 @@ namespace Business.SourceGenerator
         /// </summary>
         /// <param name="type"></param>
         /// <returns></returns>
-        public static bool IsDefinition(this Type type) => IsDefinition(GeneratorCode, type);
+        public static bool IsCustom(this Type type) => IsCustom(GeneratorCode, type);
 
         /// <summary>
         /// Whether to customize the object.
@@ -569,7 +569,7 @@ namespace Business.SourceGenerator
         /// <param name="generatorType">Target IGeneratorType.</param>
         /// <param name="type"></param>
         /// <returns></returns>
-        public static bool IsDefinition(this IGeneratorType generatorType, Type type)
+        public static bool IsCustom(this IGeneratorType generatorType, Type type)
         {
             if (type is null)
             {
@@ -591,7 +591,7 @@ namespace Business.SourceGenerator
                 return default;
             }
 
-            return meta.IsDefinition;
+            return meta.IsCustom;
         }
 
         #endregion
