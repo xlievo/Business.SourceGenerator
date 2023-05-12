@@ -526,7 +526,7 @@ namespace Business.SourceGenerator.Analysis
             {
                 var typeSymbol = c.Value.Declared as ITypeSymbol;
 
-                return !typeSymbol.TypeChecked(t => t.TypeKind is TypeKind.TypeParameter);
+                return !typeSymbol.IsDefinition && !typeSymbol.TypeChecked(t => t.TypeKind is TypeKind.TypeParameter);
             }).ToArray();
 
             foreach (var info in analysisInfo.TypeSymbols)
