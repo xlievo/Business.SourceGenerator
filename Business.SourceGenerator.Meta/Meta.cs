@@ -1280,10 +1280,6 @@ namespace Business.SourceGenerator.Meta
     /// </remarks>
     public interface IAccessorType : IAccessorMeta
     {
-        //public bool IsGeneric { get; }
-
-        //public IEnumerable<IAccessorType> TypeParameters { get; }
-
         /*
         /// <summary>
         /// Returns true if this symbol is a namespace. If it is not a namespace, it must
@@ -1511,11 +1507,11 @@ namespace Business.SourceGenerator.Meta
         ///// </summary>
         //public IAccessorNamedType NativeIntegerUnderlyingType { get; }
 
-        /// <summary>
-        /// Returns the type parameters that this type has. If this is a non-generic type,
-        /// returns an empty ImmutableArray.
-        /// </summary>
-        public IDictionary<string, IAccessorTypeParameter> TypeParameters { get; }
+        ///// <summary>
+        ///// Returns the type parameters that this type has. If this is a non-generic type,
+        ///// returns an empty ImmutableArray.
+        ///// </summary>
+        //public IDictionary<string, IAccessorTypeParameter> TypeParameters { get; }
 
         ///// <summary>
         ///// Returns collection of names of members declared within this type.
@@ -1568,7 +1564,7 @@ namespace Business.SourceGenerator.Meta
         /// If nothing has been substituted for a given type parameter, then the type parameter
         /// itself is considered the type argument.
         /// </summary>
-        public IEnumerable<IAccessorType> TypeArguments { get; }
+        public IAccessorType[] TypeArguments { get; }
     }
 
     /// <summary>
@@ -1710,6 +1706,7 @@ namespace Business.SourceGenerator.Meta
     /// </remarks>
     public interface IAccessorMethod : IAccessorMeta, IMethodMeta
     {
+        /*
         /// <summary>
         /// Indicates whether the method is readonly, i.e. whether the 'this' receiver parameter
         /// is 'ref readonly'. Returns true for readonly instance methods and accessors and
@@ -1721,6 +1718,7 @@ namespace Business.SourceGenerator.Meta
         /// Returns true for 'init' set accessors, and false otherwise.
         /// </summary>
         public bool IsInitOnly { get; }
+        */
 
         /// <summary>
         /// Gets the parameters of this method. If this method has no parameters, returns
@@ -1747,11 +1745,11 @@ namespace Business.SourceGenerator.Meta
         ///// </summary>
         //public IEnumerable<IAccessorTypeParameter> TypeArguments { get; }
 
-        /// <summary>
-        /// Returns a flag indicating whether this symbol has at least one applied/inherited
-        /// conditional attribute.
-        /// </summary>
-        public bool IsConditional { get; }
+        ///// <summary>
+        ///// Returns a flag indicating whether this symbol has at least one applied/inherited
+        ///// conditional attribute.
+        ///// </summary>
+        //public bool IsConditional { get; }
 
         /// <summary>
         /// Gets what kind of method this is. There are several different kinds of things
@@ -1802,6 +1800,7 @@ namespace Business.SourceGenerator.Meta
         /// </summary>
         public bool ReturnsVoid { get; }
 
+        /*
         /// <summary>
         /// Returns true if this method returns by reference.
         /// </summary>
@@ -1811,6 +1810,7 @@ namespace Business.SourceGenerator.Meta
         /// Returns true if this method returns by ref readonly.
         /// </summary>
         public bool ReturnsByRefReadonly { get; }
+        */
 
         /// <summary>
         /// Returns the RefKind of the method.
@@ -1827,7 +1827,6 @@ namespace Business.SourceGenerator.Meta
         /// Gets the top-level nullability of the return type of the method.
         /// </summary>
         public NullableAnnotation ReturnNullableAnnotation { get; }
-        */
 
         /// <summary>
         /// Returns true if this method hides base methods by name. This cannot be specified
@@ -1835,6 +1834,8 @@ namespace Business.SourceGenerator.Meta
         /// imported from metadata. The equivalent of the "hidebyname" flag in metadata.
         /// </summary>
         public bool HidesBaseMethodsByName { get; }
+
+        */
     }
 
     public delegate void SetValue(ref IGeneratorAccessor obj, object value);
@@ -2233,7 +2234,7 @@ namespace Business.SourceGenerator.Meta
     /// </remarks>
     public readonly struct AccessorNamedType : IAccessorNamedType
     {
-        public AccessorNamedType(Accessibility declaredAccessibility, bool isExtern, bool isSealed, bool isAbstract, bool isOverride, bool isVirtual, bool isStatic, bool isDefinition, string name, string fullName, Kind kind, bool isDeclaringSyntaxReferences, AccessorAttribute[] attributes, IDictionary<string, IAccessor> members, bool isReadOnly, bool isUnmanagedType, SpecialType specialType, bool isTupleType, bool isAnonymousType, NullableAnnotation nullableAnnotation, TypeKind typeKind, bool isRecord, AsyncType asyncType, IEnumerable<NullableAnnotation> typeArgumentNullableAnnotations, IEnumerable<IAccessorField> tupleElements, bool mightContainExtensionMethods, IEnumerable<IAccessorMethod> constructors, IAccessorNamedType enumUnderlyingType, IAccessorMethod delegateInvokeMethod, bool isSerializable, bool isPartial, IDictionary<string, IAccessorTypeParameter> typeParameters, IEnumerable<IAccessorType> typeArguments)
+        public AccessorNamedType(Accessibility declaredAccessibility, bool isExtern, bool isSealed, bool isAbstract, bool isOverride, bool isVirtual, bool isStatic, bool isDefinition, string name, string fullName, Kind kind, bool isDeclaringSyntaxReferences, AccessorAttribute[] attributes, IDictionary<string, IAccessor> members, bool isReadOnly, bool isUnmanagedType, SpecialType specialType, bool isTupleType, bool isAnonymousType, NullableAnnotation nullableAnnotation, TypeKind typeKind, bool isRecord, AsyncType asyncType, IEnumerable<NullableAnnotation> typeArgumentNullableAnnotations, IEnumerable<IAccessorField> tupleElements, bool mightContainExtensionMethods, IEnumerable<IAccessorMethod> constructors, IAccessorNamedType enumUnderlyingType, IAccessorMethod delegateInvokeMethod, bool isSerializable, bool isPartial, IAccessorType[] typeArguments)
         {
             DeclaredAccessibility = declaredAccessibility;
             IsExtern = isExtern;
@@ -2266,7 +2267,6 @@ namespace Business.SourceGenerator.Meta
             DelegateInvokeMethod = delegateInvokeMethod;
             IsSerializable = isSerializable;
             IsPartial = isPartial;
-            TypeParameters = typeParameters;
             TypeArguments = typeArguments;
         }
 
@@ -2458,17 +2458,11 @@ namespace Business.SourceGenerator.Meta
         public readonly bool IsPartial { get; }
 
         /// <summary>
-        /// Returns the type parameters that this type has. If this is a non-generic type,
-        /// returns an empty ImmutableArray.
-        /// </summary>
-        public readonly IDictionary<string, IAccessorTypeParameter> TypeParameters { get; }
-
-        /// <summary>
         /// Returns the type arguments that have been substituted for the type parameters.
         /// If nothing has been substituted for a given type parameter, then the type parameter
         /// itself is considered the type argument.
         /// </summary>
-        public readonly IEnumerable<IAccessorType> TypeArguments { get; }
+        public readonly IAccessorType[] TypeArguments { get; }
 
         #endregion
     }
@@ -2950,7 +2944,7 @@ namespace Business.SourceGenerator.Meta
     /// </remarks>
     public readonly struct AccessorMethod : IAccessorMethod
     {
-        public AccessorMethod(Accessibility declaredAccessibility, bool isExtern, bool isSealed, bool isAbstract, bool isOverride, bool isVirtual, bool isStatic, bool isDefinition, string name, string fullName, Kind kind, bool isDeclaringSyntaxReferences, AccessorAttribute[] attributes, bool isReadOnly, bool isInitOnly, IAccessorParameter[] parameters, bool isPartial, IDictionary<string, IAccessorTypeParameter> typeParameters, bool isConditional, MethodKind methodKind, bool isGeneric, bool isExtension, bool isAsync, bool returnsVoid, bool returnsByRef, bool returnsByRefReadonly, RefKind refKind, IAccessorType returnType, bool hidesBaseMethodsByName, Func<object, CheckedParameterValue[], object[], object> invoke, Func<object, CheckedParameterValue[], object[], Task<object>> invokeAsync, int parametersRealLength, int parametersMustLength)
+        public AccessorMethod(Accessibility declaredAccessibility, bool isExtern, bool isSealed, bool isAbstract, bool isOverride, bool isVirtual, bool isStatic, bool isDefinition, string name, string fullName, Kind kind, bool isDeclaringSyntaxReferences, AccessorAttribute[] attributes, IAccessorParameter[] parameters, bool isPartial, IDictionary<string, IAccessorTypeParameter> typeParameters, MethodKind methodKind, bool isGeneric, bool isExtension, bool isAsync, bool returnsVoid, RefKind refKind, IAccessorType returnType, Func<object, CheckedParameterValue[], object[], object> invoke, Func<object, CheckedParameterValue[], object[], Task<object>> invokeAsync, int parametersRealLength, int parametersMustLength)
         {
             DeclaredAccessibility = declaredAccessibility;
             IsExtern = isExtern;
@@ -2965,22 +2959,16 @@ namespace Business.SourceGenerator.Meta
             Kind = kind;
             IsDeclaringSyntaxReferences = isDeclaringSyntaxReferences;
             Attributes = attributes;
-            IsReadOnly = isReadOnly;
-            IsInitOnly = isInitOnly;
             Parameters = parameters;
             IsPartial = isPartial;
             TypeParameters = typeParameters;
-            IsConditional = isConditional;
             MethodKind = methodKind;
             IsGeneric = isGeneric;
             IsExtension = isExtension;
             IsAsync = isAsync;
             ReturnsVoid = returnsVoid;
-            ReturnsByRef = returnsByRef;
-            ReturnsByRefReadonly = returnsByRefReadonly;
             RefKind = refKind;
             ReturnType = returnType;
-            HidesBaseMethodsByName = hidesBaseMethodsByName;
             //IsClone = isClone;
             //ReceiverType = receiverType;
             Invoke = invoke;
@@ -3067,18 +3055,6 @@ namespace Business.SourceGenerator.Meta
         #region IAccessorMethod
 
         /// <summary>
-        /// Indicates whether the method is readonly, i.e. whether the 'this' receiver parameter
-        /// is 'ref readonly'. Returns true for readonly instance methods and accessors and
-        /// for reduced extension methods with a 'this in' parameter.
-        /// </summary>
-        public readonly bool IsReadOnly { get; }
-
-        /// <summary>
-        /// Returns true for 'init' set accessors, and false otherwise.
-        /// </summary>
-        public readonly bool IsInitOnly { get; }
-
-        /// <summary>
         /// Gets the parameters of this method. If this method has no parameters, returns
         /// an empty list.
         /// </summary>
@@ -3095,12 +3071,6 @@ namespace Business.SourceGenerator.Meta
         /// an empty list.
         /// </summary>
         public readonly IDictionary<string, IAccessorTypeParameter> TypeParameters { get; }
-
-        /// <summary>
-        /// Returns a flag indicating whether this symbol has at least one applied/inherited
-        /// conditional attribute.
-        /// </summary>
-        public readonly bool IsConditional { get; }
 
         /// <summary>
         /// Gets what kind of method this is. There are several different kinds of things
@@ -3130,16 +3100,6 @@ namespace Business.SourceGenerator.Meta
         public readonly bool ReturnsVoid { get; }
 
         /// <summary>
-        /// Returns true if this method returns by reference.
-        /// </summary>
-        public readonly bool ReturnsByRef { get; }
-
-        /// <summary>
-        /// Returns true if this method returns by ref readonly.
-        /// </summary>
-        public readonly bool ReturnsByRefReadonly { get; }
-
-        /// <summary>
         /// Returns the RefKind of the method.
         /// </summary>
         public readonly RefKind RefKind { get; }
@@ -3148,13 +3108,6 @@ namespace Business.SourceGenerator.Meta
         /// Gets the return type of the method.
         /// </summary>
         public readonly IAccessorType ReturnType { get; }
-
-        /// <summary>
-        /// Returns true if this method hides base methods by name. This cannot be specified
-        /// directly in the C# language, but can be true for methods defined in other languages
-        /// imported from metadata. The equivalent of the "hidebyname" flag in metadata.
-        /// </summary>
-        public readonly bool HidesBaseMethodsByName { get; }
 
         ///// <summary>
         ///// Is it a clone.
@@ -3166,8 +3119,6 @@ namespace Business.SourceGenerator.Meta
         ///// applied to.
         ///// </summary>
         //public string ReceiverType { get; }
-
-
 
         #endregion
 
