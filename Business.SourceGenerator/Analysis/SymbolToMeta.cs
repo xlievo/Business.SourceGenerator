@@ -404,7 +404,7 @@ namespace Business.SourceGenerator.Analysis
                         sb.AppendFormat("{0}, ", (skip2 || accessor.DelegateInvokeMethod is null) ? "default" : accessor.DelegateInvokeMethod.ToMeta(opt, depth, typeClean: typeClean));
                         sb.AppendFormat("{0}, ", accessor.IsSerializable ? "true" : "default");
                         sb.AppendFormat("{0}, ", accessor.IsPartial() ? "true" : "default");
-                        sb.AppendFormat("{0}, ", (skip || !accessor.TypeParameters.Any()) ? "default" : $"new {globalGeneric}Dictionary<{globalString}, {globalMeta}IAccessorTypeParameter> {{ {string.Join(", ", accessor.TypeParameters.Select(c => $"{{ \"{c.GetFullNameStandardFormat()}\", {c.ToMeta(opt, depth, typeClean: typeClean)} }}"))} }}");
+                        //sb.AppendFormat("{0}, ", (skip || !accessor.TypeParameters.Any()) ? "default" : $"new {globalGeneric}Dictionary<{globalString}, {globalMeta}IAccessorTypeParameter> {{ {string.Join(", ", accessor.TypeParameters.Select(c => $"{{ \"{c.GetFullNameStandardFormat()}\", {c.ToMeta(opt, depth, typeClean: typeClean)} }}"))} }}");
                         //sb.Append((MemberNames?.Any() ?? false) ? $"new string[] {{ {string.Join(", ", MemberNames.Select(c => $"\"{c}\""))} }}, " : "default, ");
                         //sb.AppendFormat("{0}, ", accessor.IsUnboundGenericType ? "true" : "default");
                         //sb.AppendFormat("{0}, ", accessor.IsGenericType ? "true" : "default");
@@ -673,23 +673,23 @@ namespace Business.SourceGenerator.Analysis
                         sb.AppendFormat("{0}, ", isDeclaringSyntaxReferences ? "true" : "default");
                         sb.AppendFormat("{0}, ", attrs.Any() ? $"{GetAttributes(attrs, globalMeta, typeClean)}" : "default");
                         //==================IAccessorMethod==================//
-                        sb.AppendFormat("{0}, ", accessor.IsReadOnly ? "true" : "default");
-                        sb.AppendFormat("{0}, ", accessor.IsInitOnly ? "true" : "default");
+                        /* sb.AppendFormat("{0}, ", accessor.IsReadOnly ? "true" : "default"); */
+                        /* sb.AppendFormat("{0}, ", accessor.IsInitOnly ? "true" : "default"); */
                         //Parameters
                         sb.AppendFormat("{0}, ", (skip || !accessor.Parameters.Any()) ? "default" : $"new {globalMeta}IAccessorParameter[] {{ {string.Join(", ", accessor.Parameters.Select(c => c.ToMeta(opt, depth, typeClean: typeClean)))} }}");
                         sb.AppendFormat("{0}, ", accessor.IsPartialDefinition ? "true" : "default");
                         sb.AppendFormat("{0}, ", (skip || !accessor.TypeParameters.Any()) ? "default" : $"new {globalGeneric}Dictionary<{globalString}, {globalMeta}IAccessorTypeParameter> {{ {string.Join(", ", typeParameters.Select(c => $"{{ \"{c.Key}\", {c.Value.ToMeta(opt, depth, typeClean: typeClean)} }}"))} }}");
-                        sb.AppendFormat("{0}, ", accessor.IsConditional ? "true" : "default");
+                        /* sb.AppendFormat("{0}, ", accessor.IsConditional ? "true" : "default"); */
                         sb.AppendFormat($"{globalMeta}MethodKind.{{0}}, ", accessor.MethodKind.GetName());
                         sb.AppendFormat("{0}, ", accessor.IsGenericMethod ? "true" : "default");
                         sb.AppendFormat("{0}, ", accessor.IsExtensionMethod ? "true" : "default");
                         sb.AppendFormat("{0}, ", accessor.IsAsync ? "true" : "default");
                         sb.AppendFormat("{0}, ", accessor.ReturnsVoid ? "true" : "default");
-                        sb.AppendFormat("{0}, ", accessor.ReturnsByRef ? "true" : "default");
-                        sb.AppendFormat("{0}, ", accessor.ReturnsByRefReadonly ? "true" : "default");
+                        /* sb.AppendFormat("{0}, ", accessor.ReturnsByRef ? "true" : "default"); */
+                        /* sb.AppendFormat("{0}, ", accessor.ReturnsByRefReadonly ? "true" : "default"); */
                         sb.AppendFormat($"{globalMeta}RefKind.{{0}}, ", accessor.RefKind.GetName());
                         sb.AppendFormat("{0}, ", skip ? "default" : accessor.ReturnType?.ToMeta(opt, depth, typeClean: typeClean));
-                        sb.AppendFormat("{0}, ", accessor.HidesBaseMethodsByName ? "true" : "default");
+                        /* sb.AppendFormat("{0}, ", accessor.HidesBaseMethodsByName ? "true" : "default"); */
                         //sb.AppendFormat("{0}, ", isClone ? "true" : "default");
                         sb.AppendFormat("{0}, ", skip2 ? "default" : getValue);
                         sb.AppendFormat("{0}, ", skip2 ? "default" : getValueAsync);
