@@ -522,12 +522,12 @@ namespace Business.SourceGenerator.Analysis
 
             var definitions = makeGenerics.Where(c => !c.TypeArguments.Any(c => !(c.TypeKind is TypeKind.TypeParameter)) && c.IsGenericType && !c.IsAbstract);
 
-            //var types = analysisInfo.TypeSymbols.Where(c =>
-            //{
-            //    var typeSymbol = c.Value.Declared as ITypeSymbol;
+            var types = analysisInfo.TypeSymbols.Where(c =>
+            {
+                var typeSymbol = c.Value.Declared as ITypeSymbol;
 
-            //    return !typeSymbol.IsDefinition && !typeSymbol.TypeChecked(t => t.TypeKind is TypeKind.TypeParameter);
-            //}).ToArray();
+                return !typeSymbol.IsDefinition && !typeSymbol.TypeChecked(t => t.TypeKind is TypeKind.TypeParameter || Meta.Global.BusinessSourceGeneratorMeta == t.GetFullName(GetFullNameOpt.Create(captureStyle: CaptureStyle.Prefix))) && c.Value.IsCustom;
+            }).ToArray();
 
             foreach (var info in analysisInfo.TypeSymbols)
             {
@@ -576,47 +576,7 @@ namespace Business.SourceGenerator.Analysis
                 sb.AppendLine($"#region {key}");
                 sb.AppendFormat("[typeof({0})] = ", key);
 
-                var definitions2 = definitions.Where(c =>
-                {
-                    var typeParameters = c.TypeParameters.First();
-
-                    //class
-                    if (typeParameters.HasReferenceTypeConstraint && !(typeSymbol.TypeKind is TypeKind.Class))
-                    {
-                        return false;
-                    }
-
-                    //struct
-                    if (typeParameters.HasValueTypeConstraint && !(typeSymbol.TypeKind is TypeKind.Struct))
-                    {
-                        return false;
-                    }
-
-                    //new()
-                    if (typeParameters.HasConstructorConstraint)
-                    {
-                        if (typeSymbol is INamedTypeSymbol namedType && !namedType.InstanceConstructors.Any(c => 0 == c.Parameters.Length))
-                        {
-                            return false;
-                        }
-                    }
-
-                    //constraints
-                    if (typeParameters.ConstraintTypes.Any())
-                    {
-                        var constraintTypes = typeParameters.ConstraintTypes.Select(c => c.GetFullName()).ToArray();
-
-                        foreach (var item in constraintTypes)
-                        {
-                            if (!EqualsFullName(typeSymbol, item) && !typeSymbol.AllInterfaces.Any(c => EqualsFullName(c, item)))
-                            {
-                                return false;
-                            }
-                        }
-                    }
-
-                    return true;
-                });
+                var definitions2 = definitions.Where(c => CheckConstraint(typeSymbol, c.TypeParameters.First()));
 
                 var makes = string.Join(", ", definitions2.Select(c =>
                 {
@@ -753,6 +713,46 @@ namespace Business.SourceGenerator.Analysis
             result.Add($"new {globalMeta}Constructor(1, 1, new {globalMeta}IParameterMeta[] {{ {ToMetaParameter(globalMeta, "length", globalInt32)} }}, (obj, m, args) => new {elementTypeClean}[({globalInt32})m[0].v])");
 
             return array.GetFullNameStandardFormat(GetFullNameOpt.Create(noNullableQuestionMark: true), typeClean: typeClean);
+        }
+
+        static bool CheckConstraint(ITypeSymbol typeSymbol, ITypeParameterSymbol typeParameter)
+        {
+            //class
+            if (typeParameter.HasReferenceTypeConstraint && !(typeSymbol.TypeKind is TypeKind.Class))
+            {
+                return false;
+            }
+
+            //struct
+            if (typeParameter.HasValueTypeConstraint && !(typeSymbol.TypeKind is TypeKind.Struct))
+            {
+                return false;
+            }
+
+            //new()
+            if (typeParameter.HasConstructorConstraint)
+            {
+                if (typeSymbol is INamedTypeSymbol namedType && !namedType.InstanceConstructors.Any(c => 0 == c.Parameters.Length))
+                {
+                    return false;
+                }
+            }
+
+            //constraints
+            if (typeParameter.ConstraintTypes.Any())
+            {
+                var constraintTypes = typeParameter.ConstraintTypes.Select(c => c.GetFullName()).ToArray();
+
+                foreach (var item in constraintTypes)
+                {
+                    if (!EqualsFullName(typeSymbol, item) && !typeSymbol.AllInterfaces.Any(c => EqualsFullName(c, item)))
+                    {
+                        return false;
+                    }
+                }
+            }
+
+            return true;
         }
 
         #region Temp
