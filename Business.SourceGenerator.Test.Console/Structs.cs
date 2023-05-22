@@ -2,6 +2,26 @@
 using System;
 using System.Threading.Tasks;
 
+[Business.SourceGenerator.Meta.GeneratorType]
+public partial struct MyStruct<T>
+{
+    public string A { get; set; }
+
+    public T B { get; set; }
+
+    public MyStruct(string a)
+    {
+        this.A = a ?? throw new ArgumentNullException(nameof(a));
+    }
+
+    public ValueTask<(int c1, string c2)> StructMethod(string? a, ref (int c1, string c2) b, out (int? c1, string? c2) c)
+    {
+        b.c1 = 888;
+        c = (333, "xxx");
+        return ValueTask.FromResult(b);
+    }
+}
+
 public struct ResultObject4<Type> : IResult2<Type>
 {
     /// <summary>
@@ -108,6 +128,7 @@ public struct ResultObject4<Type> : IResult2<Type>
     public byte[] ToBytes(bool dataBytes = true) => throw new NotImplementedException(); //Utils.Help.ProtoBufSerialize(this);
 }
 
+
 public unsafe partial struct MyStruct
 {
     public string? aaa { get; set; }
@@ -148,9 +169,10 @@ public unsafe partial struct MyStruct
         return ValueTask.FromResult(c);
     }
 
-    public ValueTask<(int c1, string c2)> StructMethod7(ref string? a, ref (int c1, string c2) c)
+    public ValueTask<(int c1, string c2)> StructMethod7(ref string? a, ref (int c1, string c2) b, out (int? c1, string? c2) c)
     {
-        return default;
+        c = (333, "xxx");
+        return ValueTask.FromResult(b);
     }
 }
 

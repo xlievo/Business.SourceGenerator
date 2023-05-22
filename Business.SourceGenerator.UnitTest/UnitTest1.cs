@@ -773,7 +773,7 @@ namespace UnitAssembly
 
             var iResult = File.ReadAllText(Path.Combine(AppContext.BaseDirectory, "TestTemp", "IResult.cs"));
 
-            var compileResult = Compilation(path, global, OutputKind.ConsoleApplication, assemblyName, testCode);
+            var compileResult = Compilation(path, global, OutputKind.ConsoleApplication, assemblyName, testCode, iResult);
             //System.Threading.Tasks.ValueTask
             var source = compileResult.GeneratorSource;
 

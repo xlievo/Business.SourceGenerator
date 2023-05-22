@@ -14,37 +14,72 @@ Because AOT mode cannot dynamically generate code and types at run time, it requ
 
 1. Declare [Business.SourceGenerator.Meta.GeneratorType] features on struct or class or interface that need to be generated in advance.
 ```C#
-    typeof(MyClass<>).GetGenericType<int>();
+	[Business.SourceGenerator.Meta.GeneratorType]
+	public partial struct MyStruct<T>
+	{
+		public string A { get; set; }
+
+		public T B { get; set; }
+
+		public MyStruct(string a)
+		{
+			this.A = a ?? throw new ArgumentNullException(nameof(a));
+		}
+
+		public ValueTask<(int c1, string c2)> StructMethod(string? a, ref (int c1, string c2) b, out (int? c1, string? c2) c)
+		{
+			b.c1 = 888;
+			c = (333, "xxx");
+			return ValueTask.FromResult(b);
+		}
+	}
+	
+    /* typeof(MyStruct<>).GetGenericType<int>(); */
 ```
 
 ## CreateInstance
 **Gets an instance of the specified type.**
 ```C#
-    typeof(MyClass<>)
+    typeof(MyStruct<>)
         .GetGenericType<int>()
         .CreateInstance(params object[] args);
 ```
 
-## AccessorGet & AccessorGetAsync
+## AccessorMethod & AccessorMethodAsync
 **Access the members and methods of the specified instance.**
 **The specified class or struct needs to declare the 'partial' keyword.**
 ```C#
-    typeof(MyClass<>)
+	var myStruct = typeof(MyStruct<>)
+		.GetGenericType(typeof(int))
+		.CreateInstance<IGeneratorAccessor>("666");
+	
+	var args = new object[] { 
+                string.Empty,
+                RefArg.Ref((55, "66")),
+                RefArg.Out<(int? c1, string? c2)>()
+            };
+			
+	var result = await myStruct.AccessorMethodAsync("StructMethod", args);
+		
+	/*
+    typeof(MyStruct<>)
         .GetGenericType<int>()
         .CreateInstance<>(params object[] args)
-        .AccessorGetAsync(string name, params object[] args);
+        .AccessorMethod(string name, out result, params object[] args);
         
-        AccessorGetAsync<Type>(string name, params object[] args);
+        AccessorMethodAsync<Type>(string name, params object[] args);
+	*/
 ```
 
-## AccessorSet
+## AccessorSet & AccessorGet
 **Set the value of a field or property.**
 **The specified class or struct needs to declare the 'partial' keyword.**
 ```C#
-    typeof(MyClass<int>)
+    typeof(MyStruct<int>)
         .CreateInstance<IGeneratorAccessor>()
         .AccessorSet<IGeneratorAccessor>("A", "WWW")
-        .AccessorSet<IGeneratorAccessor>("B", new Dictionary<string, string>());
+        .AccessorSet<IGeneratorAccessor>("B", new Dictionary<string, string>())
+		.AccessorGet(string name, out result);
 ```
 
 ## About the secondary distribution of nuget packages [direct reference without watching]

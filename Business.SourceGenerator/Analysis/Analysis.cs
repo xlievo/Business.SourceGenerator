@@ -79,60 +79,67 @@ namespace Business.SourceGenerator.Analysis
 
                         var dict = new Dictionary<string, INamedTypeSymbol>();
 
-                        foreach (var item2 in analysisInfo.TypeSymbols.Values)
+                        if (declared.TypeKind is TypeKind.Struct)
                         {
-                            //if (!(item.Declared is ITypeSymbol declared))
-                            //{
-                            //    continue;
-                            //}
-
-                            //if (TypeKind.Interface != declared.TypeKind && TypeKind.Class != declared.TypeKind && TypeKind.Struct != declared.TypeKind)
-                            //{
-                            //    continue;
-                            //}
-
-                            if (!(item2.Declared is INamedTypeSymbol namedType) || namedType.IsUnboundGenericType)
+                            dict.Add(key, declared);
+                        }
+                        else
+                        {
+                            foreach (var item2 in analysisInfo.TypeSymbols.Values)
                             {
-                                continue;
-                            }
+                                //if (!(item.Declared is ITypeSymbol declared))
+                                //{
+                                //    continue;
+                                //}
 
-                            string key2 = default;
+                                //if (TypeKind.Interface != declared.TypeKind && TypeKind.Class != declared.TypeKind && TypeKind.Struct != declared.TypeKind)
+                                //{
+                                //    continue;
+                                //}
 
-                            switch (declared.TypeKind)
-                            {
-                                case TypeKind.Class:
-                                    {
-                                        var baseType = namedType;
+                                if (!(item2.Declared is INamedTypeSymbol namedType) || namedType.IsUnboundGenericType)
+                                {
+                                    continue;
+                                }
 
-                                        while (null != baseType)
+                                string key2 = default;
+
+                                switch (declared.TypeKind)
+                                {
+                                    case TypeKind.Class:
                                         {
-                                            //if (baseType.OriginalDefinition.Equals(typeSymbol.OriginalDefinition, SymbolEqualityComparer.Default))
-                                            if (Expression.EqualsFullName(baseType.OriginalDefinition, typeSymbolName))
+                                            var baseType = namedType;
+
+                                            while (null != baseType)
+                                            {
+                                                //if (baseType.OriginalDefinition.Equals(typeSymbol.OriginalDefinition, SymbolEqualityComparer.Default))
+                                                if (Expression.EqualsFullName(baseType.OriginalDefinition, typeSymbolName))
+                                                {
+                                                    //key2 = namedType.GetFullNameStandardFormat();
+                                                    key2 = item2.Names.DeclaredStandard;
+                                                    break;
+                                                }
+                                                baseType = baseType.BaseType;
+                                            }
+                                            break;
+                                        }
+                                    case TypeKind.Interface:
+                                        {
+                                            //if (typeSymbol2.OriginalDefinition.Equals(typeSymbol.OriginalDefinition) || typeSymbol2.AllInterfaces.Any(c => typeSymbol.OriginalDefinition.Equals(c.OriginalDefinition, SymbolEqualityComparer.Default)))
+                                            if (Expression.EqualsFullName(namedType.OriginalDefinition, typeSymbolName) || namedType.AllInterfaces.Any(c => Expression.EqualsFullName(c.OriginalDefinition, typeSymbolName)))
                                             {
                                                 //key2 = namedType.GetFullNameStandardFormat();
                                                 key2 = item2.Names.DeclaredStandard;
-                                                break;
                                             }
-                                            baseType = baseType.BaseType;
+                                            break;
                                         }
-                                        break;
-                                    }
-                                case TypeKind.Interface:
-                                    {
-                                        //if (typeSymbol2.OriginalDefinition.Equals(typeSymbol.OriginalDefinition) || typeSymbol2.AllInterfaces.Any(c => typeSymbol.OriginalDefinition.Equals(c.OriginalDefinition, SymbolEqualityComparer.Default)))
-                                        if (Expression.EqualsFullName(namedType.OriginalDefinition, typeSymbolName) || namedType.AllInterfaces.Any(c => Expression.EqualsFullName(c.OriginalDefinition, typeSymbolName)))
-                                        {
-                                            //key2 = namedType.GetFullNameStandardFormat();
-                                            key2 = item2.Names.DeclaredStandard;
-                                        }
-                                        break;
-                                    }
-                                default: break;
-                            }
+                                    default: break;
+                                }
 
-                            if (!(key2 is null) && !dict.ContainsKey(key2))
-                            {
-                                dict.Add(key2, namedType);
+                                if (!(key2 is null) && !dict.ContainsKey(key2))
+                                {
+                                    dict.Add(key2, namedType);
+                                }
                             }
                         }
 
@@ -522,12 +529,12 @@ namespace Business.SourceGenerator.Analysis
 
             var definitions = makeGenerics.Where(c => !c.TypeArguments.Any(c => !(c.TypeKind is TypeKind.TypeParameter)) && c.IsGenericType && !c.IsAbstract);
 
-            var types = analysisInfo.TypeSymbols.Where(c =>
-            {
-                var typeSymbol = c.Value.Declared as ITypeSymbol;
+            //var types = analysisInfo.TypeSymbols.Where(c =>
+            //{
+            //    var typeSymbol = c.Value.Declared as ITypeSymbol;
 
-                return !typeSymbol.IsDefinition && !typeSymbol.TypeChecked(t => t.TypeKind is TypeKind.TypeParameter || Meta.Global.BusinessSourceGeneratorMeta == t.GetFullName(GetFullNameOpt.Create(captureStyle: CaptureStyle.Prefix))) && c.Value.IsCustom;
-            }).ToArray();
+            //    return !typeSymbol.IsDefinition && !typeSymbol.TypeChecked(t => t.TypeKind is TypeKind.TypeParameter || Meta.Global.BusinessSourceGeneratorMeta == t.GetFullName(GetFullNameOpt.Create(captureStyle: CaptureStyle.Prefix))) && c.Value.IsCustom;
+            //}).ToArray();
 
             foreach (var info in analysisInfo.TypeSymbols)
             {

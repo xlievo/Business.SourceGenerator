@@ -20,6 +20,8 @@ using System.Reflection.PortableExecutable;
 using System.Runtime.CompilerServices;
 using System.Reflection;
 using System.Xml.Serialization;
+using System.Xml.Linq;
+using static Business.SourceGenerator.Utils;
 
 
 //[module: SuppressMessage("Microsoft.Design", "CS8604:", Scope = "namespace", Target = "Business.SourceGenerator.Test.Console")]
@@ -41,6 +43,20 @@ namespace Business.SourceGenerator.Test.Console
             (int c1, string c2) c5 = (55, "66");
             //var rrr5 = GetMethod<MyStruct>(c => c.StructMethod7(ref a5, ref c5)).Name;
             //System.Console.WriteLine(rrr5);
+
+            var myStruct = typeof(MyStruct<>)
+                .GetGenericType(typeof(int))
+                .CreateInstance<IGeneratorAccessor>("666");
+
+            //ref string? a, ref (int c1, string c2) b, out (int? c1, string? c2) c
+            var args2 = new object[] { 
+                string.Empty,
+                RefArg.Ref((55, "66")),
+                RefArg.Out<(int? c1, string? c2)>()
+            };
+
+            var r = await myStruct.AccessorMethodAsync("StructMethod", args2);
+
 
             var result = typeof(MyCode.ClassGeneric<string>)
                     .CreateInstance<IGeneratorAccessor>()
