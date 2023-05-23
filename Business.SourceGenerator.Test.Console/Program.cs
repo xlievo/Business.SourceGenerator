@@ -23,8 +23,9 @@ using System.Xml.Serialization;
 using System.Xml.Linq;
 using static Business.SourceGenerator.Utils;
 
-
 //[module: SuppressMessage("Microsoft.Design", "CS8604:", Scope = "namespace", Target = "Business.SourceGenerator.Test.Console")]
+
+//[assembly: AssemblyMetadata("IsTrimmable", "False")]
 
 namespace Business.SourceGenerator.Test.Console
 {
@@ -44,21 +45,21 @@ namespace Business.SourceGenerator.Test.Console
             //var rrr5 = GetMethod<MyStruct>(c => c.StructMethod7(ref a5, ref c5)).Name;
             //System.Console.WriteLine(rrr5);
 
-            var myStruct = typeof(MyStruct<>)
-                .GetGenericType(typeof(int))
-                .CreateInstance<IGeneratorAccessor>("666");
+            //var myStruct = typeof(MyStruct<>)
+            //    .GetGenericType(typeof(int))
+            //    .CreateInstance<IGeneratorAccessor>("666");
 
-            //ref string? a, ref (int c1, string c2) b, out (int? c1, string? c2) c
-            var args2 = new object[] { 
-                string.Empty,
-                RefArg.Ref((55, "66")),
-                RefArg.Out<(int? c1, string? c2)>()
-            };
+            ////ref string? a, ref (int c1, string c2) b, out (int? c1, string? c2) c
+            //var args2 = new object[] { 
+            //    string.Empty,
+            //    RefArg.Ref((55, "66")),
+            //    RefArg.Out<(int? c1, string? c2)>()
+            //};
 
-            var r = await myStruct.AccessorMethodAsync("StructMethod", args2);
+            //var r = await myStruct.AccessorMethodAsync("StructMethod", args2);
 
 
-            var result = typeof(MyCode.ClassGeneric<string>)
+            var result = typeof(ClassGeneric<string>)
                     .CreateInstance<IGeneratorAccessor>()
                     .AccessorSet<IGeneratorAccessor>("A", "WWW")
                     .AccessorSet<IGeneratorAccessor>("B", new Dictionary<string, string>());

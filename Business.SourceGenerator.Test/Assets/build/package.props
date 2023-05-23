@@ -6,6 +6,6 @@
     <CompilerVisibleProperty Include="Business_SourceGenerator_Test" />
   </ItemGroup>
   <ItemGroup>
-    <PackageReference Include="Microsoft.Net.Compilers.Toolset" Version="4.4.0" />
+    <PackageReference Include="Microsoft.Net.Compilers.Toolset" Version="4.6.0" />
   </ItemGroup>
 </Project>

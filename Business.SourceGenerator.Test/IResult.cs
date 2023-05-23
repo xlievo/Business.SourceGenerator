@@ -73,6 +73,7 @@
     /// IResult
     /// </summary>
     /// <typeparam name="DataType"></typeparam>
+    [Business.SourceGenerator.Meta.GeneratorType]
     public interface IResult2<DataType> : IResult
     {
         /// <summary>

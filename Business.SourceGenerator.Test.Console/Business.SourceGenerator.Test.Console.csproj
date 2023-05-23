@@ -7,10 +7,12 @@
     <Nullable>enable</Nullable>
     <PublishAot>true</PublishAot>
     <IlcDisableReflection>true</IlcDisableReflection>
+    <AllowUnsafeBlocks>True</AllowUnsafeBlocks>
+    <!--<PublishTrimmed>false</PublishTrimmed>-->
+    <!--<TrimMode>partial</TrimMode>-->
     <StripSymbols>true</StripSymbols>
     <DebuggerSupport>false</DebuggerSupport>
-    <!--<RunAOTCompilation>true</RunAOTCompilation>-->
-    <!--<TrimMode>partial</TrimMode>-->
+    <RunAOTCompilation>true</RunAOTCompilation>
     <TrimmerRemoveSymbols>true</TrimmerRemoveSymbols>
     <EventSourceSupport>false</EventSourceSupport>
     <AutoreleasePoolSupport>false</AutoreleasePoolSupport>
@@ -19,6 +21,7 @@
     <!--<SuppressILLinkTrimAnalysisWarnings>true</SuppressILLinkTrimAnalysisWarnings>
     <SuppressAOTAnalysisWarnings>true</SuppressAOTAnalysisWarnings>-->
     <!--<IlcOptimizationPreference>true</IlcOptimizationPreference>-->
+    
     <IlcOptimizationPreference>Size</IlcOptimizationPreference>
     <IlcFoldIdenticalMethodBodies>true</IlcFoldIdenticalMethodBodies>
     <IlcGenerateCompleteTypeMetadata>false</IlcGenerateCompleteTypeMetadata>
@@ -31,13 +34,20 @@
     <MetadataUpdaterSupport>true</MetadataUpdaterSupport>
     <UseSystemResourceKeys>true</UseSystemResourceKeys>
     <StartupObject>Business.SourceGenerator.Test.Console.Program</StartupObject>
-    <AllowUnsafeBlocks>True</AllowUnsafeBlocks>
     <AnalysisLevel>latest-recommended</AnalysisLevel>
   </PropertyGroup>
 
   <ItemGroup>
     <TrimmerRootDescriptor Include="MyRoots.xml" />
   </ItemGroup>
+
+  <!--<Target Name="ConfigureTrimming" BeforeTargets="PrepareForILLink">
+    <ItemGroup>
+      <ManagedAssemblyToLink Condition="'%(Filename)' == 'Business.SourceGenerator.Test.Console'">
+        <IsTrimmable>false</IsTrimmable>
+      </ManagedAssemblyToLink>
+    </ItemGroup>
+  </Target>-->
 
   <!--<ItemGroup>
     <TrimmerRootAssembly Include="Business.SourceGenerator.Test.Console" />
@@ -48,7 +58,7 @@
   </ItemGroup>
 
   <ItemGroup>
-    <PackageReference Include="Business.SourceGenerator.Test" Version="1.0.2.15" />
+    <PackageReference Include="Business.SourceGenerator.Test" Version="1.0.2.16" />
   </ItemGroup>
 
   <ItemGroup>
