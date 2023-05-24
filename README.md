@@ -75,7 +75,8 @@ typeof(MyStruct<>)
 **Set the value of a field or property.**
 **The specified class or struct needs to declare the 'partial' keyword.**
 ```C#
-typeof(MyStruct<int>)
+typeof(MyStruct<>)
+	.GetGenericType(typeof(int))
 	.CreateInstance<IGeneratorAccessor>()
 	.AccessorSet<IGeneratorAccessor>("A", "WWW")
 	.AccessorSet<IGeneratorAccessor>("B", new Dictionary<string, string>())
