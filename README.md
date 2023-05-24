@@ -12,7 +12,7 @@ Because AOT mode cannot dynamically generate code and types at run time, it requ
 ## GetGenericType
 **Replace System.Type.MakeGenericType(typeArguments) by generating generic type code in advance, Gets the specified generic type.**
 
-1. Declare [Business.SourceGenerator.Meta.GeneratorType] features on struct or class or interface that need to be generated in advance.
+1. Declare [Business.SourceGenerator.Meta.GeneratorType] and partial key features on struct or class or interface that need to be generated in advance.
 ```C#
 [Business.SourceGenerator.Meta.GeneratorType]
 public partial struct MyStruct<T>
@@ -78,8 +78,8 @@ typeof(MyStruct<>)
 typeof(MyStruct<>)
 	.GetGenericType(typeof(int))
 	.CreateInstance<IGeneratorAccessor>()
-	.AccessorSet<IGeneratorAccessor>("A", "WWW")
-	.AccessorSet<IGeneratorAccessor>("B", new Dictionary<string, string>())
+	.AccessorSet<IGeneratorAccessor>("A", "666")
+	.AccessorSet<IGeneratorAccessor>("B", 777)
 	.AccessorGet(string name, out result);
 ```
 
