@@ -39,25 +39,25 @@ namespace Business.SourceGenerator.Test.Console
         static async Task<int> Main(string[] args)
         {
             BusinessSourceGenerator.Generator.SetGeneratorCode();
-            
+
             string? a5 = "a5";
             (int c1, string c2) c5 = (55, "66");
             //var rrr5 = GetMethod<MyStruct>(c => c.StructMethod7(ref a5, ref c5)).Name;
             //System.Console.WriteLine(rrr5);
 
             var myStruct = typeof(MyStruct<>)
-                .GetGenericType(typeof(int))
+                .GetGenericType(typeof(List<int>))
                 .CreateInstance<IGeneratorAccessor>("666");
 
             //ref string? a, ref (int c1, string c2) b, out (int? c1, string? c2) c
             var args2 = new object[] {
                 string.Empty,
-                RefArg.Ref((55, "66")),
+                RefArg.Ref(new List<int>{ 55 }),
                 RefArg.Out<(int? c1, string? c2)>()
             };
 
-            var r = await myStruct.AccessorMethodAsync<(int c1, string c2)>("StructMethod", args2);
-            System.Console.WriteLine(r.c1);
+            var r = await myStruct.AccessorMethodAsync<List<int>>("StructMethod", args2);
+            System.Console.WriteLine(r);
 
             var result = typeof(ClassGeneric<string>)
                     .CreateInstance<IGeneratorAccessor>()
@@ -92,7 +92,7 @@ namespace Business.SourceGenerator.Test.Console
                 System.Console.WriteLine(ex.Message);
             }
 
-           
+
 
             //System.Console.WriteLine(type.IsValueType);
             ////System.Console.WriteLine(type.IsSealed);
@@ -114,11 +114,11 @@ namespace Business.SourceGenerator.Test.Console
             //System.Console.WriteLine(JsonSerializer.Serialize(MyStruct222));
             //[Serde.Json.JsonSerializer]
 
-           var structMethod7 = (MyStruct111.AccessorType().Members["StructMethod7"] as IAccessorMethodCollection).First();
+            var structMethod7 = (MyStruct111.AccessorType().Members["StructMethod7"] as IAccessorMethodCollection).First();
             foreach (var item in structMethod7.Attributes)
             {
                 var arg = item.Constructor;
-                
+
                 System.Console.WriteLine(item.Name + " " + arg.ElementAt(0).Value + " " + arg.ElementAt(1).Value + " " + arg.ElementAt(2).Value);
             }
 

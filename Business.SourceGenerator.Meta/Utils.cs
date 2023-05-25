@@ -125,7 +125,7 @@ namespace Business.SourceGenerator
         /// <returns></returns>
         public static bool AccessorMethod<ResultType>(this IGeneratorAccessor accessor, string name, out ResultType result, params object[] args)
         {
-            var success = AccessorMethod(accessor, name, out object result2, args);
+            var success = AccessorMethod(accessor, name, out object result2, false, args);
 
             result = success ? (ResultType)result2 : default;
 
@@ -140,10 +140,50 @@ namespace Business.SourceGenerator
         /// <param name="result">Return value, obtained as an out declaration.</param>
         /// <param name="args">Method parameter array.</param>
         /// <returns></returns>
-        /// <exception cref="ArgumentNullException"></exception>
-        public static bool AccessorMethod(this IGeneratorAccessor accessor, string name, out object result, params object[] args)
+        public static bool AccessorMethod(this IGeneratorAccessor accessor, string name, out object result, params object[] args) => AccessorMethod(accessor, name, out result, false, args);
+
+        /// <summary>
+        /// Call the specified method to obtain the return object and out parameters.
+        /// </summary>
+        /// <typeparam name="ResultType"></typeparam>
+        /// <param name="accessor">Own an instance of this method.</param>
+        /// <param name="name">Method name.</param>
+        /// <param name="result">Return value, obtained as an out declaration.</param>
+        /// <param name="args">Method parameter array.</param>
+        /// <returns></returns>
+        public static bool AccessorMethodSkipGeneric<ResultType>(this IGeneratorAccessor accessor, string name, out ResultType result, params object[] args)
         {
-            var checkedResult = AccessorMethodPrepar(accessor, name, args);
+            var success = AccessorMethod(accessor, name, out object result2, true, args);
+
+            result = success ? (ResultType)result2 : default;
+
+            return success;
+        }
+
+        /// <summary>
+        /// Call the specified method to obtain the return object and out parameters.
+        /// </summary>
+        /// <param name="accessor">Own an instance of this method.</param>
+        /// <param name="name">Method name.</param>
+        /// <param name="result">Return value, obtained as an out declaration.</param>
+        /// <param name="skipGenericTypeCheck"></param>
+        /// <param name="args">Method parameter array</param>
+        /// <returns></returns>
+        public static bool AccessorMethodSkipGeneric(this IGeneratorAccessor accessor, string name, out object result, params object[] args) => AccessorMethod(accessor, name, out result, true, args);
+
+        /// <summary>
+        /// Call the specified method to obtain the return object and out parameters.
+        /// </summary>
+        /// <param name="accessor">Own an instance of this method.</param>
+        /// <param name="name">Method name.</param>
+        /// <param name="result">Return value, obtained as an out declaration.</param>
+        /// <param name="skipGenericTypeCheck">Do you want to skip checking generic type parameters.</param>
+        /// <param name="args">Method parameter array.</param>
+        /// <returns></returns>
+        /// <exception cref="ArgumentNullException"></exception>
+        static bool AccessorMethod(IGeneratorAccessor accessor, string name, out object result, bool skipGenericTypeCheck, params object[] args)
+        {
+            var checkedResult = AccessorMethodPrepar(accessor, name, skipGenericTypeCheck, args);
 
             switch (checkedResult.Exception)
             {
@@ -154,7 +194,7 @@ namespace Business.SourceGenerator
                 case AccessorMethodPreparException.ArgsNull:
                     throw new ArgumentNullException(nameof(args));
                 case AccessorMethodPreparException.MethodNotExist:
-                case AccessorMethodPreparException.ArgumentOutOfRange:
+                case AccessorMethodPreparException.ArgumentOutOfRangeOrTypeError:
                     result = default;
                     return default;
                 default:
@@ -172,12 +212,12 @@ namespace Business.SourceGenerator
         /// <summary>
         /// Gets the method value of a specified object.
         /// </summary>
-        /// <typeparam name="ResultType">Type of returned object.</typeparam>
+        /// <typeparam name="ResultType"></typeparam>
         /// <param name="accessor">Own an instance of this method.</param>
         /// <param name="name">method name.</param>
         /// <param name="args">Parameter object of calling method.</param>
-        /// <returns>Specifies the method return value of the object.</returns>
-        public static async Task<ResultType> AccessorMethodAsync<ResultType>(this IGeneratorAccessor accessor, string name, params object[] args) => (ResultType)await AccessorMethodAsync(accessor, name, args);
+        /// <returns></returns>
+        public static async Task<ResultType> AccessorMethodAsync<ResultType>(this IGeneratorAccessor accessor, string name, params object[] args) => (ResultType)await AccessorMethodAsync(accessor, name, false, args);
 
         /// <summary>
         /// Gets the method value of a specified object.
@@ -185,10 +225,39 @@ namespace Business.SourceGenerator
         /// <param name="accessor">Own an instance of this method.</param>
         /// <param name="name">method name.</param>
         /// <param name="args">Parameter object of calling method.</param>
-        /// <returns>pecifies the method return value of the object.</returns>
-        public static async Task<object> AccessorMethodAsync(this IGeneratorAccessor accessor, string name, params object[] args)
+        /// <returns></returns>
+        public static async Task<object> AccessorMethodAsync(this IGeneratorAccessor accessor, string name, params object[] args) => await AccessorMethodAsync(accessor, name, false, args);
+
+        /// <summary>
+        /// Gets the method value of a specified object.
+        /// </summary>
+        /// <typeparam name="ResultType"></typeparam>
+        /// <param name="accessor">Own an instance of this method.</param>
+        /// <param name="name">method name.</param>
+        /// <param name="args">Parameter object of calling method.</param>
+        /// <returns></returns>
+        public static async Task<ResultType> AccessorMethodSkipGenericAsync<ResultType>(this IGeneratorAccessor accessor, string name, params object[] args) => (ResultType)await AccessorMethodAsync(accessor, name, true, args);
+
+        /// <summary>
+        /// Gets the method value of a specified object.
+        /// </summary>
+        /// <param name="accessor">Own an instance of this method.</param>
+        /// <param name="name">method name.</param>
+        /// <param name="args">Parameter object of calling method.</param>
+        /// <returns></returns>
+        public static async Task<object> AccessorMethodSkipGenericAsync(this IGeneratorAccessor accessor, string name, params object[] args) => await AccessorMethodAsync(accessor, name, true, args);
+
+        /// <summary>
+        /// Gets the method value of a specified object.
+        /// </summary>
+        /// <param name="accessor">Own an instance of this method.</param>
+        /// <param name="name">method name.</param>
+        /// <param name="skipGenericTypeCheck">Do you want to skip checking generic type parameters.</param>
+        /// <param name="args">Parameter object of calling method.</param>
+        /// <returns></returns>
+        static async Task<object> AccessorMethodAsync(IGeneratorAccessor accessor, string name, bool skipGenericTypeCheck, params object[] args)
         {
-            var checkedResult = AccessorMethodPrepar(accessor, name, args);
+            var checkedResult = AccessorMethodPrepar(accessor, name, skipGenericTypeCheck, args);
 
             switch (checkedResult.Exception)
             {
@@ -200,8 +269,8 @@ namespace Business.SourceGenerator
                     return await Task.FromException<object>(new ArgumentNullException(nameof(args)));
                 case AccessorMethodPreparException.MethodNotExist:
                     return await Task.FromException<object>(new MethodAccessException($"The current method \"{name}\" does not exist."));
-                case AccessorMethodPreparException.ArgumentOutOfRange:
-                    return await Task.FromException<object>(new ArgumentOutOfRangeException(nameof(args), "The number of parameters must be less than or equal to the actual total number of parameters for the method."));
+                case AccessorMethodPreparException.ArgumentOutOfRangeOrTypeError:
+                    return await Task.FromException<object>(new ArgumentOutOfRangeException(nameof(args), "The number of parameters must be equal to the actual total number of parameters for the method, and the parameter types must be consistent."));
                 default:
                     if (checkedResult.Method.InvokeAsync is null)
                     {
@@ -263,7 +332,7 @@ namespace Business.SourceGenerator
             NameNull,
             ArgsNull,
             MethodNotExist,
-            ArgumentOutOfRange,
+            ArgumentOutOfRangeOrTypeError,
         }
 
         /// <summary>
@@ -271,9 +340,10 @@ namespace Business.SourceGenerator
         /// </summary>
         /// <param name="accessor">Own an instance of this method.</param>
         /// <param name="name">method name.</param>
+        /// <param name="skipGenericTypeCheck">Do you want to skip checking generic type parameters.</param>
         /// <param name="args">Parameter object of calling method.</param>
         /// <returns>Return inspection results.</returns>
-        public static AccessorMethodPreparResult AccessorMethodPrepar(this IGeneratorAccessor accessor, string name, params object[] args)
+        public static AccessorMethodPreparResult AccessorMethodPrepar(IGeneratorAccessor accessor, string name, bool skipGenericTypeCheck = false, params object[] args)
         {
             if (accessor is null)
             {
@@ -299,11 +369,11 @@ namespace Business.SourceGenerator
             {
                 case IAccessorMethod method:
                     {
-                        var checkedArgs = CheckedMethod(method, args);
+                        var checkedArgs = CheckedMethod(method, args, skipGenericTypeCheck);
 
                         if (checkedArgs is null)
                         {
-                            return new AccessorMethodPreparResult(AccessorMethodPreparException.ArgumentOutOfRange);
+                            return new AccessorMethodPreparResult(AccessorMethodPreparException.ArgumentOutOfRangeOrTypeError);
                         }
 
                         return new AccessorMethodPreparResult(method, checkedArgs);
@@ -312,7 +382,7 @@ namespace Business.SourceGenerator
                     {
                         foreach (var method in collection)
                         {
-                            var checkedArgs = CheckedMethod(method, args);
+                            var checkedArgs = CheckedMethod(method, args, skipGenericTypeCheck);
 
                             if (checkedArgs is null)
                             {
@@ -322,13 +392,13 @@ namespace Business.SourceGenerator
                             return new AccessorMethodPreparResult(method, checkedArgs);
                         }
 
-                        return new AccessorMethodPreparResult(AccessorMethodPreparException.ArgumentOutOfRange);
+                        return new AccessorMethodPreparResult(AccessorMethodPreparException.ArgumentOutOfRangeOrTypeError);
                     }
                 default: return new AccessorMethodPreparResult(AccessorMethodPreparException.MethodNotExist);
             }
         }
 
-        static CheckedParameterValue[] CheckedMethod(IMethodMeta method, object[] args)
+        static CheckedParameterValue[] CheckedMethod(IMethodMeta method, object[] args, bool skipGenericTypeCheck)
         {
             if (method.ParametersRealLength < args.Length || method.ParametersMustLength > args.Length)
             {
@@ -368,7 +438,7 @@ namespace Business.SourceGenerator
                         argType = arg?.GetType();
                     }
 
-                    if (!typeof(object).Equals(parameter.RuntimeType))
+                    if (!typeof(object).Equals(parameter.RuntimeType) && !(parameter.HasGenericType && skipGenericTypeCheck))
                     {
                         if (!(argType is null))
                         {
@@ -484,7 +554,7 @@ namespace Business.SourceGenerator
         /// <param name="type">Target type.</param>
         /// <param name="args">An array of arguments that match in number, order, and type the parameters of the constructor to invoke. If args is an empty array or null, the constructor that takes no parameters (the parameterless constructor) is invoked.</param>
         /// <returns>A reference to the newly created object.</returns>
-        public static Type CreateInstance<Type>(this System.Type type, params object[] args) => (Type)CreateInstance(GeneratorCode, type, args);
+        public static Type CreateInstance<Type>(this System.Type type, params object[] args) => (Type)CreateInstance(GeneratorCode, type, false, args);
 
         /// <summary>
         /// Create objects of pre built type.
@@ -492,7 +562,7 @@ namespace Business.SourceGenerator
         /// <param name="type">Target type.</param>
         /// <param name="args">An array of arguments that match in number, order, and type the parameters of the constructor to invoke. If args is an empty array or null, the constructor that takes no parameters (the parameterless constructor) is invoked.</param>
         /// <returns>A reference to the newly created object.</returns>
-        public static object CreateInstance(this Type type, params object[] args) => CreateInstance(GeneratorCode, type, args);
+        public static object CreateInstance(this Type type, params object[] args) => CreateInstance(GeneratorCode, type, false, args);
 
         /// <summary>
         /// Create objects of pre built type.
@@ -500,11 +570,47 @@ namespace Business.SourceGenerator
         /// <param name="generatorType">Target IGeneratorType.</param>
         /// <param name="type">Target type.</param>
         /// <param name="args">An array of arguments that match in number, order, and type the parameters of the constructor to invoke. If args is an empty array or null, the constructor that takes no parameters (the parameterless constructor) is invoked.</param>
+        /// <returns>A reference to the newly created object.</returns>
+        public static object CreateInstance(this IGeneratorType generatorType, Type type, params object[] args) => CreateInstance(generatorType, type, false, args);
+
+        /// <summary>
+        /// Create objects of pre built type.
+        /// </summary>
+        /// <typeparam name="Type"></typeparam>
+        /// <param name="type">Target type.</param>
+        /// <param name="args">An array of arguments that match in number, order, and type the parameters of the constructor to invoke. If args is an empty array or null, the constructor that takes no parameters (the parameterless constructor) is invoked.</param>
+        /// <returns>A reference to the newly created object.</returns>
+        public static Type CreateInstanceSkipGeneric<Type>(this System.Type type, params object[] args) => (Type)CreateInstance(GeneratorCode, type, true, args);
+
+        /// <summary>
+        /// Create objects of pre built type.
+        /// </summary>
+        /// <param name="type">Target type.</param>
+        /// <param name="args">An array of arguments that match in number, order, and type the parameters of the constructor to invoke. If args is an empty array or null, the constructor that takes no parameters (the parameterless constructor) is invoked.</param>
+        /// <returns>A reference to the newly created object.</returns>
+        public static object CreateInstanceSkipGeneric(this Type type, params object[] args) => CreateInstance(GeneratorCode, type, true, args);
+
+        /// <summary>
+        /// Create objects of pre built type.
+        /// </summary>
+        /// <param name="generatorType"></param>
+        /// <param name="type">Target type.</param>
+        /// <param name="args">An array of arguments that match in number, order, and type the parameters of the constructor to invoke. If args is an empty array or null, the constructor that takes no parameters (the parameterless constructor) is invoked.</param>
+        /// <returns>A reference to the newly created object.</returns>
+        public static object CreateInstanceSkipGeneric(this IGeneratorType generatorType, Type type, params object[] args) => CreateInstance(generatorType, type, true, args);
+
+        /// <summary>
+        /// Create objects of pre built type.
+        /// </summary>
+        /// <param name="generatorType">Target IGeneratorType.</param>
+        /// <param name="type">Target type.</param>
+        /// <param name="skipGenericTypeCheck">Do you want to skip checking generic type parameters</param>
+        /// <param name="args">An array of arguments that match in number, order, and type the parameters of the constructor to invoke. If args is an empty array or null, the constructor that takes no parameters (the parameterless constructor) is invoked.</param>
         /// <returns></returns>
         /// <exception cref="ArgumentNullException"></exception>
         /// <exception cref="NotImplementedException"></exception>
         /// <exception cref="ArgumentOutOfRangeException"></exception>
-        public static object CreateInstance(this IGeneratorType generatorType, Type type, params object[] args)
+        static object CreateInstance(IGeneratorType generatorType, Type type, bool skipGenericTypeCheck, params object[] args)
         {
             if (type is null)
             {
@@ -538,7 +644,7 @@ namespace Business.SourceGenerator
 
             foreach (var method in meta.Constructors)
             {
-                var checkedArgs = CheckedMethod(method, args);
+                var checkedArgs = CheckedMethod(method, args, skipGenericTypeCheck);
 
                 if (checkedArgs is null)
                 {
@@ -553,7 +659,7 @@ namespace Business.SourceGenerator
                 return method.Invoke(default, checkedArgs, args);
             }
 
-            throw new ArgumentOutOfRangeException(nameof(args), "The number of parameters must be less than or equal to the actual total number of parameters for the method.");
+            throw new ArgumentOutOfRangeException(nameof(args), "The number of parameters must be equal to the actual total number of parameters for the method, and the parameter types must be consistent.");
         }
 
         /// <summary>
