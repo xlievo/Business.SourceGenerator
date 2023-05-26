@@ -1,7 +1,12 @@
 # Business.SourceGenerator
-This is a Roslyn-Analyzers SourceGenerator based library that mainly solves System.Type.MakeGenericType and AOP.
+This is a based on Roslyn Analyzers the SourceGenerator library, mainly to solve in the &lt;IlcDisableReflection&gt; scenarios for [System.Type.MakeGenericType(type)] generated code.
 
-Because AOT mode cannot dynamically generate code and types at run time, it requires that the types that need to be used must be completely determined at compile time.
+Due to the inability of AOT &lt;IlcDisableReflection&gt; mode to dynamically reflection types at runtime, it requires a complete determination of the types to be used at compile time.
+
+**Core competence:**  
+1: Constructors will be generated for all known types.  
+2: Access will be generated for custom types.  
+3: Provides an implementation of a single type parameter [System.Type.MakeGenericType(type)] for all known types.  
 
 **Install**
 [![NuGet Version](https://img.shields.io/nuget/v/Business.SourceGenerator.svg?style=flat)](https://www.nuget.org/packages/Business.SourceGenerator)
@@ -80,7 +85,7 @@ typeof(MyStruct<>)
 	.CreateInstance<IGeneratorAccessor>()
 	.AccessorSet<IGeneratorAccessor>("A", "666")
 	.AccessorSet<IGeneratorAccessor>("B", 777)
-	.AccessorGet(string name, out result);
+	.AccessorGet("B", out int result);
 ```
 
 ## About the secondary distribution of nuget packages [direct reference without watching]
