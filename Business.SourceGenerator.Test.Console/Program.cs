@@ -46,18 +46,18 @@ namespace Business.SourceGenerator.Test.Console
             //System.Console.WriteLine(rrr5);
 
             var myStruct = typeof(MyStruct<>)
-                .GetGenericType(typeof(List<int>))
+                .GetGenericType(typeof(MyStruct<List<MyStruct<List<int>>>>))
                 .CreateInstance<IGeneratorAccessor>("666");
 
             //ref string? a, ref (int c1, string c2) b, out (int? c1, string? c2) c
             var args2 = new object[] {
                 string.Empty,
-                RefArg.Ref(new List<int>{ 55 }),
+                RefArg.Ref(new MyStruct<List<MyStruct<List<int>>>>("aaa555") { B = new List<MyStruct<List<int>>> { new MyStruct<List<int>>("") { B = new List<int> { 777 } } } }),
                 RefArg.Out<(int? c1, string? c2)>()
             };
 
-            var r = await myStruct.AccessorMethodAsync<List<int>>("StructMethod", args2);
-            System.Console.WriteLine(r.First());
+            var r = await myStruct.AccessorMethodAsync<MyStruct<List<MyStruct<List<int>>>>>("StructMethod", args2);
+            System.Console.WriteLine(r.B.FirstOrDefault().B.FirstOrDefault());
 
             var result = typeof(ClassGeneric<string>)
                     .CreateInstance<IGeneratorAccessor>()

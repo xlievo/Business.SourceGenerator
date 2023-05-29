@@ -539,7 +539,7 @@ namespace Business.SourceGenerator
                 return default;
             }
 
-            if (!meta.MakeGenerics.TryGetValue(type, out Type makeType))
+            if (meta.MakeGenerics is null || !meta.MakeGenerics.TryGetValue(type, out Type makeType))
             {
                 return default;
             }

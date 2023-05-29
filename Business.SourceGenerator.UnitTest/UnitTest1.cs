@@ -757,11 +757,14 @@ namespace UnitAssembly
         {{
             {assemblyName}.BusinessSourceGenerator.Generator.SetGeneratorCode();
 
-            var r = typeof(MyCode.TypeInfo<>);
-            var result = typeof(MyCode.TypeInfo<Func<string, bool?>>)
-                    .CreateInstance<IGeneratorAccessor>();
+            var result = typeof(MyCode.MyStruct<>)
+                    .GetGenericType(typeof(MyCode.MyStruct<List<int>>))
+                    .CreateInstance<IGeneratorAccessor>(""666"");
 
-            return 0;
+            //var result = typeof(MyCode.TypeInfo<Func<string, bool?>>)
+            //        .CreateInstance<IGeneratorAccessor>();
+
+            return result;
         }}
     }}
 }}

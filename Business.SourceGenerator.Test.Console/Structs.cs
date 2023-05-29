@@ -4,7 +4,7 @@ using System.Threading.Tasks;
 
 [Business.SourceGenerator.Meta.GeneratorType]
 public partial struct MyStruct<T>
-    where T : class
+    //where T : class
 {
     public string A { get; set; }
 
@@ -15,8 +15,8 @@ public partial struct MyStruct<T>
         this.A = a ?? throw new ArgumentNullException(nameof(a));
     }
 
-    public ValueTask<T2> StructMethod<T2>(string? a, ref T2 b, out (int? c1, string? c2) c)
-        where T2 : class, System.Collections.Generic.IList<int>
+    public ValueTask<T> StructMethod<T2>(string? a, ref T b, out (int? c1, string? c2) c)
+        //where T2 : class, System.Collections.Generic.IList<int>
     {
         //b.c1 = (T)888;
         c = (333, "xxx");

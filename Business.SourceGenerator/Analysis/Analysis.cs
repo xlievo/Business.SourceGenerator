@@ -523,18 +523,11 @@ namespace Business.SourceGenerator.Analysis
             //var types = GetTypes(analysisInfo);
 
             var sb = new System.Text.StringBuilder(null);
-            var generatorTypes = new List<string>();
+            var generatorTypes = new Dictionary<string, string>();
 
             #region all type
 
             var definitions = makeGenerics.Where(c => !c.TypeArguments.Any(c => !(c.TypeKind is TypeKind.TypeParameter)) && c.IsGenericType && !c.IsAbstract);
-
-            //var types = analysisInfo.TypeSymbols.Where(c =>
-            //{
-            //    var typeSymbol = c.Value.Declared as ITypeSymbol;
-
-            //    return !typeSymbol.IsDefinition && !typeSymbol.TypeChecked(t => t.TypeKind is TypeKind.TypeParameter || Meta.Global.BusinessSourceGeneratorMeta == t.GetFullName(GetFullNameOpt.Create(captureStyle: CaptureStyle.Prefix))) && c.Value.IsCustom;
-            //}).ToArray();
 
             foreach (var info in analysisInfo.TypeSymbols)
             {
@@ -550,7 +543,8 @@ namespace Business.SourceGenerator.Analysis
                     continue;
                 }
 
-                if (makeGenericsKeys.Contains(typeSymbol.GetFullNameOrig()))
+                //if (makeGenericsKeys.Contains(typeSymbol.GetFullNameOrig()))
+                if (makeGenericsKeys.Contains(info.Value.Names.DeclaredStandard))
                 {
                     continue;
                 }
@@ -599,11 +593,28 @@ namespace Business.SourceGenerator.Analysis
 
                 sb.AppendLine();
                 sb.AppendLine($"        #endregion");
-                generatorTypes.Add(sb.ToString());
+
+                if (generatorTypes.ContainsKey(key))
+                {
+                    generatorTypes.Remove(key);
+                    generatorTypes.Add(key, sb.ToString());
+                }
+                else
+                {
+                    generatorTypes.Add(key, sb.ToString());
+                }
 
                 sb.Clear();
 
-                SetGenerics(definitions2, generatorTypes, typeClean, opt, typeSymbol);
+                var types = SetGenerics(definitions2, typeClean, opt, typeSymbol);
+
+                foreach (var item in types)
+                {
+                    if (!generatorTypes.ContainsKey(item.Key))
+                    {
+                        generatorTypes.Add(item.Key, item.Value);
+                    }
+                }
             }
 
             #endregion
@@ -613,7 +624,7 @@ namespace Business.SourceGenerator.Analysis
                 sb.AppendFormat("namespace {1}{0}", $"{format}{{{format}", assemblyName);
                 sb.AppendFormat(iGeneratorTypeTemp,
                     opt.Global ? $"{GlobalConst.Global}{assemblyName}." : default,
-                    generatorTypes.Any() ? $" {string.Join($"        , {format}        ", generatorTypes)} " : " ",
+                    generatorTypes.Any() ? $" {string.Join($"        , {format}        ", generatorTypes.Values)} " : " ",
                     globalMeta,
                     globalSystem,
                     globalGeneric,
@@ -624,7 +635,7 @@ namespace Business.SourceGenerator.Analysis
             {
                 sb.AppendFormat(iGeneratorTypeTemp,
                     opt.Global ? GlobalConst.Global : default,
-                    generatorTypes.Any() ? $" {string.Join(", ", generatorTypes)} " : " ",
+                    generatorTypes.Any() ? $" {string.Join(", ", generatorTypes.Values)} " : " ",
                     globalMeta,
                     globalSystem,
                     globalGeneric,
@@ -639,9 +650,11 @@ namespace Business.SourceGenerator.Analysis
 
             return sb.ToString();
 
-            static void SetGenerics(IEnumerable<INamedTypeSymbol> makeGenerics, List<string> generatorTypes, Func<string, bool, string> typeClean, ToCodeOpt opt, params ITypeSymbol[] typeArgument)
+            static Dictionary<string, string> SetGenerics(IEnumerable<INamedTypeSymbol> makeGenerics, Func<string, bool, string> typeClean, ToCodeOpt opt, params ITypeSymbol[] typeArgument)
             {
                 var globalMeta = opt.GetGlobalName(GlobalName.Business_SourceGenerator_Meta);
+
+                var types = new Dictionary<string, string>();
 
                 foreach (var makeGeneric in makeGenerics)
                 {
@@ -666,10 +679,14 @@ namespace Business.SourceGenerator.Analysis
 
                     sb.AppendLine();
                     sb.AppendLine($"        #endregion");
-                    generatorTypes.Add(sb.ToString());
+                    //generatorTypes.Add(sb.ToString());
+
+                    types.Add(key, sb.ToString());
 
                     sb.Clear();
                 }
+
+                return types;
             }
         }
 

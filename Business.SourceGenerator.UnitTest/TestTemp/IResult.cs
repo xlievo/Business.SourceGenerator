@@ -82,7 +82,7 @@ namespace Business.SourceGenerator.Test
     /// <typeparam name="DataType"></typeparam>
     //[Business.SourceGenerator.Meta.GeneratorType]
     public interface IResult2<DataType> : IResult<DataType>
-        where DataType : class, IList<string>, new()
+        //where DataType : class, IList<string>, new()
     {
         /// <summary>
         /// Specific Byte/Json data objects
@@ -96,7 +96,7 @@ namespace Business.SourceGenerator.Test
     /// <typeparam name="Type"></typeparam>
     //[Meta.GeneratorType]
     public partial class ResultObject<Type> : IResult2<Type>
-        where Type : class, IList<string>, new()
+        //where Type : class, IList<string>, new()
     {
         /// <summary>
         /// Activator.CreateInstance
@@ -209,7 +209,7 @@ namespace Business.SourceGenerator.Test
     /// </summary>
     /// <typeparam name="Type"></typeparam>
     public partial class ResultObject2<Type> : ResultObject<Type>
-        where Type : class, IList<string>, new()
+        //where Type : class, IList<string>, new()
     {
         /// <summary>
         /// Activator.CreateInstance
@@ -320,7 +320,7 @@ namespace Business.SourceGenerator.Test
     /// </summary>
     /// <typeparam name="Type"></typeparam>
     public partial struct ResultObject3<Type> : IResult2<Type>
-        where Type : class, IList<string>, new()
+        //where Type : class, IList<string>, new()
     {
         /// <summary>
         /// Activator.CreateInstance
