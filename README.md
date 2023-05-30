@@ -22,21 +22,21 @@ Due to the inability of AOT &lt;IlcDisableReflection&gt; mode to dynamically ref
 [Business.SourceGenerator.Meta.GeneratorType]
 public partial struct MyStruct<T>
 {
-  public string A { get; set; }
+    public string A { get; set; }
 
-  public T B { get; set; }
+    public T B { get; set; }
 
-  public MyStruct(string a)
-  {
-	  this.A = a ?? throw new ArgumentNullException(nameof(a));
-  }
+    public MyStruct(string a)
+    {
+        this.A = a ?? throw new ArgumentNullException(nameof(a));
+    }
 
-  public ValueTask<(int c1, string c2)> StructMethod(string? a, ref (int c1, string c2) b, out (int? c1, string? c2) c)
-  {
-  	  b.c1 = 888;
-	  c = (333, "xxx");
-	  return ValueTask.FromResult(b);
-  }
+    public ValueTask<(int c1, string c2)> StructMethod(string? a, ref (int c1, string c2) b, out (int? c1, string? c2) c)
+    {
+        b.c1 = 888;
+        c = (333, "xxx");
+        return ValueTask.FromResult(b);
+    }
 }
 
 /* typeof(MyStruct<>).GetGenericType<int>(); */
@@ -46,8 +46,8 @@ public partial struct MyStruct<T>
 **Gets an instance of the specified type.**
 ```C#
 typeof(MyStruct<>)
-  .GetGenericType<int>()
-  .CreateInstance(params object[] args);
+    .GetGenericType<int>()
+    .CreateInstance(params object[] args);
 ```
 
 ## AccessorMethod & AccessorMethodAsync
@@ -55,13 +55,13 @@ typeof(MyStruct<>)
 **The specified class or struct needs to declare the 'partial' keyword.**
 ```C#
 var myStruct = typeof(MyStruct<>)
-  .GetGenericType(typeof(int))
-  .CreateInstance<IGeneratorAccessor>("666");
+    .GetGenericType(typeof(int))
+    .CreateInstance<IGeneratorAccessor>("666");
 
 var args = new object[] { 
-  string.Empty,
-  RefArg.Ref((55, "66")),
-  RefArg.Out<(int? c1, string? c2)>()
+    string.Empty,
+    RefArg.Ref((55, "66")),
+    RefArg.Out<(int? c1, string? c2)>()
 };
 		
 var result = await myStruct.AccessorMethodAsync("StructMethod", args);
@@ -81,11 +81,11 @@ typeof(MyStruct<>)
 **The specified class or struct needs to declare the 'partial' keyword.**
 ```C#
 typeof(MyStruct<>)
-  .GetGenericType(typeof(int))
-  .CreateInstance<IGeneratorAccessor>()
-  .AccessorSet<IGeneratorAccessor>("A", "666")
-  .AccessorSet<IGeneratorAccessor>("B", 777)
-  .AccessorGet("B", out int result);
+    .GetGenericType(typeof(int))
+    .CreateInstance<IGeneratorAccessor>()
+    .AccessorSet<IGeneratorAccessor>("A", "666")
+    .AccessorSet<IGeneratorAccessor>("B", 777)
+    .AccessorGet("B", out int result);
 ```
 
 ## About the secondary distribution of nuget packages [direct reference without watching]
