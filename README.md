@@ -110,7 +110,7 @@ typeof(MyStruct<>)
         <CompilerVisibleProperty Include="Your_project_name" />
     </ItemGroup>
     <ItemGroup>
-        <PackageReference Include="Microsoft.Net.Compilers.Toolset" Version="4.3.1" />
+        <PackageReference Include="Microsoft.Net.Compilers.Toolset" Version="4.6.0" />
     </ItemGroup>
 </Project>
 ```
@@ -128,6 +128,6 @@ typeof(MyStruct<>)
     <None Include="Assets\src\IResult.cs" />
 </ItemGroup>
 <ItemGroup>
-    <PackageReference Include="Business.SourceGenerator" Version="0.0.5-pre.4" />
+    <PackageReference Include="Business.SourceGenerator" Version="0.0.6.21" />
 </ItemGroup>
 ```
