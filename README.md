@@ -68,11 +68,11 @@ var result = await myStruct.AccessorMethodAsync("StructMethod", args);
 	
 /*
 typeof(MyStruct<>)
-	.GetGenericType<int>()
-	.CreateInstance<>(params object[] args)
-	.AccessorMethod(string name, out result, params object[] args);
+    .GetGenericType<int>()
+    .CreateInstance<>(params object[] args)
+    .AccessorMethod(string name, out result, params object[] args);
 	
-	AccessorMethodAsync<Type>(string name, params object[] args);
+    AccessorMethodAsync<Type>(string name, params object[] args);
 */
 ```
 
