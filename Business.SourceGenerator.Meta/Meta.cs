@@ -78,8 +78,8 @@ namespace Business.SourceGenerator.Meta
         /// </summary>
         /// <param name="name">property or field name.</param>
         /// <param name="value">The new value.</param>
-        /// <returns></returns>
-        public bool AccessorSet(string name, object value);
+        /// <returns>Success or not.</returns>
+        public bool TryAccessorSet(string name, object value);
     }
 
     /// <summary>

@@ -1,11 +1,12 @@
-﻿namespace Business.SourceGenerator.Test
+﻿using System.Collections.Generic;
+
+namespace Business.SourceGenerator.Test
 {
     [System.AttributeUsage(System.AttributeTargets.All, AllowMultiple = true)]
     public sealed class GeneratorType2Attribute : System.Attribute
     {
         public GeneratorType2Attribute(System.Type type, string a = default, int b = default)
         {
-
         }
     }
 

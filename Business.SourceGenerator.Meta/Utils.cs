@@ -45,13 +45,9 @@ namespace Business.SourceGenerator
         /// <param name="accessor">The object whose value will be get.</param>
         /// <param name="name">property or field name.</param>
         /// <returns>Return member value.</returns>
-        public static Type AccessorGet<Type>(this IGeneratorAccessor accessor, string name)
-        {
-            var success = AccessorGet(accessor, name, out object result2);
+        public static Type AccessorGet<Type>(this IGeneratorAccessor accessor, string name) => TryAccessorGet(accessor, name, out object result2) ? (Type)result2 : default;
 
-            return success ? (Type)result2 : default;
-        }
-
+        /*
         /// <summary>
         /// Gets the property or field value of a specified object.
         /// </summary>
@@ -62,12 +58,13 @@ namespace Business.SourceGenerator
         /// <returns>Return to true successfully.</returns>
         public static bool AccessorGet<Type>(this IGeneratorAccessor accessor, string name, out Type result)
         {
-            var success = AccessorGet(accessor, name, out object result2);
+            var success = TryAccessorGet(accessor, name, out object result2);
 
             result = success ? (Type)result2 : default;
 
             return success;
         }
+        */
 
         /// <summary>
         /// Gets the property or field value of a specified object.
@@ -77,7 +74,7 @@ namespace Business.SourceGenerator
         /// <param name="result">The property or field value of the specified object.</param>
         /// <returns>Return to true successfully.</returns>
         /// <exception cref="ArgumentNullException"></exception>
-        public static bool AccessorGet(this IGeneratorAccessor accessor, string name, out object result)
+        public static bool TryAccessorGet(this IGeneratorAccessor accessor, string name, out object result)
         {
             if (accessor is null)
             {
@@ -105,16 +102,8 @@ namespace Business.SourceGenerator
         /// <param name="accessor">The object whose value will be set.</param>
         /// <param name="name">property or field name.</param>
         /// <param name="value">The new value.</param>
-        /// <returns></returns>
-        public static IGeneratorAccessor AccessorSet(this IGeneratorAccessor accessor, string name, object value)
-        {
-            if (accessor.AccessorSet(name, value))
-            {
-                return accessor;
-            }
-
-            return default;
-        }
+        /// <returns>IGeneratorAccessor.</returns>
+        public static IGeneratorAccessor AccessorSet(this IGeneratorAccessor accessor, string name, object value) => accessor.TryAccessorSet(name, value) ? accessor : default;
 
         /// <summary>
         /// Sets the property or field value of a specified object.
@@ -123,16 +112,8 @@ namespace Business.SourceGenerator
         /// <param name="accessor">The object whose value will be set.</param>
         /// <param name="name">property or field name.</param>
         /// <param name="value">The new value.</param>
-        /// <returns></returns>
-        public static Type AccessorSet<Type>(this IGeneratorAccessor accessor, string name, object value)
-        {
-            if (accessor.AccessorSet(name, value))
-            {
-                return (Type)accessor;
-            }
-
-            return default;
-        }
+        /// <returns>Caller of specified type.</returns>
+        public static Type AccessorSet<Type>(this IGeneratorAccessor accessor, string name, object value) => accessor.TryAccessorSet(name, value) ? (Type)accessor : default;
 
         #endregion
 

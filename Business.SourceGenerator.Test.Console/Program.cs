@@ -59,9 +59,9 @@ namespace Business.SourceGenerator.Test.Console
             var r = await myStruct.AccessorMethodAsync<MyStruct<List<MyStruct<List<int>>>>>("StructMethod", args2);
             System.Console.WriteLine(r.B.FirstOrDefault().B.FirstOrDefault());
 
-            myStruct.AccessorGet("A", out string rr);
-            myStruct.AccessorSet<IGeneratorAccessor>("A", "999");
-            System.Console.WriteLine(rr);
+            System.Console.WriteLine(myStruct.AccessorGet<string>("A"));
+            myStruct.AccessorSet("A", "999")?.AccessorSet("A", "555000");
+            System.Console.WriteLine(myStruct.AccessorGet<string>("A"));
 
             var result = typeof(ClassGeneric<string>)
                     .CreateInstance<IGeneratorAccessor>()
@@ -158,24 +158,13 @@ namespace Business.SourceGenerator.Test.Console
 
 
 
-            if (MyStruct111.AccessorGet("aaa", out string value))
-            {
-                System.Console.WriteLine(value);
-            }
+            System.Console.WriteLine(MyStruct111.AccessorGet<string>("aaa"));
 
-            if (MyStruct111.AccessorGet("bbb", out int? value22))
-            {
-                System.Console.WriteLine(value22);
-            }
+            System.Console.WriteLine(MyStruct111.AccessorGet<int?>("bbb"));
 
-            if (MyStruct111.AccessorGet("ccc", out DateTimeOffset? value3))
-            {
-                System.Console.WriteLine(value3);
-            }
+            System.Console.WriteLine(MyStruct111.AccessorGet<DateTimeOffset?>("ccc"));
 
-            _ = MyStruct111.AccessorGet("ccc", out object rrr);
-
-            System.Console.WriteLine(rrr);
+            System.Console.WriteLine(MyStruct111.AccessorGet<object>("ccc"));
 
             var data = typeof(ResultObject<>).GetGenericType(typeof(MyStruct)).CreateInstance(MyStruct111, 8888, "message", true);
 

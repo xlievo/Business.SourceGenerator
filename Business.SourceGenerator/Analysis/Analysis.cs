@@ -781,7 +781,7 @@ namespace Business.SourceGenerator.Analysis
 
         #region Temp
 
-        const string accessorTemp = @"public {5} AccessorSet({3} name, {4} value)
+        const string accessorTemp = @"public {5} TryAccessorSet({3} name, {4} value)
 {{
     if (name is null)
     {{
