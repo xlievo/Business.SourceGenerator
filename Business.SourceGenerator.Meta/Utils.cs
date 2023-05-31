@@ -41,15 +41,28 @@ namespace Business.SourceGenerator
         /// <summary>
         /// Gets the property or field value of a specified object.
         /// </summary>
-        /// <typeparam name="Type">Type of returned object.</typeparam>
+        /// <typeparam name="Type">Returns the caller of the specified type.</typeparam>
+        /// <param name="accessor">The object whose value will be get.</param>
+        /// <param name="name">property or field name.</param>
+        /// <returns>Return member value.</returns>
+        public static Type AccessorGet<Type>(this IGeneratorAccessor accessor, string name)
+        {
+            var success = AccessorGet(accessor, name, out object result2);
+
+            return success ? (Type)result2 : default;
+        }
+
+        /// <summary>
+        /// Gets the property or field value of a specified object.
+        /// </summary>
+        /// <typeparam name="Type">Returns the caller of the specified type.</typeparam>
         /// <param name="accessor">The object whose value will be get.</param>
         /// <param name="name">property or field name.</param>
         /// <param name="result">The property or field value of the specified object.</param>
-        /// <param name="args">Parameter object of calling method.</param>
         /// <returns>Return to true successfully.</returns>
-        public static bool AccessorGet<Type>(this IGeneratorAccessor accessor, string name, out Type result, params object[] args)
+        public static bool AccessorGet<Type>(this IGeneratorAccessor accessor, string name, out Type result)
         {
-            var success = AccessorGet(accessor, name, out object result2, args);
+            var success = AccessorGet(accessor, name, out object result2);
 
             result = success ? (Type)result2 : default;
 
@@ -62,10 +75,9 @@ namespace Business.SourceGenerator
         /// <param name="accessor">The object whose value will be get.</param>
         /// <param name="name">property or field name.</param>
         /// <param name="result">The property or field value of the specified object.</param>
-        /// <param name="args">Parameter object of calling method.</param>
         /// <returns>Return to true successfully.</returns>
         /// <exception cref="ArgumentNullException"></exception>
-        public static bool AccessorGet(this IGeneratorAccessor accessor, string name, out object result, params object[] args)
+        public static bool AccessorGet(this IGeneratorAccessor accessor, string name, out object result)
         {
             if (accessor is null)
             {
@@ -75,11 +87,6 @@ namespace Business.SourceGenerator
             if (name is null)
             {
                 throw new ArgumentNullException(nameof(name));
-            }
-
-            if (args is null)
-            {
-                args = Array.Empty<object>();
             }
 
             if (!accessor.AccessorType().Members.TryGetValue(name, out IAccessor meta) || !(meta is IAccessorMember member) || member.GetValue is null)
@@ -95,7 +102,24 @@ namespace Business.SourceGenerator
         /// <summary>
         /// Sets the property or field value of a specified object.
         /// </summary>
-        /// <typeparam name="Type"></typeparam>
+        /// <param name="accessor">The object whose value will be set.</param>
+        /// <param name="name">property or field name.</param>
+        /// <param name="value">The new value.</param>
+        /// <returns></returns>
+        public static IGeneratorAccessor AccessorSet(this IGeneratorAccessor accessor, string name, object value)
+        {
+            if (accessor.AccessorSet(name, value))
+            {
+                return accessor;
+            }
+
+            return default;
+        }
+
+        /// <summary>
+        /// Sets the property or field value of a specified object.
+        /// </summary>
+        /// <typeparam name="Type">Returns the caller of the specified type.</typeparam>
         /// <param name="accessor">The object whose value will be set.</param>
         /// <param name="name">property or field name.</param>
         /// <param name="value">The new value.</param>

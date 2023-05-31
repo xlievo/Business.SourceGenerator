@@ -59,6 +59,10 @@ namespace Business.SourceGenerator.Test.Console
             var r = await myStruct.AccessorMethodAsync<MyStruct<List<MyStruct<List<int>>>>>("StructMethod", args2);
             System.Console.WriteLine(r.B.FirstOrDefault().B.FirstOrDefault());
 
+            myStruct.AccessorGet("A", out string rr);
+            myStruct.AccessorSet<IGeneratorAccessor>("A", "999");
+            System.Console.WriteLine(rr);
+
             var result = typeof(ClassGeneric<string>)
                     .CreateInstance<IGeneratorAccessor>()
                     .AccessorSet<IGeneratorAccessor>("A", "WWW")
