@@ -22,6 +22,9 @@ Due to the inability of AOT &lt;IlcDisableReflection&gt; mode to dynamically ref
 using Business.SourceGenerator;
 using Business.SourceGenerator.Meta;
 
+//Globally unique settings, before startup.
+BusinessSourceGenerator.Generator.SetGeneratorCode();
+
 [Business.SourceGenerator.Meta.GeneratorType]
 public partial struct MyStruct<T>
 {
