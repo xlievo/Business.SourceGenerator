@@ -19,6 +19,9 @@ Due to the inability of AOT &lt;IlcDisableReflection&gt; mode to dynamically ref
 
 1. Declare [Business.SourceGenerator.Meta.GeneratorType] and partial key features on struct or class or interface that need to be generated in advance.
 ```C#
+using Business.SourceGenerator;
+using Business.SourceGenerator.Meta;
+
 [Business.SourceGenerator.Meta.GeneratorType]
 public partial struct MyStruct<T>
 {
@@ -45,9 +48,17 @@ public partial struct MyStruct<T>
 ## CreateInstance
 **Gets an instance of the specified type.**
 ```C#
+/*
+var type = typeof(MyStruct<>)
+    .MakeGenericType(typeof(int));
+    System.Activator.CreateInstance(type, "666");
+*/
+```
+to
+```C#
 typeof(MyStruct<>)
-    .GetGenericType<int>()
-    .CreateInstance(params object[] args);
+    .GetGenericType(typeof(int))
+    .CreateInstance("666");
 ```
 
 ## AccessorMethod & AccessorMethodAsync
