@@ -115,12 +115,12 @@ typeof(MyStruct<>)
 ```
 
 ## AccessorSet & AccessorGet
-**Set the value of a field or property.**
+**Access the members of the specified instance.**
 **The specified class or struct needs to declare the 'partial' keyword.**
 ```C#
 typeof(MyStruct<>)
     .GetGenericType(typeof(int))
-    .CreateInstance<IGeneratorAccessor>()
+    .CreateInstance<IGeneratorAccessor>("666")
     .AccessorSet<IGeneratorAccessor>("A", "666")
     .AccessorSet<IGeneratorAccessor>("B", 777)
     .AccessorGet("B", out int result);
