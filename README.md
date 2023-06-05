@@ -14,18 +14,30 @@ Due to the inability of AOT &lt;IlcDisableReflection&gt; mode to dynamically ref
 [![](https://img.shields.io/badge/License-MIT-blue?style=flat-square)](https://github.com/xlievo/Business.SourceGenerator/blob/master/LICENSE)
 ***
 
-## GetGenericType
-**Replace System.Type.MakeGenericType(typeArguments) by generating generic type code in advance, Gets the specified generic type.**
+## necessary condition
+**Configure AOT to disable reflection mode in .csproj.**
+```C#
+<PublishAot>true</PublishAot>
+<IlcDisableReflection>true</IlcDisableReflection>
+```
+**Initialize and reference namespaces at global entry points.**
+```C#
+using Business.SourceGenerator;
+using Business.SourceGenerator.Meta;
+//Globally unique settings, before startup.
+static async Task<int> Main(string[] args)
+{
+    BusinessSourceGenerator.Generator.SetGeneratorCode();
+}
+```
 
-1. Declare [Business.SourceGenerator.Meta.GeneratorType] and partial key features on struct or class or interface that need to be generated in advance.
+## Custom & [GeneratorType]
+**Declare [GeneratorType] and partial key features on struct or class or interface that need to be generated in advance.**
 ```C#
 using Business.SourceGenerator;
 using Business.SourceGenerator.Meta;
 
-//Globally unique settings, before startup.
-BusinessSourceGenerator.Generator.SetGeneratorCode();
-
-[Business.SourceGenerator.Meta.GeneratorType]
+[GeneratorType]
 public partial struct MyStruct<T>
 {
     public string A { get; set; }
@@ -44,8 +56,20 @@ public partial struct MyStruct<T>
         return ValueTask.FromResult(b);
     }
 }
+```
 
-/* typeof(MyStruct<>).GetGenericType<int>(); */
+## GetGenericType
+**Replace System.Type.MakeGenericType(typeArguments) by generating generic type code in advance, Gets the specified generic type.**
+```C#
+/*
+var type = typeof(MyStruct<>)
+    .MakeGenericType(typeof(int));
+*/
+```
+to
+```C#
+typeof(MyStruct<>)
+    .GetGenericType(typeof(int));
 ```
 
 ## CreateInstance
