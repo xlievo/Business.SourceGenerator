@@ -89,7 +89,7 @@ typeof(MyStruct<>)
 ```
 
 ## AccessorMethod & AccessorMethodAsync
-**Access the members and methods of the specified instance.**
+**Access the methods of the specified instance.**
 **The specified class or struct needs to declare the 'partial' keyword.**
 ```C#
 var myStruct = typeof(MyStruct<>)
