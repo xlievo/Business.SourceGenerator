@@ -372,24 +372,24 @@ namespace Business.SourceGenerator.Meta
         /// </summary>
         /// <param name="value"></param>
         /// <returns></returns>
-        public RefArg Set(object value = default) => new RefArg(value, Type, RefKind);
+        public RefArg Set(object value = default) => new RefArg(value, RuntimeType, RefKind);
 
         /// <summary>
         /// Original parameter object.
         /// </summary>
         public readonly object Value { get; }
 
-        public readonly Type Type { get; }
+        public readonly Type RuntimeType { get; }
 
         /// <summary>
         /// RefKind.
         /// </summary>
         public readonly RefKind RefKind { get; }
 
-        public RefArg(object value, Type type, RefKind refKind)
+        public RefArg(object value, Type runtimeType, RefKind refKind)
         {
             this.Value = value;
-            this.Type = type;
+            this.RuntimeType = runtimeType;
             this.RefKind = refKind;
         }
     }
@@ -1664,6 +1664,11 @@ namespace Business.SourceGenerator.Meta
     public interface IAccessorParameter : IAccessorMeta, IParameterMeta//, System.IEquatable<IAccessorMeta>
     {
         /// <summary>
+        /// Gets the symbol name. Returns the empty string if unnamed.
+        /// </summary>
+        public new string Name { get; }
+
+        /// <summary>
         /// Returns true if the parameter was declared as a parameter array.
         /// </summary>
         public bool IsParams { get; }
@@ -2804,6 +2809,10 @@ namespace Business.SourceGenerator.Meta
         /// </summary>
         public readonly string Name { get; }
 
+        string IAccessorMeta.Name => Name;
+
+        string IParameterMeta.Name => Name;
+
         /// <summary>
         /// Gets the symbol full name. Returns the empty string if unnamed.
         /// </summary>
@@ -3634,23 +3643,26 @@ namespace Business.SourceGenerator.Meta
 
     public readonly struct AccessorAttribute
     {
-        public AccessorAttribute(string name, TypedConstant[] constructor)
+        public AccessorAttribute(string name, Type runtimeType, TypedConstant[] constructor)
         {
             Name = name;
+            RuntimeType = runtimeType;
             Constructor = constructor;
         }
 
         public readonly string Name { get; }
+
+        public readonly Type RuntimeType { get; }
 
         public readonly TypedConstant[] Constructor { get; }
     }
 
     public readonly struct TypedConstant
     {
-        public TypedConstant(string name, Type type, bool isNull, TypedConstantKind kind, object value)
+        public TypedConstant(string name, Type runtimeType, bool isNull, TypedConstantKind kind, object value)
         {
             Name = name;
-            Type = type;
+            RuntimeType = runtimeType;
             IsNull = isNull;
             Kind = kind;
             Value = value;
@@ -3658,7 +3670,7 @@ namespace Business.SourceGenerator.Meta
 
         public readonly string Name { get; }
 
-        public readonly Type Type { get; }
+        public readonly Type RuntimeType { get; }
 
         public readonly bool IsNull { get; }
 

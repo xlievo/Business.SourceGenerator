@@ -436,7 +436,7 @@ namespace Business.SourceGenerator
                         }
 
                         arg = refValue.Value;
-                        argType = refValue.Type;
+                        argType = refValue.RuntimeType;
                     }
                     else
                     {

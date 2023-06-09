@@ -58,7 +58,7 @@
   </ItemGroup>
 
   <ItemGroup>
-    <PackageReference Include="Business.SourceGenerator.Test" Version="1.0.2.24" />
+    <PackageReference Include="Business.SourceGenerator.Test" Version="1.0.2.25" />
   </ItemGroup>
 
   <ItemGroup>

@@ -1,4 +1,6 @@
-﻿using System.Collections.Generic;
+﻿using System;
+using System.Linq;
+using System.Collections.Generic;
 
 namespace Business.SourceGenerator.Test
 {
@@ -7,6 +9,7 @@ namespace Business.SourceGenerator.Test
     {
         public GeneratorType2Attribute(System.Type type, string a = default, int b = default)
         {
+            
         }
     }
 

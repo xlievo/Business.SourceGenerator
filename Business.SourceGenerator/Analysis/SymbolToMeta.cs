@@ -971,7 +971,8 @@ namespace Business.SourceGenerator.Analysis
             var attr = attributes.Select(c =>
             {
                 var args = GetAttributeArguments(c, globalMeta, typeClean);
-                return $"new {globalMeta}AccessorAttribute(\"{c.AttributeClass.Name}\", {((args?.Any() ?? false) ? $"new {globalMeta}TypedConstant[] {{ {string.Join(", ", args)} }}" : "default")})";
+
+                return $"new {globalMeta}AccessorAttribute(\"{c.AttributeClass.Name}\", typeof({c.AttributeClass.GetFullNameStandardFormat(typeClean: typeClean)}), {((args?.Any() ?? false) ? $"new {globalMeta}TypedConstant[] {{ {string.Join(", ", args)} }}" : "default")})";
             });
 
             return $"new {globalMeta}AccessorAttribute[] {{ {string.Join(", ", attr)} }}";

@@ -2,7 +2,7 @@
 
   <PropertyGroup>
     <TargetFramework>netstandard2.0</TargetFramework>
-    <Version>1.0.2.24</Version>
+    <Version>1.0.2.25</Version>
 	<GeneratePackageOnBuild>true</GeneratePackageOnBuild>
     <!--<EmitCompilerGeneratedFiles>true</EmitCompilerGeneratedFiles>
     <CompilerGeneratedFilesOutputPath>GeneratedFiles</CompilerGeneratedFilesOutputPath>-->
@@ -19,7 +19,7 @@
   </ItemGroup>
 
   <ItemGroup>
-    <PackageReference Include="Business.SourceGenerator" Version="0.0.6.23" />
+    <PackageReference Include="Business.SourceGenerator" Version="0.0.6.24" />
   </ItemGroup>
 
   <ItemGroup>
