@@ -49,7 +49,10 @@ public partial struct MyStruct<T>
         this.A = a ?? throw new ArgumentNullException(nameof(a));
     }
 
-    public ValueTask<(int c1, string c2)> StructMethod(string? a, ref (int c1, string c2) b, out (int? c1, string? c2) c)
+    public ValueTask<(int c1, string c2)> StructMethod(
+        string? a, 
+        ref (int c1, string c2) b, 
+        out (int? c1, string? c2) c)
     {
         b.c1 = 888;
         c = (333, "xxx");
