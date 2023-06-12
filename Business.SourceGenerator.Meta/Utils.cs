@@ -18,6 +18,7 @@ namespace Business.SourceGenerator
 {
     using Business.SourceGenerator.Meta;
     using System;
+    using System.Linq;
     using System.Threading.Tasks;
 
     public static partial class Utils
@@ -704,6 +705,42 @@ namespace Business.SourceGenerator
 
             return meta.IsCustom;
         }
+
+        #endregion
+
+        #region Attribute
+
+        /// <summary>
+        /// Retrieve custom attribute.
+        /// </summary>
+        /// <param name="accessor">Proporciona acceso a los datos de atributos personalizados para los ensamblados.</param>
+        /// <returns></returns>
+        public static Attribute GetAttribute(this AccessorAttribute accessor)
+        {
+            var args = accessor.ConstructorArguments?.Select(c => c.Value);
+
+            var attr = accessor.RuntimeType.CreateInstance<Attribute>(args?.ToArray());
+
+            if (attr is IGeneratorAccessor generatorAccessor && (accessor.NamedArguments?.Any() ?? false))
+            {
+                foreach (var item in accessor.NamedArguments)
+                {
+                    generatorAccessor.AccessorSet(item.Name, item.Value);
+                }
+            }
+
+            return attr;
+        }
+
+        /// <summary>
+        /// Retrieve custom attribute.
+        /// </summary>
+        /// <typeparam name="Attribute">Proporciona acceso a los datos de atributos personalizados para los ensamblados.</typeparam>
+        /// <param name="accessor"></param>
+        /// <returns></returns>
+        public static Attribute GetAttribute<Attribute>(this AccessorAttribute accessor)
+            where Attribute : System.Attribute, IGeneratorAccessor
+            => GetAttribute(accessor) as Attribute;
 
         #endregion
 

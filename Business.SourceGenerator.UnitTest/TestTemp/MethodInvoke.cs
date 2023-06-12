@@ -65,7 +65,7 @@ namespace MyCode
 
         [Business.SourceGenerator.Test.GeneratorType2(typeof(System.DateTimeOffset), "999", 333)]
         [Business.SourceGenerator.Test.GeneratorType2(typeof(System.DateTimeOffset), b: 444)]
-        [Business.SourceGenerator.Test.GeneratorType2]
+        [Business.SourceGenerator.Test.GeneratorType2(A = "dddddddd")]
         public System.Threading.Tasks.ValueTask<dynamic> StructMethod7<T2>(
         ref T2? a,
         out int? b,

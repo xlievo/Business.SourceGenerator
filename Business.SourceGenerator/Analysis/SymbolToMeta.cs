@@ -971,8 +971,9 @@ namespace Business.SourceGenerator.Analysis
             var attr = attributes.Select(c =>
             {
                 var args = GetAttributeArguments(c, globalMeta, typeClean);
+                var namedArgs = GetAttributeNamedArguments(c, globalMeta, typeClean);
 
-                return $"new {globalMeta}AccessorAttribute(\"{c.AttributeClass.Name}\", typeof({c.AttributeClass.GetFullNameStandardFormat(typeClean: typeClean)}), {((args?.Any() ?? false) ? $"new {globalMeta}TypedConstant[] {{ {string.Join(", ", args)} }}" : "default")})";
+                return $"new {globalMeta}AccessorAttribute(\"{c.AttributeClass.Name}\", typeof({c.AttributeClass.GetFullNameStandardFormat(typeClean: typeClean)}), {((args?.Any() ?? false) ? $"new {globalMeta}TypedConstant[] {{ {string.Join(", ", args)} }}" : "default")}, {((namedArgs?.Any() ?? false) ? $"new {globalMeta}TypedConstant[] {{ {string.Join(", ", namedArgs)} }}" : "default")})";
             });
 
             return $"new {globalMeta}AccessorAttribute[] {{ {string.Join(", ", attr)} }}";
@@ -984,10 +985,22 @@ namespace Business.SourceGenerator.Analysis
 
             return $"new {globalMeta}TypedConstant(" +
             $"\"{c.Name}\", " +
-            $"typeof({c.Type.GetFullNameStandardFormat(typeClean: typeClean)}), " +
+            $"typeof({v.Type.GetFullNameStandardFormat(typeClean: typeClean)}), " +
             $"{(v.IsNull ? "true" : "default")}, " +
             $"{globalMeta}TypedConstantKind.{v.Kind.GetName()}, " +
-            $"{(c.Type is IArrayTypeSymbol array ? v.Values.Any() ? $"new {array.ElementType.GetFullNameStandardFormat(typeClean: typeClean)}[] {v.ToCSharpString()}" : "default" : v.ToCSharpString())})";
+            $"{(v.Type is IArrayTypeSymbol array ? v.Values.Any() ? $"new {array.ElementType.GetFullNameStandardFormat(typeClean: typeClean)}[] {v.ToCSharpString()}" : "default" : v.ToCSharpString())})";
+        });
+
+        public static IEnumerable<string> GetAttributeNamedArguments(AttributeData attribute, string globalMeta, Func<string, bool, string> typeClean) => attribute.NamedArguments.Select(c =>
+        {
+            var v = c.Value;
+
+            return $"new {globalMeta}TypedConstant(" +
+            $"\"{c.Key}\", " +
+            $"typeof({v.Type.GetFullNameStandardFormat(typeClean: typeClean)}), " +
+            $"{(v.IsNull ? "true" : "default")}, " +
+            $"{globalMeta}TypedConstantKind.{v.Kind.GetName()}, " +
+            $"{(v.Type is IArrayTypeSymbol array ? v.Values.Any() ? $"new {array.ElementType.GetFullNameStandardFormat(typeClean: typeClean)}[] {v.ToCSharpString()}" : "default" : v.ToCSharpString())})";
         });
     }
 }

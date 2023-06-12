@@ -19,6 +19,7 @@ namespace Business.SourceGenerator.Meta
     using System;
     using System.Collections;
     using System.Collections.Generic;
+    using System.Linq;
     using System.Threading.Tasks;
 
     public readonly struct Global
@@ -3641,22 +3642,40 @@ namespace Business.SourceGenerator.Meta
         #endregion
     }
 
+    /// <summary>
+    /// Proporciona acceso a los datos de atributos personalizados para los ensamblados, los módulos, los tipos, los miembros y los parámetros cargados en el contexto.
+    /// </summary>
     public readonly struct AccessorAttribute
     {
-        public AccessorAttribute(string name, Type runtimeType, TypedConstant[] constructor)
+        public AccessorAttribute(string name, Type runtimeType, TypedConstant[] constructorArguments, TypedConstant[] namedArguments)
         {
             Name = name;
             RuntimeType = runtimeType;
-            Constructor = constructor;
+            ConstructorArguments = constructorArguments;
+            NamedArguments = namedArguments;
         }
 
         public readonly string Name { get; }
 
+        /// <summary>
+        /// Obtiene el tipo del atributo.
+        /// </summary>
         public readonly Type RuntimeType { get; }
 
-        public readonly TypedConstant[] Constructor { get; }
+        /// <summary>
+        /// Obtiene una lista con los argumentos de posición especificados para la instancia de atributo representada por el objeto CustomAttributeData.
+        /// </summary>
+        public readonly TypedConstant[] ConstructorArguments { get; }
+
+        /// <summary>
+        /// Obtiene una lista de los argumentos con nombre especificados para la instancia de atributo representada por el objeto CustomAttributeData.
+        /// </summary>
+        public readonly TypedConstant[] NamedArguments { get; }
     }
 
+    /// <summary>
+    /// Representa un argumento de un atributo personalizado en el contexto o un elemento de un argumento de matriz.
+    /// </summary>
     public readonly struct TypedConstant
     {
         public TypedConstant(string name, Type runtimeType, bool isNull, TypedConstantKind kind, object value)
@@ -3670,12 +3689,18 @@ namespace Business.SourceGenerator.Meta
 
         public readonly string Name { get; }
 
+        /// <summary>
+        /// Obtiene el tipo del argumento o del elemento de argumento de matriz.
+        /// </summary>
         public readonly Type RuntimeType { get; }
 
         public readonly bool IsNull { get; }
 
         public readonly TypedConstantKind Kind { get; }
 
+        /// <summary>
+        /// Obtiene el valor del argumento para un argumento simple o para un elemento de un argumento de matriz; obtiene una colección de valores para un argumento de matriz.
+        /// </summary>
         public readonly object Value { get; }
     }
 }

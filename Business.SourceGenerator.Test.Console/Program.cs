@@ -121,17 +121,17 @@ namespace Business.SourceGenerator.Test.Console
             var structMethod7 = (MyStruct111.AccessorType().Members["StructMethod7"] as IAccessorMethodCollection).First();
             foreach (var item in structMethod7.Attributes)
             {
-                var arg = item.Constructor;
+                var arg = item.ConstructorArguments;
 
                 System.Console.WriteLine(item.Name + " " + arg.ElementAt(0).Value + " " + arg.ElementAt(1).Value + " " + arg.ElementAt(2).Value);
             }
 
             var arr0attr = structMethod7.Parameters[0].Attributes.First();
-            var arg2 = arr0attr.Constructor;
+            var arg2 = arr0attr.ConstructorArguments;
             System.Console.WriteLine(arr0attr.Name + " " + arg2.ElementAt(0).Value + " " + arg2.ElementAt(1).Value + " " + arg2.ElementAt(2).Value);
 
             var arr0attr2 = structMethod7.Parameters[1].Attributes.First();
-            var arg3 = arr0attr2.Constructor;
+            var arg3 = arr0attr2.ConstructorArguments;
             System.Console.WriteLine(arr0attr2.Name + " " + arg3.ElementAt(0).Value + " " + arg3.ElementAt(1).Value + " " + arg3.ElementAt(2).Value);
 
             //StructMember2(ref string? a, out int* b, ref (int c1, string c2) c, out (int? c1, string? c2) d)
