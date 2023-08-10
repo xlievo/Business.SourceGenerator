@@ -24,14 +24,41 @@ namespace Business.SourceGenerator.Analysis
     using System.Collections.Generic;
     using System.Collections.Specialized;
     using System.Linq;
+    using static Business.SourceGenerator.Analysis.SyntaxToCode;
 
     internal static class AnalysisMeta
     {
-        public static AnalysisInfoModel AnalysisInfo = new AnalysisInfoModel(new ConcurrentDictionary<string, StringCollection>(), new ConcurrentDictionary<string, SymbolInfo>(), new ConcurrentDictionary<string, SymbolInfo>(), new ConcurrentDictionary<string, ConcurrentDictionary<string, AssignmentExpressionSyntax>>(), new ConcurrentDictionary<string, ConcurrentDictionary<string, SymbolInfo>>(), new ConcurrentDictionary<string, ConcurrentDictionary<string, ConcurrentDictionary<string, AttributeSyntax>>>());
+        //new Dictionary<string, string>
+        //{
+        //    ["System.Void"] = "global::Business.SourceGenerator.Meta.Types.VoidType.Singleton",
+        //    ["System.Object"] = "global::Business.SourceGenerator.Meta.Types.ObjectType.Singleton",
+        //    ["System.Decimal"] = "global::Business.SourceGenerator.Meta.Types.DecimalType.Singleton",
+        //    ["System.Double"] = "global::Business.SourceGenerator.Meta.Types.DoubleType.Singleton",
+        //    ["System.Single"] = "global::Business.SourceGenerator.Meta.Types.SingleType.Singleton",
+        //    ["System.UInt16"] = "global::Business.SourceGenerator.Meta.Types.UInt16Type.Singleton",
+        //    ["System.UInt32"] = "global::Business.SourceGenerator.Meta.Types.UInt32Type.Singleton",
+        //    ["System.UInt64"] = "global::Business.SourceGenerator.Meta.Types.UInt64Type.Singleton",
+        //    ["System.Int16"] = "global::Business.SourceGenerator.Meta.Types.Int16Type.Singleton",
+        //    ["System.Int32"] = "global::Business.SourceGenerator.Meta.Types.Int32Type.Singleton",
+        //    ["System.Int64"] = "global::Business.SourceGenerator.Meta.Types.Int64Type.Singleton",
+        //    ["System.String"] = "global::Business.SourceGenerator.Meta.Types.StringType.Singleton",
+        //    ["System.Char"] = "global::Business.SourceGenerator.Meta.Types.CharType.Singleton",
+        //    ["System.SByte"] = "global::Business.SourceGenerator.Meta.Types.SByteType.Singleton",
+        //    ["System.Byte"] = "global::Business.SourceGenerator.Meta.Types.ByteType.Singleton",
+        //    ["System.Boolean"] = "global::Business.SourceGenerator.Meta.Types.BooleanType.Singleton",
+        //    ["System.Delegate"] = "global::Business.SourceGenerator.Meta.Types.DelegateType.Singleton",
+        //    ["System.MulticastDelegate"] = "global::Business.SourceGenerator.Meta.Types.MulticastDelegateType.Singleton",
+        //    ["System.Enum"] = "global::Business.SourceGenerator.Meta.Types.EnumType.Singleton",
+        //    //["System.Type"] = "global::Business.SourceGenerator.Meta.Types.TypeType.Singleton",
+        //    //["System."] = "global::Business.SourceGenerator.Meta.Types..Singleton",
+        //}
+    readonly static Lazy<AnalysisInfoModel> analysisInfoModel = new Lazy<AnalysisInfoModel>(() => new AnalysisInfoModel(new ConcurrentDictionary<string, StringCollection>(), new ConcurrentDictionary<string, SymbolInfo>(), new ConcurrentDictionary<string, SymbolInfo>(), new ConcurrentDictionary<string, ConcurrentDictionary<string, AssignmentExpressionSyntax>>(), new ConcurrentDictionary<string, ConcurrentDictionary<string, SymbolInfo>>(), new ConcurrentDictionary<string, ConcurrentDictionary<string, ConcurrentDictionary<string, AttributeSyntax>>>(), new Dictionary<string, (string key, string code)>()));
+
+        public static AnalysisInfoModel AnalysisInfo => analysisInfoModel.Value;
 
         public readonly struct AnalysisInfoModel
         {
-            internal AnalysisInfoModel(ConcurrentDictionary<string, StringCollection> syntaxTrees, ConcurrentDictionary<string, SymbolInfo> declaredSymbols, ConcurrentDictionary<string, SymbolInfo> typeSymbols, ConcurrentDictionary<string, ConcurrentDictionary<string, AssignmentExpressionSyntax>> staticAssignments, ConcurrentDictionary<string, ConcurrentDictionary<string, SymbolInfo>> invocations, ConcurrentDictionary<string, ConcurrentDictionary<string, ConcurrentDictionary<string, AttributeSyntax>>> attributes)
+            internal AnalysisInfoModel(ConcurrentDictionary<string, StringCollection> syntaxTrees, ConcurrentDictionary<string, SymbolInfo> declaredSymbols, ConcurrentDictionary<string, SymbolInfo> typeSymbols, ConcurrentDictionary<string, ConcurrentDictionary<string, AssignmentExpressionSyntax>> staticAssignments, ConcurrentDictionary<string, ConcurrentDictionary<string, SymbolInfo>> invocations, ConcurrentDictionary<string, ConcurrentDictionary<string, ConcurrentDictionary<string, AttributeSyntax>>> attributes, Dictionary<string, (string key, string code)> accessorType)
             {
                 SyntaxTrees = syntaxTrees;
                 DeclaredSymbols = declaredSymbols;
@@ -39,21 +66,26 @@ namespace Business.SourceGenerator.Analysis
                 StaticAssignments = staticAssignments;
                 Invocations = invocations;
                 Attributes = attributes;
+                AccessorType = accessorType;
             }
 
-            public ConcurrentDictionary<string, StringCollection> SyntaxTrees { get; }
+            public readonly ConcurrentDictionary<string, StringCollection> SyntaxTrees { get; }
 
-            public ConcurrentDictionary<string, SymbolInfo> DeclaredSymbols { get; }
+            public readonly ConcurrentDictionary<string, SymbolInfo> DeclaredSymbols { get; }
 
-            public ConcurrentDictionary<string, SymbolInfo> TypeSymbols { get; }
+            public readonly ConcurrentDictionary<string, SymbolInfo> TypeSymbols { get; }
 
             //================================================================================//
 
-            public ConcurrentDictionary<string, ConcurrentDictionary<string, AssignmentExpressionSyntax>> StaticAssignments { get; }
+            public readonly ConcurrentDictionary<string, ConcurrentDictionary<string, AssignmentExpressionSyntax>> StaticAssignments { get; }
 
-            public ConcurrentDictionary<string, ConcurrentDictionary<string, SymbolInfo>> Invocations { get; }
+            public readonly ConcurrentDictionary<string, ConcurrentDictionary<string, SymbolInfo>> Invocations { get; }
 
-            public ConcurrentDictionary<string, ConcurrentDictionary<string, ConcurrentDictionary<string, AttributeSyntax>>> Attributes { get; }
+            public readonly ConcurrentDictionary<string, ConcurrentDictionary<string, ConcurrentDictionary<string, AttributeSyntax>>> Attributes { get; }
+
+            public readonly Dictionary<string, (string key, string code)> AccessorType { get; }
+
+            //public readonly IReadOnlyDictionary<string, string> BasrType { get; }
         }
 
         public readonly struct Names
@@ -67,15 +99,15 @@ namespace Business.SourceGenerator.Analysis
                 AssemblyName = assemblyName;
             }
 
-            public string Syntax { get; }
+            public readonly string Syntax { get; }
 
-            public string Symbol { get; }
+            public readonly string Symbol { get; }
 
-            public string DeclaredFull { get; }
+            public readonly string DeclaredFull { get; }
 
-            public string DeclaredStandard { get; }
+            public readonly string DeclaredStandard { get; }
 
-            public string AssemblyName { get; }
+            public readonly string AssemblyName { get; }
         }
 
         public readonly struct SymbolInfo
@@ -115,27 +147,34 @@ namespace Business.SourceGenerator.Analysis
 
             public string GetFullName() => null != GenericArguments ? $"{Declared.GetFullName()}<{string.Join(", ", GenericArguments.Select(c => c.GetFullName()))}>" : null;
 
-            public SyntaxNode Syntax { get; }
+            public readonly SyntaxNode Syntax { get; }
 
-            public ISymbol Symbol { get; }
+            public readonly ISymbol Symbol { get; }
 
-            public ISymbol Declared { get; }
+            public readonly ISymbol Declared { get; }
 
-            public ISymbol Source { get; }
+            public readonly ISymbol Source { get; }
 
-            public SyntaxNode References { get; }
+            public readonly SyntaxNode References { get; }
 
             /// <summary>
             /// !(References is null || !declared.DeclaringSyntaxReferences.Any())
             /// </summary>
-            public bool IsCustom { get; }
+            public readonly bool IsCustom { get; }
 
-            public ConcurrentDictionary<string, ConcurrentDictionary<string, AttributeSyntax>> Attributes { get; }
+            public readonly ConcurrentDictionary<string, ConcurrentDictionary<string, AttributeSyntax>> Attributes { get; }
 
-            public Names Names { get; }
+            public readonly Names Names { get; }
 
-            public IEnumerable<ITypeSymbol> GenericArguments { get; }
+            public readonly IEnumerable<ITypeSymbol> GenericArguments { get; }
         }
+
+        /*
+        static readonly Type[] baseTypes = new Type[] {
+            //typeof(System.Object), typeof(System.Type), typeof(System.Decimal), typeof(System.Double), typeof(System.Single), typeof(System.UInt16), typeof(System.UInt32), typeof(System.UInt64), typeof(System.Int16), typeof(System.Int32), typeof(System.Int64), typeof(System.String), typeof(System.Char), typeof(System.SByte), typeof(System.Byte), typeof(System.Boolean), typeof(System.Delegate), typeof(System.MulticastDelegate), typeof(System.Enum), typeof(System.DateTime), typeof(System.DateTimeOffset), typeof(System.IDisposable), typeof(System.Array), typeof(System.Collections.IEnumerable), typeof(System.Collections.IEnumerator), typeof(System.DBNull), typeof(System.Threading.Tasks.Task), typeof(System.Threading.Tasks.ValueTask),
+            typeof(System.Object[]), typeof(System.Type[]), typeof(System.Decimal[]), typeof(System.Double[]), typeof(System.Single[]), typeof(System.UInt16[]), typeof(System.UInt32[]), typeof(System.UInt64[]), typeof(System.Int16[]), typeof(System.Int32[]), typeof(System.Int64[]), typeof(System.String[]), typeof(System.Char[]), typeof(System.SByte[]), typeof(System.Byte[]), typeof(System.Boolean[]), typeof(System.Delegate[]), typeof(System.MulticastDelegate[]), typeof(System.Enum[]), typeof(System.DateTime[]),typeof(System.DateTimeOffset[]), typeof(System.DBNull[]),  typeof(System.Threading.Tasks.Task[]), typeof(System.Threading.Tasks.ValueTask[])
+        };
+        */
 
         public static void Init(GeneratorExecutionContext context)
         {
@@ -148,6 +187,9 @@ namespace Business.SourceGenerator.Analysis
             var references = compilation.ReferencedAssemblyNames.Select(c => c.Name);
 
             #region AddSource
+
+            //add int type.
+            compilation = compilation.AddSyntaxTree(@"namespace Business.SourceGenerator.Meta.Types { readonly struct BasrTypeDeclaration { readonly static System.Type[] basrType = new System.Type[] { typeof(int) }; } }", out _, context.ParseOptions);
 
             var businessSourceGeneratorDirectory = context.GetMSBuildProperty("Business_SourceGenerator");
             System.Diagnostics.Debug.WriteLine($"BusinessSourceGeneratorDirectory: {businessSourceGeneratorDirectory}");
@@ -206,6 +248,7 @@ namespace Business.SourceGenerator.Analysis
             AnalysisInfo.Attributes.Clear();
             AnalysisInfo.StaticAssignments.Clear();
             AnalysisInfo.Invocations.Clear();
+            AnalysisInfo.AccessorType.Clear();
 
             //=======================add=======================//
 

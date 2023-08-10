@@ -1,4 +1,24 @@
-﻿
+﻿//using Business.SourceGenerator.Meta;
+//using Business.SourceGenerator;
+//using System.Collections.Generic;
+//using System.Collections.ObjectModel;
+//using System.Threading.Tasks.Sources;
+//using System.Threading.Tasks;
+//using System.Threading;
+//using System.Linq.Expressions;
+//using System.Linq;
+//using System.Globalization;
+//using System.IO;
+//using System;
+
+//namespace MethodInvokeAssembly
+//{
+//    public partial class BusinessSourceGenerator
+//    {
+//        static readonly Lazy<IAccessorType> System_Threading_Tasks_ValueTask_System.Object___NamedType_Struct_None = new Lazy<IAccessorType>(() => new AccessorNamedType(Accessibility.Public, default, true, default, default, default, default, default, "ValueTask", "System.Threading.Tasks.ValueTask<System.Object>", Kind.NamedType, default, default, default, true, default, SpecialType.None, default, default, NullableAnnotation.None, TypeKind.Struct, default, AsyncType.ValueTaskGeneric, default, default, default, default, default, default, default, default, new IAccessorType[] { new AccessorType(Accessibility.NotApplicable, default, default, default, default, default, default, true, "dynamic", "System.Object", Kind.DynamicType, default, default, default, default, default, SpecialType.None, default, default, NullableAnnotation.None, TypeKind.Dynamic, default, AsyncType.None) }));
+//    }
+//}
+
 
 
 

@@ -17,12 +17,12 @@
 namespace Business.SourceGenerator.Analysis
 {
     using Microsoft.CodeAnalysis;
-    using Microsoft.CodeAnalysis.CSharp;
     using Microsoft.CodeAnalysis.CSharp.Syntax;
     using System;
-    using System.Buffers;
     using System.Collections.Generic;
+    using System.Collections.ObjectModel;
     using System.Linq;
+    using System.Reflection;
     using static Business.SourceGenerator.Analysis.AnalysisMeta;
     using static Business.SourceGenerator.Analysis.SymbolToMeta;
     using static Business.SourceGenerator.Analysis.SymbolTypeName;
@@ -332,7 +332,7 @@ namespace Business.SourceGenerator.Analysis
                 return true;
             }
 
-            if ((Accessibility.Public != typeSymbol.DeclaredAccessibility && SymbolKind.DynamicType != typeSymbol.Kind) || typeSymbol.IsStatic || typeSymbol.IsRefLikeType)
+            if ((Accessibility.Public != typeSymbol.DeclaredAccessibility && SymbolKind.DynamicType != typeSymbol.Kind) || typeSymbol.IsStatic || typeSymbol.IsRefLikePointerTypedReferenceValueTypeConstraint())
             {
                 if (SymbolKind.ArrayType != typeSymbol.Kind)
                 {
@@ -419,6 +419,7 @@ namespace Business.SourceGenerator.Analysis
         }
         */
 
+        /*
         public static IDictionary<string, string> GeneratorAccessor(AnalysisInfoModel analysisInfo, string assemblyName, ToCodeOpt opt, string[] usings = default)
         {
             var format = opt.StandardFormat ? Environment.NewLine : " ";
@@ -496,26 +497,91 @@ namespace Business.SourceGenerator.Analysis
                     sb.AppendFormat("{0}}}", format);
                 }
 
-                dict.Add($"{typeSymbol.GetFullName(GetFullNameOpt.Create(typeParameterBracketLeft: "[", typeParameterBracketRight: "]"))}.Gen", sb.ToString());
+                dict.Add($"{typeSymbol.GetFullName(GetFullNameOpt.Create(charSpecial: CharSpecial.Create(bracketLeft: '[', bracketRight: ']')))}.Gen", sb.ToString());
                 sb.Clear();
             }
 
             return dict;
         }
+        */
 
-        public static string GeneratorCode(AnalysisInfoModel analysisInfo, string assemblyName, ToCodeOpt opt, string[] usings = default)
+        public static (string id, string key, string code) GeneratorAccessor(ITypeSymbol typeSymbol, string assemblyName, string makes, bool noParameterConstructor, List<string> result, bool isCustom, ToCodeOpt opt, string[] usings = default)
         {
             var format = opt.StandardFormat ? Environment.NewLine : " ";
-            //string typeClean(string type) => !opt.Global ? TypeNameClean(type, $"{assemblyName}.", "System.Collections.Generic.", "System.Collections.ObjectModel.") : $"{Global}{type}";// type;
+            var space = Meta.Global.Space;
             var usings2 = usings.Select(c => $"{c}.").Concat(new string[] { $"{assemblyName}." }).ToArray();
             string typeClean(string type, bool noGlobal = false) => !opt.Global ? TypeNameClean(type, usings2) : !noGlobal ? $"{GlobalConst.Global}{type}" : type;
 
             var globalSystem = opt.GetGlobalName(GlobalName.System);
             var globalMeta = opt.GetGlobalName(GlobalName.Business_SourceGenerator_Meta);
             var globalGeneric = opt.GetGlobalName(GlobalName.System_Collections_Generic);
+
+            var sb = new System.Text.StringBuilder(null);
+
+            var key = $"{typeSymbol.GetFullNameStandardFormat(GetFullNameOpt.Create(noNullableQuestionMark: true, charSpecial: CharSpecial.Create('_')))}__{typeSymbol.Kind.GetName()}_{typeSymbol.TypeKind.GetName()}_{typeSymbol.SpecialType.GetName()}";
+            string key2 = default;
+
+            int spaceCount = 0;
+
+            if (!string.IsNullOrEmpty(assemblyName))
+            {
+                sb.AppendFormat("namespace {1}{0}", $"{format}{{{format}", assemblyName);
+                spaceCount++;
+            }
+
+            sb.AppendFormat($"{{0}}public partial class {{2}} {{1}}{{0}}{{{{{{1}}", space.Repeat(spaceCount), format, Meta.Global.GeneratorCodeName);
+
+            spaceCount++;
+
+            if (typeSymbol.SpecialType is SpecialType.None && (typeSymbol.TypeKind is TypeKind.Class || typeSymbol.TypeKind is TypeKind.Struct))
+            {
+                key2 = typeSymbol.ToMeta3(opt, typeClean, default, assemblyName);// $"{key}_Accessor";
+
+                //sb.AppendFormat($"{space.Repeat(spaceCount)}static readonly {globalSystem}Lazy<{globalMeta}IAccessorType> {{0}} = new {globalSystem}Lazy<{globalMeta}IAccessorType>(() => {{1}});", key2, typeSymbol.ToMeta3(opt, typeClean, default));
+
+                //if (typeSymbol is INamedTypeSymbol named)
+                //{
+                //    var dd = named.ToMeta3(opt, typeClean, default);
+                //    //var ss = typeSymbol.ToMeta2(opt, typeClean: typeClean);
+                //}
+
+                //sb.AppendLine(format);
+            }
+
+            sb.AppendFormat($"{space.Repeat(spaceCount)}readonly static {globalSystem}Lazy<{globalMeta}TypeMeta> {{0}} = new {globalSystem}Lazy<{globalMeta}TypeMeta>(() => new {globalMeta}TypeMeta({{1}}, {{2}}, {{3}}, {{4}}, {{5}}, {{6}}));",
+                key,
+                !string.IsNullOrEmpty(makes) ? $"new {globalGeneric}Dictionary<{globalSystem}Type, {globalSystem}Type> {{ {makes} }}" : "default",
+                result.Any() ? $"new {globalMeta}IMethod[] {{ {string.Join(", ", result)} }}" : $"{globalSystem}Array.Empty<{globalMeta}IMethod>()",
+                isCustom ? "true" : "default",
+                typeSymbol.IsValueType || noParameterConstructor ? "true" : "default", $"{globalMeta}TypeKind.{typeSymbol.TypeKind.GetName()}",
+                !string.IsNullOrEmpty(key2) ? key2 : "default");
+
+            spaceCount--;
+
+            sb.AppendFormat("{0}{1}}}", format, space.Repeat(spaceCount));
+
+            if (!string.IsNullOrEmpty(assemblyName))
+            {
+                sb.Append($"{format}}}");
+            }
+
+            return (typeSymbol.GetFullNameStandardFormat(GetFullNameOpt.Create(noNullableQuestionMark: true, charSpecial: CharSpecial.Create(bracketLeft: '[', bracketRight: ']', asterisk: '_'))), key, sb.ToString());
+        }
+
+        public static (string types, IDictionary<string, string> accessors) GeneratorCode(AnalysisInfoModel analysisInfo, string assemblyName, ToCodeOpt opt, string[] usings = default)
+        {
+            var format = opt.StandardFormat ? Environment.NewLine : " ";
+            var space = Meta.Global.Space;
+            var space_x3 = space.Repeat(3);
+            var usings2 = usings.Select(c => $"{c}.").Concat(new string[] { $"{assemblyName}." }).ToArray();
+            string typeClean(string type, bool noGlobal = false) => !opt.Global ? TypeNameClean(type, usings2) : !noGlobal ? $"{GlobalConst.Global}{type}" : type;
+
+            var global = opt.GetGlobalName(GlobalName.Globa);
+            var globalSystem = opt.GetGlobalName(GlobalName.System);
+            var globalMeta = opt.GetGlobalName(GlobalName.Business_SourceGenerator_Meta);
+            var globalGeneric = opt.GetGlobalName(GlobalName.System_Collections_Generic);
             var globalObjectModel = opt.GetGlobalName(GlobalName.System_Collections_ObjectModel);
             var globalType = opt.GetGlobalName(GlobalName.System_Type);
-            var globalObject = opt.GetGlobalName(GlobalName.System_Object);
 
             var makeGenericTypes = GeneratorType.GetMakeGenericTypes(analysisInfo);
             var makeGenerics = makeGenericTypes.SelectMany(c => c.Value);
@@ -523,7 +589,7 @@ namespace Business.SourceGenerator.Analysis
             //var types = GetTypes(analysisInfo);
 
             var sb = new System.Text.StringBuilder(null);
-            var generatorTypes = new Dictionary<string, string>();
+            var generators = new Dictionary<string, (string types, (string id, string key, string code) accessors)>();
 
             #region all type
 
@@ -549,33 +615,29 @@ namespace Business.SourceGenerator.Analysis
                     continue;
                 }
 
-                if (SpecialType.System_Void == typeSymbol.SpecialType || TypeKind.Delegate == typeSymbol.TypeKind || typeSymbol.IsAbstract)
+                if (typeSymbol.SpecialType is SpecialType.System_Void || typeSymbol.TypeKind is TypeKind.Delegate || typeSymbol.IsAbstract)
                 {
                     continue;
                 }
 
                 string key = default;
-
                 var result = new List<string>();
                 var noParameterConstructor = false;
 
                 switch (typeSymbol.Kind)
                 {
                     case SymbolKind.ArrayType:
-                        key = SetConstructorArray(typeSymbol as IArrayTypeSymbol, result, typeClean, opt);
+                        key = SetConstructorArray(typeSymbol as IArrayTypeSymbol, result, typeClean, opt, assemblyName);
                         noParameterConstructor = true;
                         break;
                     case SymbolKind.PointerType:
                         break;
                     //case SymbolKind.DynamicType:
                     case SymbolKind.NamedType:
-                        key = SetConstructor(typeSymbol as INamedTypeSymbol, result, out noParameterConstructor, typeClean, opt);
+                        key = SetConstructor(typeSymbol as INamedTypeSymbol, result, out noParameterConstructor, typeClean, opt, assemblyName);
                         break;
                     default: continue;
                 }
-
-                sb.AppendLine($"#region {key}");
-                sb.AppendFormat("[typeof({0})] = ", key);
 
                 var definitions2 = definitions.Where(c => CheckConstraint(typeSymbol, c.TypeParameters.First()));
 
@@ -585,71 +647,98 @@ namespace Business.SourceGenerator.Analysis
                     return $"[typeof({make}<>)] = typeof({make}<{key}>)";
                 }));
 
-                sb.AppendFormat(generatorTypeTemp,
-                    globalMeta,
-                    definitions2.Any() ? $"new {globalGeneric}Dictionary<{globalSystem}Type, {globalSystem}Type> {{ {makes} }}" : "default",
-                    $"new {globalMeta}IMethodMeta[] {{ {string.Join(", ", result)} }}",
-                    info.Value.IsCustom ? "true" : "default", typeSymbol.IsValueType || noParameterConstructor ? "true" : "default", $"{globalMeta}TypeKind.{typeSymbol.TypeKind.GetName()}");
+                var accessor = GeneratorAccessor(typeSymbol, assemblyName, makes, noParameterConstructor, result, info.Value.IsCustom, opt, usings);
 
-                sb.AppendLine();
-                sb.AppendLine($"        #endregion");
+                sb.AppendLine($"{space_x3}#region {key}");
+                sb.AppendLine($"{space_x3}[typeof({key})] = {accessor.key}?.Value ?? default");
+                sb.Append($"{space_x3}#endregion");
 
-                if (generatorTypes.ContainsKey(key))
+                if (generators.ContainsKey(key))
                 {
-                    generatorTypes.Remove(key);
-                    generatorTypes.Add(key, sb.ToString());
+                    generators.Remove(key);
+                    generators.Add(key, (sb.ToString(), accessor));
                 }
                 else
                 {
-                    generatorTypes.Add(key, sb.ToString());
+                    generators.Add(key, (sb.ToString(), accessor));
                 }
 
+                result.Clear();
                 sb.Clear();
 
-                var types = SetGenerics(definitions2, typeClean, opt, typeSymbol);
-
-                foreach (var item in types)
+                foreach (var item in definitions2)
                 {
-                    if (!generatorTypes.ContainsKey(item.Key))
+                    var makeGeneric = item.ConstructedFrom.Construct(typeSymbol);
+
+                    key = SetConstructor(makeGeneric, result, out noParameterConstructor, typeClean, opt, assemblyName);
+
+                    accessor = GeneratorAccessor(makeGeneric, assemblyName, default, noParameterConstructor, result, item.GetSymbolInfo().IsCustom, opt, usings);
+
+                    if (!generators.ContainsKey(key))
                     {
-                        generatorTypes.Add(item.Key, item.Value);
+                        sb.AppendLine($"{space_x3}#region {key}");
+                        sb.AppendLine($"{space_x3}[typeof({key})] = {accessor.key}?.Value ?? default");
+                        sb.Append($"{space_x3}#endregion");
+
+                        generators.Add(key, (sb.ToString(), accessor));
+
+                        sb.Clear();
                     }
+
+                    result.Clear();
                 }
+
+                //if (generators.Count > 0)
+                //{
+                //    //break;
+                //}
             }
 
             #endregion
 
+            #region Temp
+
+            int spaceCount = 0;
+
+            var globalAssemblyName = global;
             if (!string.IsNullOrEmpty(assemblyName))
             {
+                globalAssemblyName = $"{global}{assemblyName}.";
                 sb.AppendFormat("namespace {1}{0}", $"{format}{{{format}", assemblyName);
-                sb.AppendFormat(iGeneratorTypeTemp,
-                    opt.Global ? $"{GlobalConst.Global}{assemblyName}." : default,
-                    generatorTypes.Any() ? $" {string.Join($"        , {format}        ", generatorTypes.Values)} " : " ",
-                    globalMeta,
-                    globalSystem,
-                    globalGeneric,
-                    globalObjectModel,
-                    globalType);
+                spaceCount++;
             }
-            else
-            {
-                sb.AppendFormat(iGeneratorTypeTemp,
-                    opt.Global ? GlobalConst.Global : default,
-                    generatorTypes.Any() ? $" {string.Join(", ", generatorTypes.Values)} " : " ",
-                    globalMeta,
-                    globalSystem,
-                    globalGeneric,
-                    globalObjectModel,
-                    globalType);
-            }
+
+            sb.AppendFormat("{0}public partial class {2} : {3}IGeneratorCode {1}{0}{{{1}", space.Repeat(spaceCount), format, Meta.Global.GeneratorCodeName, globalMeta);
+
+            spaceCount++;
+
+            sb.AppendFormat("{0}readonly static {1}Lazy<{2}{3}> generator = new {1}Lazy<{2}{3}>(() => new {2}{3}());", space.Repeat(spaceCount), globalSystem, globalAssemblyName, Meta.Global.GeneratorCodeName);
+            sb.AppendLine(format);
+            sb.AppendFormat("{0}public static {1}IGeneratorCode Generator {{ get {{ return generator.Value; }} }}", space.Repeat(spaceCount), globalMeta);
+            sb.AppendLine(format);
+
+            sb.AppendFormat("{0}readonly static {2}Lazy<{3}IReadOnlyDictionary<{5}, {6}TypeMeta>> generatorType = new {2}Lazy<{3}IReadOnlyDictionary<{5}, {6}TypeMeta>>(() => new {4}ReadOnlyDictionary<{5}, {6}TypeMeta>(new {3}Dictionary<{5}, {6}TypeMeta>{1}{0}{{{1}{7}{1}{0}}}));", space.Repeat(spaceCount), format, globalSystem, globalGeneric, globalObjectModel, globalType, globalMeta, generators.Any() ? $"{string.Join($"{format}{space_x3},{format}", generators.Values.Select(c => c.types))}" : default);
+
+            sb.AppendLine(format);
+
+            sb.AppendFormat("{0}static {1}IReadOnlyDictionary<{2}, {3}TypeMeta> Singleton {{ get {{ return generatorType.Value; }} }}", space.Repeat(spaceCount), globalGeneric, globalType, globalMeta);
+            sb.AppendLine(format);
+            sb.AppendFormat("{0}public {1}IReadOnlyDictionary<{2}, {3}TypeMeta> GeneratorType {{ get {{ return Singleton; }} }}", space.Repeat(spaceCount), globalGeneric, globalType, globalMeta);
+
+            spaceCount--;
+
+            sb.AppendFormat("{0}{1}}}", format, space.Repeat(spaceCount));
 
             if (!string.IsNullOrEmpty(assemblyName))
             {
                 sb.Append($"{format}}}");
             }
 
-            return sb.ToString();
+            #endregion
 
+            return (sb.ToString(), generators.Values.ToDictionary(c => c.accessors.id, c => c.accessors.code));
+
+            /*
             static Dictionary<string, string> SetGenerics(IEnumerable<INamedTypeSymbol> makeGenerics, Func<string, bool, string> typeClean, ToCodeOpt opt, params ITypeSymbol[] typeArgument)
             {
                 var globalMeta = opt.GetGlobalName(GlobalName.Business_SourceGenerator_Meta);
@@ -668,14 +757,18 @@ namespace Business.SourceGenerator.Analysis
                     new Dictionary<Type, Type> { [typeof(int)] = typeof(int) };
                     var key = SetConstructor(makeGeneric, result, out bool noParameterConstructor, typeClean, opt, typeArgument);
 
+                    //var accessor = GeneratorAccessor2(makeGeneric, assemblyName, makes, noParameterConstructor, result, info.Value.IsCustom, opt, usings);
+
                     sb.AppendLine($"#region {key}");
                     sb.AppendFormat("[typeof({0})] = ", key);
 
-                    sb.AppendFormat(generatorTypeTemp,
-                        globalMeta,
-                        "default",
-                        $"new {globalMeta}IMethodMeta[] {{ {string.Join(", ", result)} }}",
-                        makeGeneric.GetSymbolInfo().IsCustom ? "true" : "default", makeGeneric.IsValueType || noParameterConstructor ? "true" : "default", $"{globalMeta}TypeKind.{makeGeneric.TypeKind.GetName()}");
+                    //sb.AppendFormat(generatorTypeTemp,
+                    //    globalMeta,
+                    //    "default",
+                    //    $"new {globalMeta}IMethodMeta[] {{ {string.Join(", ", result)} }}",
+                    //    makeGeneric.GetSymbolInfo().IsCustom ? "true" : "default",
+                    //    makeGeneric.IsValueType || noParameterConstructor ? "true" : "default", $"{globalMeta}TypeKind.{makeGeneric.TypeKind.GetName()}",
+                    //    "default");
 
                     sb.AppendLine();
                     sb.AppendLine($"        #endregion");
@@ -688,9 +781,10 @@ namespace Business.SourceGenerator.Analysis
 
                 return types;
             }
+            */
         }
 
-        static string SetConstructor(INamedTypeSymbol named, IList<string> result, out bool noParameterConstructor, Func<string, bool, string> typeClean, ToCodeOpt opt, params ITypeSymbol[] typeArgument)
+        static string SetConstructor(INamedTypeSymbol named, IList<string> result, out bool noParameterConstructor, Func<string, bool, string> typeClean, ToCodeOpt opt, string assemblyName, params ITypeSymbol[] typeArgument)
         {
             noParameterConstructor = default;
 
@@ -703,38 +797,46 @@ namespace Business.SourceGenerator.Analysis
                     continue;
                 }
 
-                if (constructor.Parameters.Any(c =>
-                {
-                    var typeFullName = c.Type.GetFullNameStandardFormat();
-                    return c.Type.Kind is SymbolKind.PointerType || typeFullName.StartsWith("System.Span") || typeFullName.StartsWith("System.ReadOnlySpan");
-                }))
+                if (constructor.Parameters.Any(c => c.Type.IsRefLikePointerTypedReferenceValueTypeConstraint()))
                 {
                     continue;
                 }
+
+                //if (constructor.Parameters.Any(c =>
+                //{
+                //    var typeFullName = c.Type.GetFullNameStandardFormat();
+                //    return c.Type.Kind is SymbolKind.PointerType || typeFullName.StartsWith("System.Span") || typeFullName.StartsWith("System.ReadOnlySpan");
+                //}))
+                //{
+                //    continue;
+                //}
 
                 if (!constructor.Parameters.Any())
                 {
                     noParameterConstructor = !constructor.Parameters.Any();
                 }
 
-                result.Add(GetConstructor(constructor, typeArguments, typeClean, opt));
+                result.Add(GetConstructor(constructor, typeArguments, typeClean, opt, assemblyName));
             }
 
             return named.GetFullNameStandardFormat(GetFullNameOpt.Create(typeArguments: typeArguments), typeClean);
             //return (named.IsGenericType && SpecialType.System_Nullable_T != named.OriginalDefinition?.SpecialType) ? named.GetFullNameStandardFormat(GetFullNameOpt.Create(noNullableQuestionMark: true, typeArguments: typeArguments), typeClean) : named.GetFullNameStandardFormat(GetFullNameOpt.Create(noNullableQuestionMark: true), typeClean: typeClean);
         }
 
-        static string SetConstructorArray(IArrayTypeSymbol array, IList<string> result, Func<string, bool, string> typeClean, ToCodeOpt opt)
+        static string SetConstructorArray(IArrayTypeSymbol array, IList<string> result, Func<string, bool, string> typeClean, ToCodeOpt opt, string assemblyName)
         {
             var globalSystem = opt.GetGlobalName(GlobalName.System);
             var globalMeta = opt.GetGlobalName(GlobalName.Business_SourceGenerator_Meta);
             var globalInt32 = opt.GetGlobalName(GlobalName.System_Int32);
-            var globalObject = opt.GetGlobalName(GlobalName.System_Object);
             var elementTypeClean = array.ElementType.GetFullNameStandardFormat(typeClean: typeClean);
 
-            result.Add($"new {globalMeta}Constructor(0, 0, default, (obj, m, args) => {globalSystem}Array.Empty<{elementTypeClean}>())");
+            var type = $"{opt.GetGlobalName(GlobalName.Globa)}{assemblyName}.AccessorTypes.System_Int32.Singleton";
+            //var type = $"{globalMeta}Types.{nameof(Meta.Types.Int32Type)}.Singleton";
+            //var type = AnalysisInfo.BasrType.TryGetValue("System.Int32", out string v) ? v : "default";
+            var p = $"new {globalMeta}AccessorParameter({type})";
 
-            result.Add($"new {globalMeta}Constructor(1, 1, new {globalMeta}IParameterMeta[] {{ {ToMetaParameter(globalMeta, "length", globalInt32)} }}, (obj, m, args) => new {elementTypeClean}[({globalInt32})m[0].v])");
+            result.Add($"new {globalMeta}Constructor(default, 0, 0, (obj, m, args) => {globalSystem}Array.Empty<{elementTypeClean}>())");
+            result.Add($"new {globalMeta}Constructor(new {globalMeta}IAccessorParameter[] {{ {p} }}, 1, 1, (obj, m, args) => new {elementTypeClean}[({globalInt32})m[0].v])");
 
             return array.GetFullNameStandardFormat(GetFullNameOpt.Create(noNullableQuestionMark: true), typeClean: typeClean);
         }
@@ -793,62 +895,13 @@ namespace Business.SourceGenerator.Analysis
         return default;
     }}
 
-    {0}IGeneratorAccessor accessor = this;
+    {4} accessor = this;
 
     member.SetValue(ref accessor, value);
     {1}
     return true;
 }}
 ";
-
-        /*
-        const string makeGenericTypeTemp = @"case {1}GeneratorTypeOpt.MakeGenericType:
-                {{ 
-                    if (arg.makeType is null) {{ throw new {2}ArgumentNullException(nameof(arg.makeType)); }} 
-                    switch (arg.makeType) 
-                    {{ 
-                        {0}
-                        default: return default; 
-                    }} 
-                }}
-                ";
-
-        const string createGenericTypeTemp = @"case {1}GeneratorTypeOpt.CreateGenericType:
-                {{
-                    switch (arg.createType)
-                    {{ 
-                        {0} 
-                        default: return default; 
-                    }} 
-                }}
-                ";
-
-        const string constructorsTemp = @"case {1}GeneratorTypeOpt.Constructors:
-                {{ 
-                    if (arg.makeType is null) {{ throw new {2}ArgumentNullException(nameof(arg.makeType)); }} 
-                    switch (arg.makeType) 
-                    {{ 
-                        {0}
-                    }} 
-                }}
-                ";
-        */
-
-        const string generatorTypeTemp = @"new {0}GeneratorTypeMeta({1}, {2}, {3}, {4}, {5})";
-
-        const string iGeneratorTypeTemp = @"public partial class BusinessSourceGenerator : {2}IGeneratorType
-{{
-    static readonly {3}Lazy<{2}IGeneratorType> generator = new {3}Lazy<{2}IGeneratorType>(() => new {0}BusinessSourceGenerator());
-
-    public static {2}IGeneratorType Generator {{ get => generator.Value; }}
-
-    static readonly {3}Lazy<{4}IReadOnlyDictionary<{6}, {2}GeneratorTypeMeta>> generatorType = new {3}Lazy<{4}IReadOnlyDictionary<{6}, {2}GeneratorTypeMeta>>(() => new {5}ReadOnlyDictionary<{6}, {2}GeneratorTypeMeta>(new {4}Dictionary<{6}, {2}GeneratorTypeMeta> 
-    {{
-       {1}
-    }}));
-
-    public {4}IReadOnlyDictionary<{6}, {2}GeneratorTypeMeta> GeneratorType {{ get => generatorType.Value; }}
-}}";
 
         #endregion
     }

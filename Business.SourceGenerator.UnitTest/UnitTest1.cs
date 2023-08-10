@@ -25,6 +25,15 @@ using Business.SourceGenerator.Analysis;
 using System.Collections;
 using Microsoft.VisualStudio.TestPlatform.CommunicationUtilities;
 using System.Collections.Specialized;
+using static System.Runtime.CompilerServices.ConfiguredTaskAwaitable;
+using static System.Runtime.CompilerServices.ConfiguredValueTaskAwaitable;
+using static System.Runtime.CompilerServices.RuntimeHelpers;
+using static System.Runtime.CompilerServices.YieldAwaitable;
+using static System.Runtime.InteropServices.ComWrappers;
+using static System.Runtime.InteropServices.Marshalling.CustomMarshallerAttribute;
+using static System.Runtime.InteropServices.ObjectiveC.ObjectiveCMarshal;
+using static System.Text.StringBuilder;
+using static System.TimeZoneInfo;
 
 namespace Business.SourceGenerator.Test
 {
@@ -36,6 +45,7 @@ namespace Business.SourceGenerator.Test
         {
             //string nullType2 = GetFormattedName(typeof(System.Threading.Tasks.ValueTask<System.Threading.Tasks.ValueTask<int?>?>?));
 
+            //
             //System.Threading.Tasks.ValueTask<System.Collections.Generic.IDictionary<System.Threading.Tasks.ValueTask<System.Int32[]>?, System.Threading.Tasks.ValueTask<System.Int32?>?>>?
 
             string nullType4 = GetFormattedName(typeof(ValueTask<IDictionary<System.Nullable<ValueTask<int[]?>>, ValueTask<int?>?>?>?));
@@ -279,14 +289,13 @@ namespace UnitAssembly
         {{
             {assemblyName}.BusinessSourceGenerator.Generator.SetGeneratorCode();
 
-            Business.SourceGenerator.Utils.GeneratorCode.GeneratorType.TryGetValue(typeof({valueTaskType}), out Business.SourceGenerator.Meta.GeneratorTypeMeta value);
+            Business.SourceGenerator.Utils.GeneratorCode.GeneratorType.TryGetValue(typeof({valueTaskType}), out Business.SourceGenerator.Meta.TypeMeta value);
 
             return value;
         }}
     }}
 }}
 ";
-
 
             var path = System.IO.Path.Combine(AppContext.BaseDirectory, "TestTemp", file);
 
@@ -327,9 +336,10 @@ namespace UnitAssembly
             {assemblyName}.BusinessSourceGenerator.Generator.SetGeneratorCode();
 
             var result = typeof(MyCode.ClassGeneric<string>)
-                    .CreateInstance<IGeneratorAccessor>()
-                    .AccessorSet<IGeneratorAccessor>(""A"", ""WWW"")
-                    .AccessorSet<IGeneratorAccessor>(""B"", new Dictionary<string, string>());
+                    .AsGeneratorType()
+                    .CreateInstance()
+                    .AccessorSet(""A"", ""WWW"")
+                    .AccessorSet(""B"", new Dictionary<string, string>());
 
             return 0;
         }}
@@ -339,9 +349,10 @@ namespace UnitAssembly
             {assemblyName}.BusinessSourceGenerator.Generator.SetGeneratorCode();
 
             var result = typeof(MyCode.ClassGeneric<string>)
-                    .CreateInstance<IGeneratorAccessor>()
-                    .AccessorSet<IGeneratorAccessor>(""A"", ""WWW"")
-                    .AccessorSet<IGeneratorAccessor>(""B"", new Dictionary<string, string>());
+                    .AsGeneratorType()
+                    .CreateInstance()
+                    .AccessorSet(""A"", ""WWW"")
+                    .AccessorSet<MyCode.ClassGeneric<string>>(""B"", new Dictionary<string, string>());
 
             return result;
         }}
@@ -395,13 +406,15 @@ namespace UnitAssembly
             {assemblyName}.BusinessSourceGenerator.Generator.SetGeneratorCode();
 
             return typeof(MyCode.ClassMember)
-                    .CreateInstance<IGeneratorAccessor>()
-                    .AccessorSet<IGeneratorAccessor>(""A"", ""WWW3"")
-                    .AccessorSet<IGeneratorAccessor>(""B"", new Dictionary<string, int?>());
+                    .AsGeneratorType()
+                    .CreateInstance()
+                    .AccessorSet(""A"", ""WWW3"")
+                    .AccessorSet<MyCode.ClassMember>(""B"", new Dictionary<string, int?>());
         }}
     }}
 }}
 ";
+
             var path = System.IO.Path.Combine(AppContext.BaseDirectory, "TestTemp", file);
 
             Debug.Assert(System.IO.File.Exists(path));
@@ -443,9 +456,10 @@ namespace UnitAssembly
             {assemblyName}.BusinessSourceGenerator.Generator.SetGeneratorCode();
 
             return typeof(MyCode.StructMember)
-                    .CreateInstance<IGeneratorAccessor>()
-                    .AccessorSet<IGeneratorAccessor>(""A"", ""WWW2"")
-                    .AccessorSet<IGeneratorAccessor>(""B"", new Dictionary<string, int?>());
+                .AsGeneratorType()
+                .CreateInstance()
+                .AccessorSet(""A"", ""WWW2"")
+                .AccessorSet<MyCode.StructMember>(""B"", new Dictionary<string, int?>());
         }}
     }}
 }}
@@ -491,7 +505,9 @@ namespace UnitAssembly
         {{
             {assemblyName}.BusinessSourceGenerator.Generator.SetGeneratorCode();
 
-            var acc = typeof(MyCode.MethodInvoke<System.IO.MemoryStream>).CreateInstance<IGeneratorAccessor>();
+            var acc = typeof(MyCode.MethodInvoke<System.IO.MemoryStream>)
+                .AsGeneratorType()
+                .CreateInstance();
             
             (int? c1, string? c2) c = (33, ""66"");
             (int? c1, string? c2) d = (44, ""88"");
@@ -514,7 +530,9 @@ namespace UnitAssembly
         {{
             {assemblyName}.BusinessSourceGenerator.Generator.SetGeneratorCode();
 
-            var acc = typeof(MyCode.MethodInvoke<System.IO.MemoryStream>).CreateInstance<IGeneratorAccessor>();
+            var acc = typeof(MyCode.MethodInvoke<System.IO.MemoryStream>)
+                .AsGeneratorType()    
+                .CreateInstance();
             
             (int? c1, string? c2) c = (33, ""66"");
             (int? c1, string? c2) d = (44, ""88"");
@@ -536,7 +554,9 @@ namespace UnitAssembly
         {{
             {assemblyName}.BusinessSourceGenerator.Generator.SetGeneratorCode();
 
-            var acc = typeof(MyCode.MethodInvoke<System.IO.MemoryStream>).CreateInstance<IGeneratorAccessor>();
+            var acc = typeof(MyCode.MethodInvoke<System.IO.MemoryStream>)
+                .AsGeneratorType()
+                .CreateInstance();
             
             (int? c1, string? c2) c = (33, ""66"");
             (int? c1, string? c2) d = (44, ""88"");
@@ -559,8 +579,10 @@ namespace UnitAssembly
         {{
             {assemblyName}.BusinessSourceGenerator.Generator.SetGeneratorCode();
 
-            var acc = typeof(MyCode.MethodInvoke<System.IO.MemoryStream>).CreateInstance<IGeneratorAccessor>();
-            
+            var acc = typeof(MyCode.MethodInvoke<System.IO.MemoryStream>)
+                .AsGeneratorType()
+                .CreateInstance();
+
             (int? c1, string? c2) c = (33, ""66"");
             (int? c1, string? c2) d = (44, ""88"");
 
@@ -577,8 +599,10 @@ namespace UnitAssembly
         {{
             {assemblyName}.BusinessSourceGenerator.Generator.SetGeneratorCode();
 
-            var acc = typeof(MyCode.MethodInvoke<System.IO.MemoryStream>).CreateInstance<IGeneratorAccessor>();
-            
+            var acc = typeof(MyCode.MethodInvoke<System.IO.MemoryStream>)
+                .AsGeneratorType()
+                .CreateInstance();
+
             var aaa = new System.IO.MemoryStream();
             var bbb = new List<string>();
 
@@ -685,9 +709,10 @@ namespace UnitAssembly
             {assemblyName}.BusinessSourceGenerator.Generator.SetGeneratorCode();
 
             //var result = typeof(MyCode.ClassGeneric<string>)
-            //        .CreateInstance<IGeneratorAccessor>()
-            //        .AccessorSet<IGeneratorAccessor>(""A"", ""WWW"")
-            //        .AccessorSet<IGeneratorAccessor>(""B"", new Dictionary<string, string>());
+            //    .AsGeneratorType()
+            //    .CreateInstance()
+            //    .AccessorSet(""A"", ""WWW"")
+            //    .AccessorSet<MyCode.ClassGeneric<string>>(""B"", new Dictionary<string, string>());
 
             //return result;
 
@@ -697,8 +722,10 @@ namespace UnitAssembly
             //Refs(ref int a, out System.DateTimeOffset b)
             var args2 = new object[] {{ RefArg.Ref(777), RefArg.Out<System.DateTimeOffset>() }};
 
-            var success = typeof(MyCode.Refs).CreateInstance<IGeneratorAccessor>(args2)
-                  .AccessorMethod(""Method0"", out ValueTask<dynamic> result, args);
+            var success = typeof(MyCode.Refs)
+                .AsGeneratorType()
+                .CreateInstance(args2)
+                .AccessorMethod(""Method0"", out ValueTask<dynamic> result, args);
 
             return args;
             
@@ -758,8 +785,8 @@ namespace UnitAssembly
             {assemblyName}.BusinessSourceGenerator.Generator.SetGeneratorCode();
 
             var result = typeof(MyCode.MyStruct<>)
-                    .GetGenericType(typeof(MyCode.MyStruct<List<int>>))
-                    .CreateInstance<IGeneratorAccessor>(""666"");
+                .AsGeneratorType(typeof(MyCode.MyStruct<List<int>>))
+                .CreateInstance<MyCode.MyStruct<MyCode.MyStruct<List<int>>>>(""666"");
 
             //var result = typeof(MyCode.TypeInfo<Func<string, bool?>>)
             //        .CreateInstance<IGeneratorAccessor>();
@@ -790,6 +817,141 @@ namespace UnitAssembly
             //Debug.Assert((bool)typeof(Dictionary<string, string>).Equals(testResult.B.GetType()));
         }
 
+        [Theory]
+        [InlineData("TypeFull.cs")]
+        public void TypeFullTest(string file, bool global = false)
+        {
+            System.TypedReference ddd = default;
+            System.Reflection.FieldInfo ddd2 = default;
+            //System.Reflection.FieldInfo vvv2 = default;
+            //var dd = typeof(global::System.ValueTuple<global::System.Object, global::System.Object, global::System.Object, global::System.Object, global::System.Object, global::System.Object, global::System.Object, global::System.Object>);
+            //var sss = new System_Nullable_System_DateOnly__Type();
+
+            var types = new List<Type>();
+
+            var ass = System.AppDomain.CurrentDomain.GetAssemblies();
+
+            foreach (var item in ass)
+            {
+                foreach (var type in item.GetExportedTypes())
+                {
+                    if (!type.IsAbstract && !type.IsEnum && !type.IsCOMObject && !type.IsGenericType && !type.IsGenericParameter && !type.IsGenericMethodParameter && !typeof(void).Equals(type) && type.IsPublic)
+                    {
+                        if (type.FullName.StartsWith("Microsoft") || type.FullName.StartsWith("System.ComponentModel") || type.FullName.StartsWith("System.Diagnostics") || type.FullName.StartsWith("Newtonsoft"))
+                        {
+                            continue;
+                        }
+
+                        types.Add(type);
+                    }
+                }
+            }
+
+            //System.Runtime.CompilerServices.YieldAwaitable
+
+            //var types2 = typeof(System.Runtime.CompilerServices.YieldAwaitable.YieldAwaiter);
+
+            //var nnn = types2.FullName;
+
+            var tt = types.Select(c => $"typeof({c.FullName.Replace('+', '.')})").Take(800).ToArray();
+
+            var ts = string.Join(", ", tt);
+
+            const string assemblyName = "TypeFullAssembly";
+            //System.Half
+            var testCode = $@"
+using System;
+using System.Threading.Tasks;
+using System.Collections.Generic;
+using Business.SourceGenerator;
+using Business.SourceGenerator.Meta;
+
+namespace UnitAssembly
+{{
+    internal class Program
+    {{
+        //typeof(System.Half)
+        //Type[] types = new Type[] {{ {ts} }};
+
+        static async Task<int> Main(string[] args)
+        {{
+            return 0;
+        }}
+
+        public object Test()
+        {{
+            {assemblyName}.BusinessSourceGenerator.Generator.SetGeneratorCode();
+
+            // public System.Threading.Tasks.ValueTask<T2> StructMethod<T2>(string? a, ref T2 b, out (int? c1, string? c2) c)
+             var args = new object[] {{ ""yyy"", RefArg.Out<int>(), RefArg.Ref(555), RefArg.Out<int>(), ""www"" }};
+
+            //out System.Threading.Tasks.ValueTask<IList<int>> value,
+
+            //<MyCode.TypeFull<MyCode.TypeFull<List<int>>>>
+            var result = typeof(MyCode.TypeFull<>)
+                    .AsGeneratorType(typeof(MyCode.TypeFull<List<int>>))
+                    .CreateInstance(""666"")
+                    .AccessorSet(""A"", ""WWW2"")
+                    //.AccessorGet<string>(""A"");
+                    //.AccessorMethod(""StructMethod"", out System.Threading.Tasks.ValueTask<IList<int>> value,
+                    //    string.Empty, 
+                    //    RefArg.Ref(new List<int> {{ 1, 2, 3 }}),
+                    //    RefArg.Out<(int? c1, string? c2)>()
+                    //    );
+                    .AccessorMethodAsync(""StructMethod"", 
+                        string.Empty, 
+                        RefArg.Ref(new List<int> {{ 1, 2, 3 }}),
+                        RefArg.Out<(int? c1, string? c2)>()
+                        );
+
+            //MyCode.TypeFull<int>.C2 = 555;
+            //typeof(MyCode.TypeFull<int>).AsGeneratorType().AccessorSet(""C2"", 666);
+            //return MyCode.TypeFull<int>.C2;
+
+            return result;
+        }}
+    }}
+}}
+";
+            //typeof(MyCode.TypeFull<>).AsGeneratorType();
+
+            //<MyCode.TypeFull<MyCode.TypeFull<List<int>>>>
+            //<MyCode.TypeFull<MyCode.TypeFull<List<int>>>>
+            //MyCode.TypeFull<int>.C2 = 555;
+            //typeof(MyCode.TypeFull<int>).AsGeneratorType().AccessorSet("C2", 666);
+            //new MyCode.TypeFull<int>().AsGeneratorType().AccessorSet("C2", 777);
+            //var result = typeof(MyCode.TypeFull<>)
+            //       .AsGeneratorType(typeof(MyCode.TypeFull<List<int>>))
+            //       .CreateInstance("666")
+            //       .AccessorSet("A", "WWW")
+            //       .AccessorGet<string>("A");
+            //.AccessorMethod("StructMethod",
+            //    string.Empty,
+            //    RefArg.Ref(new List<int>()),
+            //    RefArg.Out<(int? c1, string? c2)>()
+            //    );
+
+            var path = System.IO.Path.Combine(AppContext.BaseDirectory, "TestTemp", file);
+
+            Debug.Assert(System.IO.File.Exists(path));
+
+            var iResult = File.ReadAllText(Path.Combine(AppContext.BaseDirectory, "TestTemp", "IResult.cs"));
+
+            var compileResult = Compilation(path, global, OutputKind.ConsoleApplication, assemblyName, testCode, iResult);
+            //System.Threading.Tasks.ValueTask
+            var source = compileResult.GeneratorSource;
+
+            dynamic testResult = MethodInvoke(compileResult.Compilation, "UnitAssembly.Program.Test");
+
+            //var testResult2 = testResult.GetAwaiter().GetResult();
+
+            Debug.Assert(testResult is not null);
+
+            //Debug.Assert((bool)"WWW".Equals(testResult.A));
+
+            //Debug.Assert((bool)typeof(Dictionary<string, string>).Equals(testResult.B.GetType()));
+        }
+
         static (Compilation Compilation, string GeneratorSource) Compilation(string file, bool global = false, OutputKind outputKind = OutputKind.DynamicallyLinkedLibrary, string assemblyName = "UnitAssembly", params string[] source)
         {
             // Create the 'input' compilation that the generator will act on
@@ -807,7 +969,7 @@ namespace UnitAssembly
 
             //inputCompilation = inputCompilation.AddReferences(MetadataReference.CreateFromFile(typeof(object).Assembly.Location));
             //inputCompilation = inputCompilation.AddReferences(MetadataReference.CreateFromFile(typeof(Enumerable).Assembly.Location));
-            inputCompilation = inputCompilation.AddReferences(MetadataReference.CreateFromFile(typeof(Meta.Accessibility).Assembly.Location));
+            inputCompilation = inputCompilation.AddReferences(MetadataReference.CreateFromFile(typeof(Meta.IAccessor).Assembly.Location));
 
             var refs = System.IO.Directory.GetFiles(System.IO.Path.Combine(AppContext.BaseDirectory, "ref_NETCore_7.0"));
 
@@ -836,7 +998,11 @@ namespace UnitAssembly
 
             var outputDiagnostics = outputCompilation.GetDiagnostics();
 
-            Debug.Assert(!outputDiagnostics.Any(c => DiagnosticSeverity.Error == c.Severity), DiagnosticsFirst(outputDiagnostics));// verify the compilation with the added source has no diagnostics
+            var error = outputDiagnostics.Where(c => DiagnosticSeverity.Error == c.Severity).ToArray();
+
+            var eee = error.GroupBy(c => c.Id).ToArray();
+
+            Debug.Assert(!error.Any(), DiagnosticsFirst(outputDiagnostics));// verify the compilation with the added source has no diagnostics
 
             // Or we can look at the results directly:
             GeneratorDriverRunResult runResult = driver.GetRunResult();

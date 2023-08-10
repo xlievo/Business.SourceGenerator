@@ -322,7 +322,7 @@ namespace Business.SourceGenerator.Test
     /// </summary>
     /// <typeparam name="Type"></typeparam>
     public partial struct ResultObject3<Type> : IResult2<Type>
-        //where Type : class, IList<string>, new()
+        where Type : class, IList<string>, new()
     {
         /// <summary>
         /// Activator.CreateInstance

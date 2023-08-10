@@ -9,7 +9,7 @@ namespace Business.SourceGenerator.Test
     {
         public GeneratorType2Attribute(System.Type type, string a = default, int b = default)
         {
-            
+
         }
     }
 

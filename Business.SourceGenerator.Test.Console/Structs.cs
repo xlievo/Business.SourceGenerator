@@ -3,8 +3,8 @@ using System;
 using System.Threading.Tasks;
 
 [Business.SourceGenerator.Meta.GeneratorType]
-public partial struct MyStruct<T>
-    //where T : class
+public struct MyStruct<T>
+//where T : class
 {
     public string A { get; set; }
 
@@ -16,7 +16,7 @@ public partial struct MyStruct<T>
     }
 
     public ValueTask<T> StructMethod<T2>(string? a, ref T b, out (int? c1, string? c2) c)
-        //where T2 : class, System.Collections.Generic.IList<int>
+    //where T2 : class, System.Collections.Generic.IList<int>
     {
         //b.c1 = (T)888;
         c = (333, "xxx");
@@ -131,7 +131,7 @@ public struct ResultObject4<Type> : IResult2<Type>
 }
 
 
-public unsafe partial struct MyStruct
+public unsafe struct MyStruct
 {
     public string? aaa { get; set; }
 
@@ -180,7 +180,7 @@ public unsafe partial struct MyStruct
 
 //[Serde.GenerateSerialize]
 //[Serde.GenerateDeserialize]
-public partial struct MyStruct2
+public struct MyStruct2
 {
     public string? aaa { get; set; }
 
@@ -192,7 +192,7 @@ public partial struct MyStruct2
     }
 }
 
-public partial struct MyStruct3
+public struct MyStruct3
 {
     public string aaa { get; set; }
 
@@ -202,7 +202,7 @@ public partial struct MyStruct3
     }
 }
 
-public partial struct MyStruct4
+public struct MyStruct4
 {
     public string aaa { get; set; }
 
@@ -212,7 +212,7 @@ public partial struct MyStruct4
     }
 }
 
-public partial struct MyStruct5
+public struct MyStruct5
 {
     public string aaa { get; set; }
 
@@ -222,7 +222,7 @@ public partial struct MyStruct5
     }
 }
 
-public partial struct MyStruct6
+public struct MyStruct6
 {
     public string aaa { get; set; }
 
@@ -232,7 +232,7 @@ public partial struct MyStruct6
     }
 }
 
-public partial struct MyStruct7
+public struct MyStruct7
 {
     public string aaa { get; set; }
 
@@ -242,7 +242,7 @@ public partial struct MyStruct7
     }
 }
 
-public partial struct MyStruct8
+public struct MyStruct8
 {
     public string aaa { get; set; }
 
@@ -252,7 +252,7 @@ public partial struct MyStruct8
     }
 }
 
-public partial struct MyStruct9
+public struct MyStruct9
 {
     public string aaa { get; set; }
 
@@ -262,7 +262,7 @@ public partial struct MyStruct9
     }
 }
 
-public partial struct MyStruct10
+public struct MyStruct10
 {
     public string aaa { get; set; }
 
@@ -272,7 +272,7 @@ public partial struct MyStruct10
     }
 }
 
-public partial struct MyStruct11
+public struct MyStruct11
 {
     public string aaa { get; set; }
 
@@ -282,7 +282,7 @@ public partial struct MyStruct11
     }
 }
 
-public partial struct MyStruct12
+public struct MyStruct12
 {
     public string aaa { get; set; }
 
@@ -292,14 +292,14 @@ public partial struct MyStruct12
     }
 }
 
-public partial class ClassGeneric<T> : System.Collections.Generic.Dictionary<T, T>
+public class ClassGeneric<T> : System.Collections.Generic.Dictionary<T, T>
 {
     public T A { get; set; }
 
     public System.Collections.Generic.Dictionary<T, T> B { get; set; }
 }
 
-public partial struct MethodInvoke<T>
+public struct MethodInvoke<T>
     where T : System.IDisposable
 {
 

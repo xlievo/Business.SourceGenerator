@@ -26,6 +26,7 @@ namespace Business.SourceGenerator.Analysis
     {
         public const string Global = "global::";
 
+        public const string Global_System_Lazy = "global::System.Lazy";
         public const string Global_System_Type = "global::System.Type";
         public const string Global_System_Object = "global::System.Object";
         public const string Global_System_String = "global::System.String";
@@ -38,6 +39,7 @@ namespace Business.SourceGenerator.Analysis
         public const string System_Int32 = "System.Int32";
         public const string System_Boolean = "System.Boolean";
 
+        public const string Lazy = "Lazy";
         public const string Type = "Type";
         public const string Object = "object";
         public const string String = "string";
@@ -66,6 +68,7 @@ namespace Business.SourceGenerator.Analysis
             System_Collections_ObjectModel,
             System_Threading_Tasks,
 
+            System_Lazy,
             System_Type,
             System_Object,
             System_String,
@@ -85,11 +88,13 @@ namespace Business.SourceGenerator.Analysis
                 case GlobalName.System_Collections_ObjectModel: return opt.Global ? GlobalConst.Global_System_Collections_ObjectModel : default;
                 case GlobalName.System_Threading_Tasks: return opt.Global ? GlobalConst.Global_System_Threading_Tasks : default;
 
+                case GlobalName.System_Lazy: return opt.Global ? GlobalConst.Global_System_Lazy : GlobalConst.Lazy;
                 case GlobalName.System_Type: return opt.Global ? GlobalConst.Global_System_Type : GlobalConst.Type;
                 case GlobalName.System_Object: return opt.Global ? GlobalConst.Global_System_Object : GlobalConst.Object;
                 case GlobalName.System_String: return opt.Global ? GlobalConst.Global_System_String : GlobalConst.String;
                 case GlobalName.System_Int32: return opt.Global ? GlobalConst.Global_System_Int32 : GlobalConst.Int32;
                 case GlobalName.System_Boolean: return opt.Global ? GlobalConst.Global_System_Boolean : GlobalConst.Boolean;
+
                 default: return default;
             }
         }

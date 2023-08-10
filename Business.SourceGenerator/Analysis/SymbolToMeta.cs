@@ -21,7 +21,6 @@ namespace Business.SourceGenerator.Analysis
     using Microsoft.CodeAnalysis.CSharp.Syntax;
     using System;
     using System.Collections.Generic;
-    using System.Collections.Specialized;
     using System.Linq;
     using static Business.SourceGenerator.Analysis.SymbolTypeName;
     using static Business.SourceGenerator.Analysis.SyntaxToCode;
@@ -79,8 +78,6 @@ namespace Business.SourceGenerator.Analysis
             return AsyncType.None;
         }
 
-        const int accessorDepth = 4;
-
         static string ToDefaultValue(ISymbol symbol)
         {
             SpecialType specialType = SpecialType.None;
@@ -88,15 +85,15 @@ namespace Business.SourceGenerator.Analysis
 
             switch (symbol)
             {
-                case IFieldSymbol fieldSymbol:
-                    if (!fieldSymbol.HasConstantValue)
-                    {
-                        return "default";
-                    }
+                //case IFieldSymbol fieldSymbol:
+                //    if (!fieldSymbol.HasConstantValue)
+                //    {
+                //        return "default";
+                //    }
 
-                    specialType = fieldSymbol.Type.SpecialType;
-                    value = fieldSymbol.ConstantValue;
-                    break;
+                //    specialType = fieldSymbol.Type.SpecialType;
+                //    value = fieldSymbol.ConstantValue;
+                //    break;
                 case IParameterSymbol parameterSymbol:
                     if (!parameterSymbol.HasExplicitDefaultValue)
                     {
@@ -121,11 +118,11 @@ namespace Business.SourceGenerator.Analysis
             }
         }
 
-        public static string GetConstructor(IMethodSymbol constructorMethod, IDictionary<string, ITypeSymbol> typeArguments, Func<string, bool, string> typeClean, ToCodeOpt opt)
+        public static string GetConstructor(IMethodSymbol constructorMethod, IDictionary<string, ITypeSymbol> typeArguments, Func<string, bool, string> typeClean, ToCodeOpt opt, string assemblyName)
         {
-            var globalSystem = opt.GetGlobalName(GlobalName.System);
             var globalMeta = opt.GetGlobalName(GlobalName.Business_SourceGenerator_Meta);
             var globalObject = opt.GetGlobalName(GlobalName.System_Object);
+            var globalSystem = opt.GetGlobalName(GlobalName.System);
 
             var mustLength = 0;
 
@@ -136,18 +133,22 @@ namespace Business.SourceGenerator.Analysis
                     mustLength++;
                 }
 
-                if (c.Type.SpecialType is SpecialType.System_Object || c.Type.TypeKind is TypeKind.Dynamic)
-                {
-                    return ToMetaParameter(globalMeta, c.Name, globalObject, TypeKind.Unknown, c.RefKind, c.Type.IsValueType, c.Ordinal, c.HasExplicitDefaultValue, ToDefaultValue(c), ImplicitDefaultValue(c));
-                }
+                //if (c.Type.SpecialType is SpecialType.System_Object || c.Type.TypeKind is TypeKind.Dynamic)
+                //{
+                //    return AnalysisMeta.AnalysisInfo.AccessorType.TryGetValue("System.Object", out string v) ? v : $"default({globalMeta}(AccessorParameter))";
+                //    //return ToMetaParameter(globalMeta, globalObject, TypeKind.Unknown, c.RefKind, c.Ordinal, c.HasExplicitDefaultValue, ToDefaultValue(c), ImplicitDefaultValue(c), c.IsParams, $"c => c ? new {globalObject}() : default");
+                //}
 
-                var type = (typeArguments?.Any() ?? false) && typeArguments.TryGetValue(c.Type.GetFullName(), out ITypeSymbol typeSymbol) ? typeSymbol : c.Type;
+                //var type = (typeArguments?.Any() ?? false) && typeArguments.TryGetValue(c.Type.GetFullName(), out ITypeSymbol typeSymbol) ? typeSymbol : c.Type;
 
-                var typeName = $"{type.GetFullNameRealStandardFormat(typeClean: typeClean)}";
+                //var typeName = $"{type.GetFullNameRealStandardFormat(typeClean: typeClean)}";
 
-                var typeKind = type.SpecialType is SpecialType.None ? type.TypeKind : TypeKind.Unknown;
+                //var typeKind = type.SpecialType is SpecialType.None ? type.TypeKind : TypeKind.Unknown;
 
-                return ToMetaParameter(globalMeta, c.Name, typeName, typeKind, c.RefKind, type.IsValueType, c.Ordinal, c.HasExplicitDefaultValue, ToDefaultValue(c), ImplicitDefaultValue(c), c.Type.HasGenericType());
+                //(skip || !accessor.Parameters.Any()) ? "default" : $"new {globalMeta}IAccessorParameter[] {{ {string.Join(", ", accessor.Parameters.Select(c => c.ToMeta(opt, depth, typeClean: typeClean)))} }}";
+                return c.ToMeta3(opt, typeClean, default, assemblyName);
+
+                //return ToMetaParameter(globalMeta, typeName, typeKind, c.RefKind, c.Ordinal, c.HasExplicitDefaultValue, ToDefaultValue(c), ImplicitDefaultValue(c), c.IsParams, GetDefaultValue(type, typeClean, globalSystem), c.Type.IsGenericType());
             }).ToArray();
 
             const string methodParameterRefVarName = "args";
@@ -157,27 +158,67 @@ namespace Business.SourceGenerator.Analysis
 
             var refs = constructorMethod.Parameters.GetMethodRef(methodParameterVarName, methodParameterRefVarName, typeClean, opt);
 
-            return $"new {globalMeta}Constructor({constructorMethod.Parameters.Length}, {mustLength}, {(parameterList.Any() ? $"new {globalMeta}IParameterMeta[] {{ {string.Join(", ", parameterList)} }}" : "default")}, (obj, m, {methodParameterRefVarName}) => {{ {refs.refs}var result = new {sign}; {refs.refs2}return result; }})";
+            return $"new {globalMeta}Constructor({(parameterList.Any() ? $"new {globalMeta}IAccessorParameter[] {{ {string.Join(", ", parameterList)} }}" : "default")}, {constructorMethod.Parameters.Length}, {mustLength}, (obj, m, {methodParameterRefVarName}) => {{ {refs.refs}var result = new {sign}; {refs.refs2}return result; }})";
         }
 
-        static bool ImplicitDefaultValue(IParameterSymbol parameterSymbol) => (parameterSymbol.DeclaringSyntaxReferences.FirstOrDefault()?.GetSyntax() is ParameterSyntax parameter && parameter.Default?.Value is LiteralExpressionSyntax literalExpression && literalExpression.Token.IsKind(SyntaxKind.DefaultKeyword)) || parameterSymbol.IsParams;
+        static string GetRuntimeType(ITypeSymbol type, Func<string, bool, string> typeClean)
+        {
+            if (type.SpecialType is SpecialType.System_Void)
+            {
+                return "void";
+            }
+
+            string typeName = type.GetFullNameRealStandardFormat(typeClean: typeClean);
+
+            if (typeName.Contains("*"))
+            {
+                return default;
+            }
+
+            return typeName;
+        }
+
+        static string GetDefaultValue(ITypeSymbol type, Func<string, bool, string> typeClean, string globalSystem)
+        {
+            if (type.SpecialType is SpecialType.System_Void)
+            {
+                return "c => default";
+            }
+
+            var typeName = GetRuntimeType(type, typeClean);
+
+            if (typeName is null)
+            {
+                return "c => default";
+            }
+
+            var isArray = type.TypeKind is TypeKind.Array;
+
+            var arrayTypeName = type is IArrayTypeSymbol arrayType ? GetRuntimeType(arrayType.ElementType, typeClean) : default;
+
+            var defaultConstructor = !type.IsAbstract && (type.TypeKind is TypeKind.Class || type.TypeKind is TypeKind.Struct) && type is INamedTypeSymbol named && named.InstanceConstructors.Any(c => c.DeclaredAccessibility is Accessibility.Public && !c.Parameters.Any());
+
+            var typeDefault = type.IsValueType ? $"default({typeName})" : "default";
+            var typeConstructor = defaultConstructor ? $"new {typeName}()" : isArray ? $"{globalSystem}Array.Empty<{arrayTypeName}>()" : typeDefault;
+            var defaultValue = $"c => {(defaultConstructor || isArray ? $"c ? {typeConstructor} : {typeDefault}" : typeDefault)}";
+            return defaultValue;
+        }
+
+        static bool ImplicitDefaultValue(IParameterSymbol parameterSymbol) => parameterSymbol.DeclaringSyntaxReferences.FirstOrDefault()?.GetSyntax() is ParameterSyntax parameter && parameter.Default?.Value is LiteralExpressionSyntax literalExpression && literalExpression.Token.IsKind(SyntaxKind.DefaultKeyword);// || parameterSymbol.IsParams;
 
         static string MethodParameterVarNameCallback(string typeName, int ordinal) => $"!m[{ordinal}].c ? {typeName} : default";
 
         static string GetValueCode(IMethodSymbol method, string receiverType, bool asTask, Func<string, bool, string> typeClean, ToCodeOpt opt)
         {
-            var globalTasks = opt.GetGlobalName(GlobalName.System_Threading_Tasks);
-            var globalObject = opt.GetGlobalName(GlobalName.System_Object);
-            var globalSourceGenerator = opt.GetGlobalName(GlobalName.Business_SourceGenerator);
-            var globalMeta = opt.GetGlobalName(GlobalName.Business_SourceGenerator_Meta);
-            var globalSystem = opt.GetGlobalName(GlobalName.System);
-
             const string methodParameterRefVarName = "args";
             //!m[3].c ? global::Sl::System.ValueTuple<global::System.Int32?, global::System.String>)m[1].v; ystem.Convert.ToSingle(m[3].v) : default
             const string methodParameterVarName = "m{0}.v";
             const string methodParameterDeclaration = "(obj, m, args)";
             //var m{0}0 = m[0].v as global::System.String; var m{0}1 = (global::System.ValueTuple<global::System.Int32?, global::System.String>)m[1].v; 
-            var sign = method.GetFullNameMethodRealStandardFormat(GetFullNameOpt.Create(captureStyle: CaptureStyle.NoPrefix, methodParameterVarName: methodParameterVarName, methodParameterRefVarName: methodParameterRefVarName, methodParameterVarNameCallback: MethodParameterVarNameCallback, global: opt.Global), typeClean: typeClean);
+            var globalObject = opt.GetGlobalName(GlobalName.System_Object);
+            var globalTasks = opt.GetGlobalName(GlobalName.System_Threading_Tasks);
+
+            var sign = method.GetFullNameMethodRealStandardFormat(GetFullNameOpt.Create(tupleStyle: TupleStyle.TypeName, captureStyle: CaptureStyle.NoPrefix, methodParameterVarName: methodParameterVarName, methodParameterRefVarName: methodParameterRefVarName, methodParameterVarNameCallback: MethodParameterVarNameCallback, global: opt.Global), typeClean: typeClean);
 
             var refs = method.Parameters.GetMethodRef(methodParameterVarName, methodParameterRefVarName, typeClean, opt);
 
@@ -194,7 +235,7 @@ namespace Business.SourceGenerator.Analysis
             {
                 if (asTask)
                 {
-                    result = $"async {methodParameterDeclaration} => {{ {refs.refs}{result}; {refs.refs2}return default; }}";
+                    result = $"{methodParameterDeclaration} => {{ {refs.refs}{result}; {refs.refs2}return {globalTasks}Task.FromResult<{globalObject}>(default); }}";
                 }
                 else
                 {
@@ -210,7 +251,7 @@ namespace Business.SourceGenerator.Analysis
                     switch (asyncType)
                     {
                         case AsyncType.None:
-                            result = $"async {methodParameterDeclaration} => {{ {refs.refs}var result = {result}; {refs.refs2}return result; }}";
+                            result = $"{methodParameterDeclaration} => {{ {refs.refs}object result = {result}; {refs.refs2}return {globalTasks}Task.FromResult(result); }}";
                             break;
                         case AsyncType.Task:
                             result = $"async {methodParameterDeclaration} => {{ {refs.refs}await {result}; {refs.refs2}return default; }}";
@@ -224,7 +265,9 @@ namespace Business.SourceGenerator.Analysis
                         case AsyncType.ValueTaskGeneric:
                             result = $"async {methodParameterDeclaration} => {{ {refs.refs}var result = await {result}; {refs.refs2}return result; }}";
                             break;
-                        //case AsyncType.Other: break;
+                        case AsyncType.Other:
+                            result = $"async {methodParameterDeclaration} => {{ {refs.refs}await {result}; {refs.refs2}return default; }}";
+                            break;
                         default: break;
                     }
                 }
@@ -237,741 +280,679 @@ namespace Business.SourceGenerator.Analysis
             return result;
         }
 
-        public static string ToMetaParameter(string globalMeta, string name, string type, TypeKind typeKind = TypeKind.Unknown, RefKind refKind = RefKind.None, bool isValueType = default, int ordinal = default, bool hasExplicitDefaultValue = default, string explicitDefaultValue = "default", bool implicitDefaultValue = default, bool hasGenericType = default) => $"new {globalMeta}Parameter(\"{name}\", typeof({type}), {globalMeta}TypeKind.{typeKind.GetName()},{globalMeta}RefKind.{refKind.GetName()}, {(isValueType ? "true" : "default")}, {ordinal}, {(hasExplicitDefaultValue ? "true" : "default")}, {explicitDefaultValue}, {(implicitDefaultValue ? "true" : "default")}, {(hasGenericType ? "true" : "default")})";
+        static string GetEventCode(this IMethodSymbol method, string methodName, string receiverType, Func<string, bool, string> typeClean, ToCodeOpt opt)
+        {
+            const string methodParameterDeclaration = "(obj, arg)";
 
-        public static string ToMeta(this ISymbol symbol, ToCodeOpt opt, int depth = default, string receiverType = default, StringCollection types = default, Func<string, bool, string> typeClean = default)
+            var sign = method.GetFullNameMethodRealStandardFormat(GetFullNameOpt.Create(captureStyle: CaptureStyle.MethodParameters, methodParameterVarName: "arg", global: opt.Global), typeClean: typeClean);
+
+            var refs = method.Parameters.GetMethodRef(default, default, typeClean, opt);
+
+            if (sign is null)
+            {
+                return $"{methodParameterDeclaration} => {{ }}";
+            }
+
+            var result = method.IsStatic ? $"{receiverType}.{methodName}{sign}" : $"(({receiverType})obj).{methodName}{sign}";
+
+            result = $"{methodParameterDeclaration} => {{ {refs.refs}{result}; }}";
+
+            return result;
+        }
+
+        public static string ToMetaParameter(string globalMeta, string type, TypeKind typeKind = TypeKind.Unknown, RefKind refKind = RefKind.None, int ordinal = default, bool hasExplicitDefaultValue = default, string explicitDefaultValue = "default", bool implicitDefaultValue = default, bool isParams = default, string defaultValue = default, bool hasGenericType = default) => $"new {globalMeta}Parameter(typeof({type}), {globalMeta}TypeKind.{typeKind.GetName()}, {globalMeta}RefKind.{refKind.GetName()}, {ordinal}, {(hasExplicitDefaultValue ? "true" : "default")}, {explicitDefaultValue}, {(implicitDefaultValue ? "true" : "default")}, {(isParams ? "true" : "default")}, {defaultValue}, {(hasGenericType ? "true" : "default")})";
+
+        //const int accessorDepth = 4;
+
+        static void AppendFormat(this System.Text.StringBuilder sb, bool v, bool end = default) => sb.AppendFormat(end ? "{0}" : "{0}, ", v ? "true" : "default");
+        static string ToName(this bool v) => v ? "true" : "default";
+
+        public static string ToMeta3(this IEnumerable<IMethodSymbol> methodSymbols, ToCodeOpt opt, Func<string, bool, string> typeClean, string receiverType, string assemblyName)
         {
             var globalMeta = opt.GetGlobalName(GlobalName.Business_SourceGenerator_Meta);
-            var globalSystem = opt.GetGlobalName(GlobalName.System);
+
+            var methods = methodSymbols.Select(c => c.ToMeta3(opt, typeClean, receiverType, assemblyName)).Where(c => !(c is null)).ToArray();
+
+            if (1 < methods.Length)
+            {
+                return $"new {globalMeta}AccessorMethodCollection(new {globalMeta}IAccessorMethod[] {{ {string.Join(", ", methods)} }})";
+            }
+            else if (1 == methods.Length)
+            {
+                return methods[0];
+            }
+
+            return default;
+        }
+
+        public static string ToMeta3(this ISymbol symbol, ToCodeOpt opt, Func<string, bool, string> typeClean, string receiverType, string assemblyName)
+        {
+            var space = Meta.Global.Space;
+            var format = opt.StandardFormat ? Environment.NewLine : " ";
+            var accessorTypes = $"{assemblyName}.AccessorTypes";
+            var accessorTypes2 = $"{opt.GetGlobalName(GlobalName.Globa)}{accessorTypes}.";
+            var globalMeta = opt.GetGlobalName(GlobalName.Business_SourceGenerator_Meta);
             var globalGeneric = opt.GetGlobalName(GlobalName.System_Collections_Generic);
-            var globalString = opt.GetGlobalName(GlobalName.System_String);
-            var globalInt32 = opt.GetGlobalName(GlobalName.System_Int32);
             var globalObject = opt.GetGlobalName(GlobalName.System_Object);
+            var globalSystem = opt.GetGlobalName(GlobalName.System);
+            var globalLazy = opt.GetGlobalName(GlobalName.System_Lazy);
             var globalType = opt.GetGlobalName(GlobalName.System_Type);
+            var globalString = opt.GetGlobalName(GlobalName.System_String);
+            var globalBoolean = opt.GetGlobalName(GlobalName.System_Boolean);
 
             switch (symbol)
             {
                 case INamedTypeSymbol accessor:
                     {
-                        depth++;
-                        var isDeclaringSyntaxReferences = symbol.DeclaringSyntaxReferences.Any();
-                        var skip = accessorDepth < depth || SpecialType.None != accessor.SpecialType;
-                        var skip2 = skip || !isDeclaringSyntaxReferences;
-                        var fullName = symbol.GetFullNameStandardFormat(typeClean: typeClean);
-                        var attrs = accessor.GetAttributes().Where(c => !(c.ApplicationSyntaxReference is null));
+                        var fullName = symbol.GetFullNameStandardFormat();
 
-                        if (null == types)
+                        //if (AnalysisMeta.AnalysisInfo.BasrType.TryGetValue(fullName, out string v))
+                        //{
+                        //    return v;
+                        //}
+
+                        var key = $"{symbol.GetFullNameStandardFormat(GetFullNameOpt.Create(noNullableQuestionMark: true, charSpecial: CharSpecial.Create('_')))}";
+                        //var key2 = typeClean?.Invoke(key, false);
+
+                        //if (accessor.TypeKind is TypeKind.Class || accessor.TypeKind is TypeKind.Struct || accessor.TypeKind is TypeKind.Interface || accessor.TypeKind is TypeKind.Enum)
+
+                        if (AnalysisMeta.AnalysisInfo.AccessorType.ContainsKey(fullName))
                         {
-                            types = new StringCollection { fullName };
+                            return $"{accessorTypes2}{key}.Singleton";
                         }
+
+                        AnalysisMeta.AnalysisInfo.AccessorType.Add(fullName, default);
+
+                        var runtimeType = GetRuntimeType(accessor, typeClean);
+                        var isTupleType = accessor.IsTupleType && !accessor.IsDefinition;
+                        var fullName2 = isTupleType ? symbol.GetFullNameRealStandardFormat(GetFullNameOpt.Create(tupleStyle: TupleStyle.TypeName), typeClean: typeClean) : symbol.GetFullNameRealStandardFormat(typeClean: typeClean);
+                        var attrs = accessor.GetAttributes().Where(c => !(c.ApplicationSyntaxReference is null));
 
                         #region members
 
-                        var members = skip2 ? default : new Dictionary<string, string>();
-                        var methods = skip2 ? default : new Dictionary<string, IList<IMethodSymbol>>();
+                        var members = new Dictionary<string, string>();
+                        var methods = new Dictionary<string, IList<IMethodSymbol>>();
 
-                        if (!skip2)
+                        foreach (var item in accessor.GetMembers())
                         {
-                            foreach (var item in accessor.GetMembers())
+                            if (Accessibility.Public != item.DeclaredAccessibility)
                             {
-                                if (Accessibility.Public != item.DeclaredAccessibility)
+                                continue;
+                            }
+
+                            switch (item)
+                            {
+                                case IMethodSymbol member:
+                                    if (!symbol.DeclaringSyntaxReferences.Any()) { continue; }
+                                    if (MethodKind.Ordinary == member.MethodKind)
+                                    {
+                                        if (!methods.TryGetValue(member.Name, out IList<IMethodSymbol> m))
+                                        {
+                                            methods.Add(member.Name, new List<IMethodSymbol> { member });
+                                        }
+                                        else
+                                        {
+                                            m.Add(member);
+                                        }
+                                    }
+                                    break;
+                                case IFieldSymbol member:
+                                    {
+                                        if (member.IsImplicitlyDeclared || member.Type.IsRefLikePointerTypedReferenceValueTypeConstraint()) { continue; }
+
+                                        if (member.Type.Kind is SymbolKind.Event) { continue; }
+
+                                        if (member.Type.IsValueTypeConstraint()) { continue; }
+
+                                        members.Add(member.Name, member.ToMeta3(opt, typeClean, fullName2, assemblyName));
+                                    }
+                                    break;
+                                case IPropertySymbol member:
+                                    {
+                                        if (member.IsImplicitlyDeclared || member.Type.IsRefLikePointerTypedReferenceValueTypeConstraint() || member.IsIndexer) { continue; }
+
+                                        if (member.Type.Kind is SymbolKind.Event) { continue; }
+
+                                        if (member.Type.IsValueTypeConstraint()) { continue; }
+
+                                        members.Add(member.Name, member.ToMeta3(opt, typeClean, fullName2, assemblyName));
+                                    }
+                                    break;
+                                case IEventSymbol member:
+                                    {
+                                        if (!symbol.DeclaringSyntaxReferences.Any()) { continue; }
+                                        if (member.Type.IsRefLikePointerTypedReferenceValueTypeConstraint()) { continue; }
+
+                                        if (member.Type.IsValueTypeConstraint()) { continue; }
+
+                                        members.Add(member.Name, member.ToMeta3(opt, typeClean, fullName2, assemblyName));
+                                    }
+                                    break;
+                                default: break;
+                            }
+                        }
+
+                        foreach (var item in methods)
+                        {
+                            if (1 < item.Value.Count)
+                            {
+                                var method = item.Value.ToMeta3(opt, typeClean, fullName2, assemblyName);
+
+                                if (method is null)
                                 {
                                     continue;
                                 }
 
-                                switch (item)
-                                {
-                                    case IMethodSymbol member:
-                                        if (MethodKind.Ordinary == member.MethodKind)
-                                        {
-                                            if (member.Parameters.Any(c => c.Type.IsPointerType()))
-                                            {
-                                                continue;
-                                            }
-                                            if (!methods.TryGetValue(member.Name, out IList<IMethodSymbol> m))
-                                            {
-                                                methods.Add(member.Name, new List<IMethodSymbol> { member });
-                                            }
-                                            else
-                                            {
-                                                m.Add(member);
-                                            }
-                                            //if (!members.ContainsKey(member.Name))
-                                            //{
-                                            //    members.Add(member.Name, member.ToMeta(opt, depth, fullName, typeClean: typeClean));
-                                            //}
-                                            //else
-                                            //{
-                                            //    members.Add(member.GetFullNameStandardFormat(), member.ToMeta(opt, depth, fullName, typeClean: typeClean));
-                                            //}
-                                        }
-                                        break;
-                                    case IFieldSymbol member:
-                                        if (member.IsImplicitlyDeclared) { continue; }
-                                        if (member.Type.IsPointerType())
-                                        {
-                                            continue;
-                                        }
-                                        members.Add(member.Name, member.ToMeta(opt, depth, fullName, types, typeClean)); break;
-                                    case IPropertySymbol member:
-                                        if (member.IsImplicitlyDeclared) { continue; }
-                                        if (member.Type.IsPointerType())
-                                        {
-                                            continue;
-                                        }
-                                        members.Add(member.Name, member.ToMeta(opt, depth, fullName, types, typeClean)); break;
-                                    case IEventSymbol member:
-                                        if (member.Type.IsPointerType()) { continue; }
-                                        members.Add(member.Name, member.ToMeta(opt, depth, fullName, types, typeClean)); break;
-                                    default: break;
-                                }
+                                members.Add(item.Key, method);
                             }
-
-                            foreach (var item in methods)
+                            else
                             {
-                                if (1 < item.Value.Count)
+                                var method = item.Value.First().ToMeta3(opt, typeClean, fullName2, assemblyName);
+
+                                if (method is null)
                                 {
-                                    members.Add(item.Key, item.Value.ToMeta(opt, depth, fullName, typeClean));
+                                    continue;
                                 }
-                                else
-                                {
-                                    members.Add(item.Key, item.Value.First().ToMeta(opt, depth, fullName, typeClean: typeClean));
-                                }
+
+                                members.Add(item.Key, method);
                             }
                         }
 
                         #endregion
 
-                        var sb = new System.Text.StringBuilder($"new {globalMeta}AccessorNamedType(");
-                        //==================Meta==================//
-                        sb.AppendFormat($"{globalMeta}Accessibility.{{0}}, ", accessor.DeclaredAccessibility.GetName());
-                        //sb.AppendFormat("{0}, ", accessor.CanBeReferencedByName ? "true" : "default");
-                        //sb.AppendFormat("{0}, ", accessor.IsImplicitlyDeclared ? "true" : "default");
-                        sb.AppendFormat("{0}, ", accessor.IsExtern ? "true" : "default");
-                        sb.AppendFormat("{0}, ", accessor.IsSealed ? "true" : "default");
-                        sb.AppendFormat("{0}, ", accessor.IsAbstract ? "true" : "default");
-                        sb.AppendFormat("{0}, ", accessor.IsOverride ? "true" : "default");
-                        sb.AppendFormat("{0}, ", accessor.IsVirtual ? "true" : "default");
-                        sb.AppendFormat("{0}, ", accessor.IsStatic ? "true" : "default");
-                        sb.AppendFormat("{0}, ", accessor.IsDefinition ? "true" : "default");
-                        sb.AppendFormat("\"{0}\", ", accessor.Name);
-                        sb.AppendFormat("\"{0}\", ", symbol.GetFullNameStandardFormat());
-                        sb.AppendFormat($"{globalMeta}Kind.{{0}}, ", accessor.Kind.GetName());
-                        sb.AppendFormat("{0}, ", isDeclaringSyntaxReferences ? "true" : "default");
-                        sb.AppendFormat("{0}, ", attrs.Any() ? $"{GetAttributes(attrs, globalMeta, typeClean)}" : "default");
-                        //==================IAccessorType==================//
-                        //sb.AppendFormat("{0}, ", accessor.IsNamespace ? "true" : "default");
-                        //sb.AppendFormat("{0}, ", accessor.IsType ? "true" : "default");
+                        #region Members
 
-                        /* Members */
-                        sb.AppendFormat("{0}, ", !(members?.Any() ?? false) ? "default" : $"new {globalGeneric}Dictionary<{globalString}, {globalMeta}IAccessor> {{ {string.Join(", ", members.Select(c => $"{{ \"{c.Key}\", {c.Value} }}"))} }}");
-                        /* IsReferenceType
-                        sb.AppendFormat("{0}, ", accessor.IsReferenceType ? "true" : "default"); */
-                        /* IsReadOnly */
-                        sb.AppendFormat("{0}, ", accessor.IsReadOnly ? "true" : "default");
-                        /* IsUnmanagedType */
-                        sb.AppendFormat("{0}, ", accessor.IsUnmanagedType ? "true" : "default");
-                        /* IsRefLikeType
-                        sb.AppendFormat("{0}, ", accessor.IsRefLikeType ? "true" : "default"); */
-                        /* SpecialType */
-                        sb.AppendFormat($"{globalMeta}SpecialType.{{0}}, ", accessor.SpecialType.GetName());
-                        /* IsNativeIntegerType
-                        sb.AppendFormat("{0}, ", accessor.IsNativeIntegerType ? "true" : "default"); */
-                        /* IsTupleType */
-                        sb.AppendFormat("{0}, ", accessor.IsTupleType ? "true" : "default");
-                        /* IsAnonymousType */
-                        sb.AppendFormat("{0}, ", accessor.IsAnonymousType ? "true" : "default");
-                        /* IsValueType
-                        sb.AppendFormat("{0}, ", accessor.IsValueType ? "true" : "default"); */
-                        /* NullableAnnotation */
-                        sb.AppendFormat($"{globalMeta}NullableAnnotation.{{0}}, ", accessor.NullableAnnotation.GetName());
-                        ///* AllInterfaces */
-                        //sb.AppendFormat("{0}, ", (skip2 || !accessor.AllInterfaces.Any()) ? "default" : $"new {globalType}[] {{ {string.Join(", ", accessor.AllInterfaces.Where(c => c.DeclaredAccessibility is Accessibility.Public).Select(c => $"typeof({(c.TypeChecked(t => t is ITypeParameterSymbol typeParameter && typeParameter.TypeParameterKind is TypeParameterKind.Method) ? c.GetFullNameRealStandardFormat(typeClean: typeClean) : c.GetFullNameStandardFormat(typeClean: typeClean))})"))} }}");
-                        ///* BaseType */
-                        //sb.AppendFormat("{0}, ", accessor.BaseType is null ? "default" : $"typeof({accessor.BaseType.GetFullNameStandardFormat(typeClean: typeClean)})");
-                        /* TypeKind */
-                        sb.AppendFormat($"{globalMeta}TypeKind.{{0}}, ", accessor.TypeKind.GetName());
-                        /* IsRecord */
-                        sb.AppendFormat("{0}, ", accessor.IsRecord ? "true" : "default");
-                        /* AsyncType */
-                        sb.AppendFormat($"{globalMeta}AsyncType.{{0}}, ", GetAsyncType(accessor).GetName());
+                        var sb = new System.Text.StringBuilder();
+                        int spaceCount = 0;
+
+                        if (!string.IsNullOrEmpty(assemblyName))
+                        {
+                            sb.AppendFormat("namespace {1}{0}", $"{format}{{{format}", accessorTypes);
+                            spaceCount++;
+                        }
+
+                        sb.AppendLine($"{space.Repeat(spaceCount)}public readonly struct {key} : {globalMeta}IAccessorNamedType");
+                        sb.AppendLine($"{space.Repeat(spaceCount)}{{");
+                        spaceCount++;
+                        sb.AppendLine($"{space.Repeat(spaceCount)}readonly static {globalLazy}<{accessorTypes2}{key}> instance = new {globalLazy}<{accessorTypes2}{key}>(() => new {accessorTypes2}{key}());");
+                        sb.AppendLine($"public static {accessorTypes2}{key} Singleton => instance.Value;");
+                        //sb.AppendLine($"{space.Repeat(spaceCount)}public {key}() {{ }}");
+                        sb.AppendLine($"{space.Repeat(spaceCount)}public override {globalString} ToString() => $\"{{Kind}}\";");
+                        //==================Meta==================//
+                        sb.AppendLine($"{space.Repeat(spaceCount)}public {globalBoolean} IsExtern => {symbol.IsExtern.ToName()};");
+                        sb.AppendLine($"{space.Repeat(spaceCount)}public {globalBoolean} IsSealed => {symbol.IsSealed.ToName()};");
+                        sb.AppendLine($"{space.Repeat(spaceCount)}public {globalBoolean} IsAbstract => {symbol.IsAbstract.ToName()};");
+                        sb.AppendLine($"{space.Repeat(spaceCount)}public {globalBoolean} IsOverride => {symbol.IsOverride.ToName()};");
+                        sb.AppendLine($"{space.Repeat(spaceCount)}public {globalBoolean} IsVirtual => {symbol.IsVirtual.ToName()};");
+                        sb.AppendLine($"{space.Repeat(spaceCount)}public {globalBoolean} IsStatic => {symbol.IsStatic.ToName()};");
+                        sb.AppendLine($"{space.Repeat(spaceCount)}public {globalMeta}Kind Kind => {globalMeta}Kind.{symbol.Kind};");
+                        //==================IAccessorType==================//
+                        sb.AppendLine($"{space.Repeat(spaceCount)}public {globalGeneric}IDictionary<{globalString}, {globalMeta}IAccessor> Members => {(members.Any() ? $"new {globalGeneric}Dictionary<{globalString}, {globalMeta}IAccessor> {{ {string.Join(", ", members.Select(c => $"{{ \"{c.Key}\", {c.Value} }}"))} }}" : "default")};");
+                        sb.AppendLine($"{space.Repeat(spaceCount)}public {globalBoolean} IsReadOnly => {accessor.IsReadOnly.ToName()};");
+                        sb.AppendLine($"{space.Repeat(spaceCount)}public {globalBoolean} IsUnmanagedType => {accessor.IsUnmanagedType.ToName()};");
+                        sb.AppendLine($"{space.Repeat(spaceCount)}public {globalMeta}SpecialType SpecialType => {globalMeta}SpecialType.{accessor.SpecialType};");
+                        sb.AppendLine($"{space.Repeat(spaceCount)}public {globalBoolean} IsTupleType => {accessor.IsTupleType.ToName()};");
+                        sb.AppendLine($"{space.Repeat(spaceCount)}public {globalBoolean} IsAnonymousType => {accessor.IsAnonymousType.ToName()};");
+                        sb.AppendLine($"{space.Repeat(spaceCount)}public {globalMeta}TypeKind TypeKind => {globalMeta}TypeKind.{accessor.TypeKind};");
+                        sb.AppendLine($"{space.Repeat(spaceCount)}public {globalBoolean} IsRecord => {accessor.IsRecord.ToName()};");
+                        sb.AppendLine($"{space.Repeat(spaceCount)}public {globalMeta}AsyncType AsyncType => {globalMeta}AsyncType.{GetAsyncType(accessor)};");
+                        sb.AppendLine($"{space.Repeat(spaceCount)}public {globalType} RuntimeType => {(!(runtimeType is null) ? $"typeof({runtimeType})" : "default")};");
+                        sb.AppendLine($"{space.Repeat(spaceCount)}public {globalMeta}DefaultValue DefaultValue => {GetDefaultValue(accessor, typeClean, globalSystem)};");
                         //==================IAccessorNamedType==================//
-                        sb.AppendFormat("{0}, ", (skip2 || !accessor.TypeArgumentNullableAnnotations.Any()) ? "default" : $"new {globalMeta}NullableAnnotation[] {{ {string.Join(", ", accessor.TypeArgumentNullableAnnotations.Select(c => $"{globalMeta}NullableAnnotation.{c.GetName()}"))} }}");
-                        sb.AppendFormat("{0}, ", (skip2 || null == accessor.TupleElements || !accessor.TupleElements.Any()) ? "default" : $"new {globalMeta}IAccessorField[] {{ {string.Join(", ", accessor.TupleElements.Select(c => c.ToMeta(opt, depth, accessor.Name, typeClean: typeClean)))} }}");
-                        sb.AppendFormat("{0}, ", accessor.MightContainExtensionMethods ? "true" : "default");
-                        sb.AppendFormat("{0}, ", (skip2 || !accessor.Constructors.Any()) ? "default" : $"new {globalMeta}IAccessorMethod[] {{ {string.Join(", ", accessor.Constructors.Select(c => c.ToMeta(opt, depth, typeClean: typeClean)))} }}");
-                        sb.AppendFormat("{0}, ", (skip2 || accessor.EnumUnderlyingType is null) ? "default" : accessor.EnumUnderlyingType.ToMeta(opt, depth, typeClean: typeClean));
-                        sb.AppendFormat("{0}, ", (skip2 || accessor.DelegateInvokeMethod is null) ? "default" : accessor.DelegateInvokeMethod.ToMeta(opt, depth, typeClean: typeClean));
-                        sb.AppendFormat("{0}, ", accessor.IsSerializable ? "true" : "default");
-                        sb.AppendFormat("{0}, ", accessor.IsPartial() ? "true" : "default");
-                        //sb.AppendFormat("{0}, ", (skip || !accessor.TypeParameters.Any()) ? "default" : $"new {globalGeneric}Dictionary<{globalString}, {globalMeta}IAccessorTypeParameter> {{ {string.Join(", ", accessor.TypeParameters.Select(c => $"{{ \"{c.GetFullNameStandardFormat()}\", {c.ToMeta(opt, depth, typeClean: typeClean)} }}"))} }}");
-                        //sb.Append((MemberNames?.Any() ?? false) ? $"new string[] {{ {string.Join(", ", MemberNames.Select(c => $"\"{c}\""))} }}, " : "default, ");
-                        //sb.AppendFormat("{0}, ", accessor.IsUnboundGenericType ? "true" : "default");
-                        //sb.AppendFormat("{0}, ", accessor.IsGenericType ? "true" : "default");
-                        sb.AppendFormat("{0}", (skip || !accessor.TypeArguments.Any()) ? "default" : $"new {globalMeta}IAccessorType[] {{ {string.Join(", ", accessor.TypeArguments.Select(c => c.ToMeta(opt, depth, typeClean: typeClean)))} }}");
-                        return sb.Append(")").ToString();
+                        sb.AppendLine($"{space.Repeat(spaceCount)}public {globalMeta}AccessorAttribute[] Attributes => {(attrs.Any() ? $"{GetAttributes(attrs, globalMeta, typeClean)}" : "default")};");
+                        sb.AppendLine($"{space.Repeat(spaceCount)}public {globalGeneric}IEnumerable<{globalMeta}IAccessorField> TupleElements => {((isTupleType && accessor.TupleElements.Any()) ? $"new {globalMeta}IAccessorField[] {{ {string.Join(", ", accessor.TupleElements.Select(c => c.ToMeta3(opt, typeClean, fullName2, assemblyName)))} }}" : "default")};");
+                        sb.AppendLine($"{space.Repeat(spaceCount)}public {globalBoolean} MightContainExtensionMethods => {accessor.MightContainExtensionMethods.ToName()};");
+                        sb.AppendLine($"{space.Repeat(spaceCount)}public {globalBoolean} IsSerializable => {accessor.IsSerializable.ToName()};");
+                        sb.AppendLine($"{space.Repeat(spaceCount)}public {globalBoolean} IsPartial => {accessor.IsPartial().ToName()};");
+                        sb.AppendLine($"{space.Repeat(spaceCount)}public {globalBoolean} HasTypeParameter => {accessor.IsTypeParameter().ToName()};");
+                        sb.AppendLine($"{space.Repeat(spaceCount)}public {globalMeta}IAccessorType[] TypeArguments => {(accessor.TypeArguments.Any() ? $"new {globalMeta}IAccessorType[] {{ {string.Join(", ", accessor.TypeArguments.Select(c => c.ToMeta3(opt, typeClean, fullName2, assemblyName)))} }}" : "default")};");
+
+                        spaceCount--;
+                        sb.Append($"{space.Repeat(spaceCount)}}}");
+                        if (!string.IsNullOrEmpty(assemblyName))
+                        {
+                            sb.AppendLine();
+                            spaceCount--;
+                            sb.Append($"{space.Repeat(spaceCount)}}}");
+                        }
+
+                        if (AnalysisMeta.AnalysisInfo.AccessorType.ContainsKey(fullName))
+                        {
+                            AnalysisMeta.AnalysisInfo.AccessorType[fullName] = ($"{symbol.GetFullNameStandardFormat(GetFullNameOpt.Create(noNullableQuestionMark: true, charSpecial: CharSpecial.Create(bracketLeft: '[', bracketRight: ']', asterisk: '_')))}_AccessorType", sb.ToString());
+                        }
+
+                        return $"{accessorTypes2}{key}.Singleton";
+
+                        #endregion
                     }
                 case ITypeParameterSymbol accessor:
                     {
-                        depth++;
-                        var isDeclaringSyntaxReferences = symbol.DeclaringSyntaxReferences.Any();
-                        var skip = accessorDepth < depth || SpecialType.None != accessor.SpecialType;
-                        var skip2 = skip || !isDeclaringSyntaxReferences;
-                        var fullName = symbol.GetFullName(GetFullNameOpt.Create(true, typeParameterStyle: TypeParameterStyle.FullName));
-                        var attrs = accessor.GetAttributes().Where(c => !(c.ApplicationSyntaxReference is null));
+                        var runtimeType = accessor.GetFullNameRealStandardFormat(typeClean: typeClean);
 
                         var sb = new System.Text.StringBuilder($"new {globalMeta}AccessorTypeParameter(");
                         //==================Meta==================//
-                        sb.AppendFormat($"{globalMeta}Accessibility.{{0}}, ", accessor.DeclaredAccessibility.GetName());
-                        sb.AppendFormat("{0}, ", accessor.IsExtern ? "true" : "default");
-                        sb.AppendFormat("{0}, ", accessor.IsSealed ? "true" : "default");
-                        sb.AppendFormat("{0}, ", accessor.IsAbstract ? "true" : "default");
-                        sb.AppendFormat("{0}, ", accessor.IsOverride ? "true" : "default");
-                        sb.AppendFormat("{0}, ", accessor.IsVirtual ? "true" : "default");
-                        sb.AppendFormat("{0}, ", accessor.IsStatic ? "true" : "default");
-                        sb.AppendFormat("{0}, ", accessor.IsDefinition ? "true" : "default");
-                        sb.AppendFormat("\"{0}\", ", accessor.GetFullNameStandardFormat());
-                        sb.AppendFormat("\"{0}\", ", fullName);
+                        sb.AppendFormat(accessor.IsExtern);
+                        sb.AppendFormat(accessor.IsSealed);
+                        sb.AppendFormat(accessor.IsAbstract);
+                        sb.AppendFormat(accessor.IsOverride);
+                        sb.AppendFormat(accessor.IsVirtual);
+                        sb.AppendFormat(accessor.IsStatic);
                         sb.AppendFormat($"{globalMeta}Kind.{{0}}, ", accessor.Kind.GetName());
-                        sb.AppendFormat("{0}, ", isDeclaringSyntaxReferences ? "true" : "default");
-                        sb.AppendFormat("{0}, ", attrs.Any() ? $"{GetAttributes(attrs, globalMeta, typeClean)}" : "default");
                         //==================IAccessorType==================//
-                        //sb.AppendFormat("{0}, ", accessor.IsNamespace ? "true" : "default");
-                        //sb.AppendFormat("{0}, ", accessor.IsType ? "true" : "default");
                         sb.Append("default, ");
-                        /* sb.AppendFormat("{0}, ", accessor.IsReferenceType ? "true" : "default"); */
-                        sb.AppendFormat("{0}, ", accessor.IsReadOnly ? "true" : "default");
-                        sb.AppendFormat("{0}, ", accessor.IsUnmanagedType ? "true" : "default");
-                        /* sb.AppendFormat("{0}, ", accessor.IsRefLikeType ? "true" : "default"); */
+                        sb.AppendFormat(accessor.IsReadOnly);
+                        sb.AppendFormat(accessor.IsUnmanagedType);
                         sb.AppendFormat($"{globalMeta}SpecialType.{{0}}, ", accessor.SpecialType.GetName());
-                        /* sb.AppendFormat("{0}, ", accessor.IsNativeIntegerType ? "true" : "default"); */
-                        sb.AppendFormat("{0}, ", accessor.IsTupleType ? "true" : "default");
-                        sb.AppendFormat("{0}, ", accessor.IsAnonymousType ? "true" : "default");
-                        /* sb.AppendFormat("{0}, ", accessor.IsValueType ? "true" : "default"); */
-                        sb.AppendFormat($"{globalMeta}NullableAnnotation.{{0}}, ", accessor.NullableAnnotation.GetName());
-                        //sb.AppendFormat("{0}, ", (skip2 || !accessor.AllInterfaces.Any()) ? "default" : $"new {globalType}[] {{ {string.Join(", ", accessor.AllInterfaces.Where(c => c.DeclaredAccessibility is Accessibility.Public).Select(c => $"typeof({(c.TypeChecked(t => t is ITypeParameterSymbol typeParameter && typeParameter.TypeParameterKind is TypeParameterKind.Method) ? c.GetFullNameRealStandardFormat(typeClean: typeClean) : c.GetFullNameStandardFormat(typeClean: typeClean))})"))} }}");
-                        //sb.AppendFormat("{0}, ", accessor.BaseType is null ? "default" : $"typeof({accessor.BaseType.GetFullNameStandardFormat(typeClean: typeClean)})");
+                        sb.AppendFormat(accessor.IsTupleType);
+                        sb.AppendFormat(accessor.IsAnonymousType);
                         sb.AppendFormat($"{globalMeta}TypeKind.{{0}}, ", accessor.TypeKind.GetName());
-                        sb.AppendFormat("{0}, ", accessor.IsRecord ? "true" : "default");
+                        sb.AppendFormat(accessor.IsRecord);
                         sb.AppendFormat($"{globalMeta}AsyncType.{{0}}, ", GetAsyncType(accessor).GetName());
+                        sb.AppendFormat("{0}, ", (!(runtimeType is null) ? $"typeof({runtimeType})" : "default"));
+                        sb.AppendFormat("{0}, ", GetDefaultValue(accessor, typeClean, globalSystem));
                         //==================IAccessorTypeParameter==================//
                         sb.AppendFormat("{0}, ", accessor.Ordinal);
                         sb.AppendFormat($"{globalMeta}VarianceKind.{{0}}, ", accessor.Variance.GetName());
                         sb.AppendFormat($"{globalMeta}TypeParameterKind.{{0}}, ", accessor.TypeParameterKind.GetName());
-                        sb.AppendFormat("{0}, ", accessor.HasReferenceTypeConstraint ? "true" : "default");
-                        sb.AppendFormat($"{globalMeta}NullableAnnotation.{{0}}, ", accessor.ReferenceTypeConstraintNullableAnnotation.GetName());
-                        sb.AppendFormat("{0}, ", accessor.HasValueTypeConstraint ? "true" : "default");
-                        sb.AppendFormat("{0}, ", accessor.HasUnmanagedTypeConstraint ? "true" : "default");
-                        sb.AppendFormat("{0}, ", accessor.HasNotNullConstraint ? "true" : "default");
-                        sb.AppendFormat("{0}, ", accessor.HasConstructorConstraint ? "true" : "default");
-                        sb.Append((skip2 || !accessor.ConstraintTypes.Any()) ? "default" : $"new {globalMeta}IAccessorType[] {{ {string.Join(", ", accessor.ConstraintTypes.Select(c => c.ToMeta(opt, depth, typeClean: typeClean)))} }}");
+                        sb.AppendFormat(accessor.HasReferenceTypeConstraint);
+                        sb.AppendFormat(accessor.HasValueTypeConstraint);
+                        sb.AppendFormat(accessor.HasUnmanagedTypeConstraint);
+                        sb.AppendFormat(accessor.HasNotNullConstraint);
+                        sb.AppendFormat(accessor.HasConstructorConstraint);
+                        sb.Append(accessor.ConstraintTypes.Any() ? $"new {globalMeta}IAccessorType[] {{ {string.Join(", ", accessor.ConstraintTypes.Select(c => c.ToMeta3(opt, typeClean, default, assemblyName)))} }}" : "default");
                         return sb.Append(")").ToString();
                     }
                 case ITypeSymbol accessor:
                     {
-                        switch (symbol)
-                        {
-                            case INamedTypeSymbol typeSymbol: return ToMeta(typeSymbol, opt, depth, typeClean: typeClean);
-                            case ITypeParameterSymbol typeSymbol: return ToMeta(typeSymbol, opt, depth, typeClean: typeClean);
-                            default: break;
-                        }
-
-                        depth++;
-                        var isDeclaringSyntaxReferences = symbol.DeclaringSyntaxReferences.Any();
-                        var skip = accessorDepth < depth || SpecialType.None != accessor.SpecialType;
-                        var skip2 = skip || !isDeclaringSyntaxReferences;
                         var fullName = symbol.GetFullNameStandardFormat();
-                        var attrs = accessor.GetAttributes().Where(c => !(c.ApplicationSyntaxReference is null));
 
-                        if (null == types)
+                        //if (AnalysisMeta.AnalysisInfo.BasrType.TryGetValue(fullName, out string v))
+                        //{
+                        //    return v;
+                        //}
+
+                        var key = $"{symbol.GetFullNameStandardFormat(GetFullNameOpt.Create(noNullableQuestionMark: true, charSpecial: CharSpecial.Create('_')))}";
+
+                        if (AnalysisMeta.AnalysisInfo.AccessorType.ContainsKey(fullName))
                         {
-                            types = new StringCollection { fullName };
+                            return $"{accessorTypes2}{key}.Singleton";
                         }
+
+                        AnalysisMeta.AnalysisInfo.AccessorType.Add(fullName, default);
+
+                        var runtimeType = GetRuntimeType(accessor, typeClean);
+                        var isTupleType = accessor.IsTupleType && !accessor.IsDefinition;
+                        var fullName2 = isTupleType ? symbol.GetFullNameRealStandardFormat(GetFullNameOpt.Create(tupleStyle: TupleStyle.TypeName), typeClean: typeClean) : symbol.GetFullNameRealStandardFormat(typeClean: typeClean);
 
                         #region members
 
-                        var members = skip2 ? default : new Dictionary<string, string>();
-                        var methods = skip2 ? default : new Dictionary<string, IList<IMethodSymbol>>();
+                        var members = new Dictionary<string, string>();
+                        var methods = new Dictionary<string, IList<IMethodSymbol>>();
 
-                        if (!skip2)
+                        foreach (var item in accessor.GetMembers())
                         {
-                            foreach (var item in accessor.GetMembers())
+                            if (Accessibility.Public != item.DeclaredAccessibility)
                             {
-                                if (Accessibility.Public != item.DeclaredAccessibility)
+                                continue;
+                            }
+
+                            switch (item)
+                            {
+                                case IMethodSymbol member:
+                                    if (!symbol.DeclaringSyntaxReferences.Any()) { continue; }
+                                    if (MethodKind.Ordinary == member.MethodKind)
+                                    {
+                                        if (!methods.TryGetValue(member.Name, out IList<IMethodSymbol> m))
+                                        {
+                                            methods.Add(member.Name, new List<IMethodSymbol> { member });
+                                        }
+                                        else
+                                        {
+                                            m.Add(member);
+                                        }
+                                    }
+                                    break;
+                                case IFieldSymbol member:
+                                    {
+                                        if (member.IsImplicitlyDeclared || member.Type.IsRefLikePointerTypedReferenceValueTypeConstraint()) { continue; }
+
+                                        if (member.Type.Kind is SymbolKind.Event) { continue; }
+
+                                        if (member.Type.IsValueTypeConstraint()) { continue; }
+
+                                        members.Add(member.Name, member.ToMeta3(opt, typeClean, fullName2, assemblyName));
+                                    }
+                                    break;
+                                case IPropertySymbol member:
+                                    {
+                                        if (member.IsImplicitlyDeclared || member.Type.IsRefLikePointerTypedReferenceValueTypeConstraint() || member.IsIndexer) { continue; }
+
+                                        if (member.Type.Kind is SymbolKind.Event) { continue; }
+
+                                        if (member.Type.IsValueTypeConstraint()) { continue; }
+
+                                        members.Add(member.Name, member.ToMeta3(opt, typeClean, fullName2, assemblyName));
+                                    }
+                                    break;
+                                case IEventSymbol member:
+                                    {
+                                        if (!symbol.DeclaringSyntaxReferences.Any()) { continue; }
+                                        if (member.Type.IsRefLikePointerTypedReferenceValueTypeConstraint()) { continue; }
+
+                                        if (member.Type.IsValueTypeConstraint()) { continue; }
+
+                                        members.Add(member.Name, member.ToMeta3(opt, typeClean, fullName2, assemblyName));
+                                    }
+                                    break;
+                                default: break;
+                            }
+                        }
+
+                        foreach (var item in methods)
+                        {
+                            if (1 < item.Value.Count)
+                            {
+                                var method = item.Value.ToMeta3(opt, typeClean, fullName2, assemblyName);
+
+                                if (method is null)
                                 {
                                     continue;
                                 }
 
-                                switch (item)
-                                {
-                                    case IMethodSymbol member:
-                                        if (MethodKind.Ordinary == member.MethodKind)
-                                        {
-                                            if (member.Parameters.Any(c => c.Type.IsPointerType()))
-                                            {
-                                                continue;
-                                            }
-                                            if (!methods.TryGetValue(member.Name, out IList<IMethodSymbol> m))
-                                            {
-                                                methods.Add(member.Name, new List<IMethodSymbol> { member });
-                                            }
-                                            else
-                                            {
-                                                m.Add(member);
-                                            }
-                                            //if (!members.ContainsKey(member.Name))
-                                            //{
-                                            //    members.Add(member.Name, member.ToMeta(opt, depth, fullName, typeClean: typeClean));
-                                            //}
-                                            //else
-                                            //{
-                                            //    members.Add(member.GetFullNameStandardFormat(), member.ToMeta(opt, depth, fullName, typeClean: typeClean));
-                                            //}
-                                        }
-                                        break;
-                                    case IFieldSymbol member:
-                                        if (member.IsImplicitlyDeclared) { continue; }
-                                        if (member.Type.IsPointerType())
-                                        {
-                                            continue;
-                                        }
-                                        members.Add(member.Name, member.ToMeta(opt, depth, fullName, types, typeClean)); break;
-                                    case IPropertySymbol member:
-                                        if (member.IsImplicitlyDeclared) { continue; }
-                                        if (member.Type.IsPointerType())
-                                        {
-                                            continue;
-                                        }
-                                        members.Add(member.Name, member.ToMeta(opt, depth, fullName, types, typeClean)); break;
-                                    case IEventSymbol member:
-                                        if (member.Type.IsPointerType()) { continue; }
-                                        members.Add(member.Name, member.ToMeta(opt, depth, fullName, types, typeClean: typeClean)); break;
-                                    default: break;
-                                }
-                            }
-
-                            foreach (var item in methods)
-                            {
-                                if (1 < item.Value.Count)
-                                {
-                                    members.Add(item.Key, item.Value.ToMeta(opt, depth, fullName, typeClean));
-                                }
-                                else
-                                {
-                                    members.Add(item.Key, item.Value.First().ToMeta(opt, depth, fullName, types, typeClean: typeClean));
-                                }
-                            }
-                        }
-
-                        #endregion
-
-                        var sb = new System.Text.StringBuilder($"new {globalMeta}AccessorType(");
-                        //==================Meta==================//
-                        sb.AppendFormat($"{globalMeta}Accessibility.{{0}}, ", accessor.DeclaredAccessibility.GetName());
-                        sb.AppendFormat("{0}, ", accessor.IsExtern ? "true" : "default");
-                        sb.AppendFormat("{0}, ", accessor.IsSealed ? "true" : "default");
-                        sb.AppendFormat("{0}, ", accessor.IsAbstract ? "true" : "default");
-                        sb.AppendFormat("{0}, ", accessor.IsOverride ? "true" : "default");
-                        sb.AppendFormat("{0}, ", accessor.IsVirtual ? "true" : "default");
-                        sb.AppendFormat("{0}, ", accessor.IsStatic ? "true" : "default");
-                        sb.AppendFormat("{0}, ", accessor.IsDefinition ? "true" : "default");
-                        sb.AppendFormat("\"{0}\", ", accessor.Name);
-                        sb.AppendFormat("\"{0}\", ", fullName);
-                        sb.AppendFormat($"{globalMeta}Kind.{{0}}, ", accessor.Kind.GetName());
-                        sb.AppendFormat("{0}, ", isDeclaringSyntaxReferences ? "true" : "default");
-                        sb.AppendFormat("{0}, ", attrs.Any() ? $"{GetAttributes(attrs, globalMeta, typeClean)}" : "default");
-                        //==================IAccessorType==================//
-                        //sb.AppendFormat("{0}, ", accessor.IsNamespace ? "true" : "default");
-                        //sb.AppendFormat("{0}, ", accessor.IsType ? "true" : "default");
-                        sb.AppendFormat("{0}, ", !(members?.Any() ?? false) ? "default" : $"new {globalGeneric}Dictionary<{globalString}, {globalMeta}IAccessor> {{ {string.Join(", ", members.Select(c => $"{{ \"{c.Key}\", {c.Value} }}"))} }}");
-                        /* sb.AppendFormat("{0}, ", accessor.IsReferenceType ? "true" : "default"); */
-                        sb.AppendFormat("{0}, ", accessor.IsReadOnly ? "true" : "default");
-                        sb.AppendFormat("{0}, ", accessor.IsUnmanagedType ? "true" : "default");
-                        /* sb.AppendFormat("{0}, ", accessor.IsRefLikeType ? "true" : "default"); */
-                        sb.AppendFormat($"{globalMeta}SpecialType.{{0}}, ", accessor.SpecialType.GetName());
-                        /* sb.AppendFormat("{0}, ", accessor.IsNativeIntegerType ? "true" : "default"); */
-                        sb.AppendFormat("{0}, ", accessor.IsTupleType ? "true" : "default");
-                        sb.AppendFormat("{0}, ", accessor.IsAnonymousType ? "true" : "default");
-                        /* sb.AppendFormat("{0}, ", accessor.IsValueType ? "true" : "default"); */
-                        sb.AppendFormat($"{globalMeta}NullableAnnotation.{{0}}, ", accessor.NullableAnnotation.GetName());
-                        //sb.AppendFormat("{0}, ", (skip2 || !accessor.AllInterfaces.Any()) ? "default" : $"new {globalType}[] {{ {string.Join(", ", accessor.AllInterfaces.Where(c => c.DeclaredAccessibility is Accessibility.Public).Select(c => $"typeof({(c.TypeChecked(t => t is ITypeParameterSymbol typeParameter && typeParameter.TypeParameterKind is TypeParameterKind.Method) ? c.GetFullNameRealStandardFormat(typeClean: typeClean) : c.GetFullNameStandardFormat(typeClean: typeClean))})"))} }}");
-                        //sb.AppendFormat("{0}, ", accessor.BaseType is null ? "default" : $"typeof({accessor.BaseType.GetFullNameStandardFormat(typeClean: typeClean)})");
-                        sb.AppendFormat($"{globalMeta}TypeKind.{{0}}, ", accessor.TypeKind.GetName());
-                        sb.AppendFormat("{0}, ", accessor.IsRecord ? "true" : "default");
-                        sb.AppendFormat($"{globalMeta}AsyncType.{{0}}", GetAsyncType(accessor).GetName());
-                        return sb.Append(")").ToString();
-                    }
-                case IParameterSymbol accessor:
-                    {
-                        depth++;
-                        var isDeclaringSyntaxReferences = symbol.DeclaringSyntaxReferences.Any();
-                        var skip = accessorDepth < depth;
-                        var fullName = symbol.GetFullNameStandardFormat();
-                        var attrs = accessor.GetAttributes().Where(c => !(c.ApplicationSyntaxReference is null));
-
-                        var sb = new System.Text.StringBuilder($"new {globalMeta}AccessorParameter(");
-                        //==================Meta==================//
-                        sb.AppendFormat($"{globalMeta}Accessibility.{{0}}, ", accessor.DeclaredAccessibility.GetName());
-                        sb.AppendFormat("{0}, ", accessor.IsExtern ? "true" : "default");
-                        sb.AppendFormat("{0}, ", accessor.IsSealed ? "true" : "default");
-                        sb.AppendFormat("{0}, ", accessor.IsAbstract ? "true" : "default");
-                        sb.AppendFormat("{0}, ", accessor.IsOverride ? "true" : "default");
-                        sb.AppendFormat("{0}, ", accessor.IsVirtual ? "true" : "default");
-                        sb.AppendFormat("{0}, ", accessor.IsStatic ? "true" : "default");
-                        sb.AppendFormat("{0}, ", accessor.IsDefinition ? "true" : "default");
-                        sb.AppendFormat("\"{0}\", ", accessor.Name);
-                        sb.AppendFormat("\"{0}\", ", fullName);
-                        sb.AppendFormat($"{globalMeta}Kind.{{0}}, ", accessor.Kind.GetName());
-                        sb.AppendFormat("{0}, ", isDeclaringSyntaxReferences ? "true" : "default");
-                        sb.AppendFormat("{0}, ", attrs.Any() ? $"{GetAttributes(attrs, globalMeta, typeClean)}" : "default");
-                        //==================IAccessorParameter==================//
-                        sb.AppendFormat($"{globalMeta}RefKind.{{0}}, ", accessor.RefKind.GetName());
-                        sb.AppendFormat("{0}, ", accessor.IsParams ? "true" : "default");
-                        sb.AppendFormat("{0}, ", accessor.IsOptional ? "true" : "default");
-                        sb.AppendFormat("{0}, ", accessor.IsThis ? "true" : "default");
-                        sb.AppendFormat("{0}, ", accessor.IsDiscard ? "true" : "default");
-                        sb.AppendFormat("{0}, ", skip ? "default" : accessor.Type.ToMeta(opt, depth, typeClean: typeClean));
-                        sb.AppendFormat($"{globalMeta}NullableAnnotation.{{0}}, ", accessor.NullableAnnotation.GetName());
-                        sb.AppendFormat("{0}, ", accessor.Ordinal);
-                        sb.AppendFormat("{0}, ", accessor.HasExplicitDefaultValue ? "true" : "default");
-                        sb.AppendFormat("{0}, ", ToDefaultValue(accessor));
-                        sb.AppendFormat("{0}, ", ImplicitDefaultValue(accessor) ? "true" : "default");
-
-                        sb.AppendFormat("{0}, ", $"typeof({accessor.Type.GetFullNameRealStandardFormat(typeClean: typeClean)})");
-                        sb.AppendFormat($"{globalMeta}TypeKind.{{0}}, ", accessor.Type.TypeKind.GetName());
-                        sb.AppendFormat("{0}, ", accessor.Type.IsValueType ? "true" : "default");
-                        sb.Append(accessor.Type.HasGenericType() ? "true" : "default");
-                        return sb.Append(")").ToString();
-                    }
-                case IMethodSymbol accessor:
-                    {
-                        depth++;
-                        var isDeclaringSyntaxReferences = symbol.DeclaringSyntaxReferences.Any();
-                        var skip = accessorDepth < depth;
-                        var fullName = symbol.GetFullNameStandardFormat();
-                        var attrs = accessor.GetAttributes().Where(c => !(c.ApplicationSyntaxReference is null));
-
-                        var typeParameters = skip ? default : accessor.TypeParameters.ToDictionary(c => c.GetFullNameStandardFormat(), c => c);
-
-                        var skip2 = string.IsNullOrEmpty(receiverType) || 2 < depth;
-                        var getValue = !skip2 ? GetValueCode(accessor, $"{receiverType}", false, typeClean, opt) : default;
-                        var getValueAsync = !skip2 ? GetValueCode(accessor, $"{receiverType}", true, typeClean, opt) : default;
-
-                        var sb = new System.Text.StringBuilder($"new {globalMeta}AccessorMethod(");
-                        //==================Meta==================//
-                        sb.AppendFormat($"{globalMeta}Accessibility.{{0}}, ", accessor.DeclaredAccessibility.GetName());
-                        sb.AppendFormat("{0}, ", accessor.IsExtern ? "true" : "default");
-                        sb.AppendFormat("{0}, ", accessor.IsSealed ? "true" : "default");
-                        sb.AppendFormat("{0}, ", accessor.IsAbstract ? "true" : "default");
-                        sb.AppendFormat("{0}, ", accessor.IsOverride ? "true" : "default");
-                        sb.AppendFormat("{0}, ", accessor.IsVirtual ? "true" : "default");
-                        sb.AppendFormat("{0}, ", accessor.IsStatic ? "true" : "default");
-                        sb.AppendFormat("{0}, ", accessor.IsDefinition ? "true" : "default");
-                        sb.AppendFormat("\"{0}\", ", accessor.Name);
-                        sb.AppendFormat("\"{0}\", ", fullName);
-                        sb.AppendFormat($"{globalMeta}Kind.{{0}}, ", accessor.Kind.GetName());
-                        sb.AppendFormat("{0}, ", isDeclaringSyntaxReferences ? "true" : "default");
-                        sb.AppendFormat("{0}, ", attrs.Any() ? $"{GetAttributes(attrs, globalMeta, typeClean)}" : "default");
-                        //==================IAccessorMethod==================//
-                        /* sb.AppendFormat("{0}, ", accessor.IsReadOnly ? "true" : "default"); */
-                        /* sb.AppendFormat("{0}, ", accessor.IsInitOnly ? "true" : "default"); */
-                        //Parameters
-                        sb.AppendFormat("{0}, ", (skip || !accessor.Parameters.Any()) ? "default" : $"new {globalMeta}IAccessorParameter[] {{ {string.Join(", ", accessor.Parameters.Select(c => c.ToMeta(opt, depth, typeClean: typeClean)))} }}");
-                        sb.AppendFormat("{0}, ", accessor.IsPartialDefinition ? "true" : "default");
-                        sb.AppendFormat("{0}, ", (skip || !accessor.TypeParameters.Any()) ? "default" : $"new {globalGeneric}Dictionary<{globalString}, {globalMeta}IAccessorTypeParameter> {{ {string.Join(", ", typeParameters.Select(c => $"{{ \"{c.Key}\", {c.Value.ToMeta(opt, depth, typeClean: typeClean)} }}"))} }}");
-                        /* sb.AppendFormat("{0}, ", accessor.IsConditional ? "true" : "default"); */
-                        sb.AppendFormat($"{globalMeta}MethodKind.{{0}}, ", accessor.MethodKind.GetName());
-                        sb.AppendFormat("{0}, ", accessor.IsGenericMethod ? "true" : "default");
-                        sb.AppendFormat("{0}, ", accessor.IsExtensionMethod ? "true" : "default");
-                        sb.AppendFormat("{0}, ", accessor.IsAsync ? "true" : "default");
-                        sb.AppendFormat("{0}, ", accessor.ReturnsVoid ? "true" : "default");
-                        /* sb.AppendFormat("{0}, ", accessor.ReturnsByRef ? "true" : "default"); */
-                        /* sb.AppendFormat("{0}, ", accessor.ReturnsByRefReadonly ? "true" : "default"); */
-                        sb.AppendFormat($"{globalMeta}RefKind.{{0}}, ", accessor.RefKind.GetName());
-                        sb.AppendFormat("{0}, ", skip ? "default" : accessor.ReturnType?.ToMeta(opt, depth, typeClean: typeClean));
-                        /* sb.AppendFormat("{0}, ", accessor.HidesBaseMethodsByName ? "true" : "default"); */
-                        //sb.AppendFormat("{0}, ", isClone ? "true" : "default");
-                        sb.AppendFormat("{0}, ", skip2 ? "default" : getValue);
-                        sb.AppendFormat("{0}, ", skip2 ? "default" : getValueAsync);
-
-                        //ParametersRealLength
-                        sb.AppendFormat("{0}, ", accessor.Parameters.Length);
-                        //ParametersMustLength
-                        sb.Append(accessor.Parameters.Count(c => !c.HasExplicitDefaultValue && !c.IsParams));
-
-                        /*
-                        #region refOrdinal
-
-                        var refOrdinal = 0;
-                        var refOrdinalList = new List<int>();
-                        foreach (var item in accessor.Parameters)
-                        {
-                            switch (item.RefKind)
-                            {
-                                case RefKind.Ref: refOrdinalList.Add(refOrdinal++); break;
-                                case RefKind.Out: break;
-                                default: refOrdinal++; break;
-                            }
-                        }
-                        //ParametersRefOrdinal
-                        sb.Append(!refOrdinalList.Any() ? "default" : $"new {globalInt32}[] {{ {string.Join(", ", refOrdinalList)} }}");
-
-                        #endregion
-                        */
-                        return sb.Append(")").ToString();
-                    }
-                case IFieldSymbol accessor:
-                    {
-                        depth++;
-                        var isDeclaringSyntaxReferences = symbol.DeclaringSyntaxReferences.Any();
-                        var skip = accessorDepth < depth;
-                        var fullName = symbol.GetFullNameStandardFormat();
-                        var attrs = accessor.GetAttributes().Where(c => !(c.ApplicationSyntaxReference is null));
-
-                        var isRepeat = types?.Contains(fullName) ?? false;
-                        if (!isRepeat && null != types)
-                        {
-                            types.Add(fullName);
-                        }
-
-                        var type = accessor.Type;
-                        var typeFullName = type.GetFullNameStandardFormat();
-
-                        string getValue = default;
-                        string setValue = default;
-                        if (!string.IsNullOrEmpty(receiverType) && 2 >= depth)
-                        {
-                            var name = $"{receiverType}.{symbol.Name}";
-                            var castName = $"(({receiverType})obj).{symbol.Name}";
-
-                            getValue = symbol.IsStatic ? $"obj => {name}" : $"obj => {castName}";
-                            var value = TypeKind.TypeParameter == type.TypeKind ? $"({type.Name})value" : type.IsValueType ? $"({typeClean(typeFullName, false)})value" : TypeKind.Dynamic == type.TypeKind ? $"value as {typeClean(typeFullName.TrimEnd('?'), false)}" : $"value as {typeClean(typeFullName.TrimEnd('?'), false)}";
-
-                            if (symbol.IsStatic)
-                            {
-                                setValue = $"(ref {globalMeta}IGeneratorAccessor obj, {globalObject} value) => {name} = {value}";
+                                members.Add(item.Key, method);
                             }
                             else
                             {
-                                setValue = $"(ref {globalMeta}IGeneratorAccessor obj, {globalObject} value) => {{ var obj2 = ({receiverType})obj; obj2.{symbol.Name} = {value}; obj = obj2; }}";
+                                var method = item.Value.First().ToMeta3(opt, typeClean, fullName2, assemblyName);
+
+                                if (method is null)
+                                {
+                                    continue;
+                                }
+
+                                members.Add(item.Key, method);
                             }
                         }
 
+                        #endregion
+
+                        #region Members
+
+                        var sb = new System.Text.StringBuilder();
+                        int spaceCount = 0;
+
+                        if (!string.IsNullOrEmpty(assemblyName))
+                        {
+                            sb.AppendFormat("namespace {1}{0}", $"{format}{{{format}", accessorTypes);
+                            spaceCount++;
+                        }
+
+                        sb.AppendLine($"{space.Repeat(spaceCount)}public readonly struct {key} : {globalMeta}IAccessorType");
+                        sb.AppendLine($"{space.Repeat(spaceCount)}{{");
+                        spaceCount++;
+                        sb.AppendLine($"{space.Repeat(spaceCount)}readonly static {globalLazy}<{accessorTypes2}{key}> instance = new {globalLazy}<{accessorTypes2}{key}>(() => new {accessorTypes2}{key}());");
+                        sb.AppendLine($"public static {accessorTypes2}{key} Singleton => instance.Value;");
+                        //sb.AppendLine($"{space.Repeat(spaceCount)}public {key}() {{ }}");
+                        sb.AppendLine($"{space.Repeat(spaceCount)}public override {globalString} ToString() => $\"{{Kind}}\";");
+                        //==================Meta==================//
+                        sb.AppendLine($"{space.Repeat(spaceCount)}public {globalBoolean} IsExtern => {accessor.IsExtern.ToName()};");
+                        sb.AppendLine($"{space.Repeat(spaceCount)}public {globalBoolean} IsSealed => {symbol.IsSealed.ToName()};");
+                        sb.AppendLine($"{space.Repeat(spaceCount)}public {globalBoolean} IsAbstract => {symbol.IsAbstract.ToName()};");
+                        sb.AppendLine($"{space.Repeat(spaceCount)}public {globalBoolean} IsOverride => {symbol.IsOverride.ToName()};");
+                        sb.AppendLine($"{space.Repeat(spaceCount)}public {globalBoolean} IsVirtual => {symbol.IsVirtual.ToName()};");
+                        sb.AppendLine($"{space.Repeat(spaceCount)}public {globalBoolean} IsStatic => {symbol.IsStatic.ToName()};");
+                        sb.AppendLine($"{space.Repeat(spaceCount)}public {globalMeta}Kind Kind => {globalMeta}Kind.{symbol.Kind};");
+                        //==================IAccessorType==================//
+                        sb.AppendLine($"{space.Repeat(spaceCount)}public {globalGeneric}IDictionary<{globalString}, {globalMeta}IAccessor> Members => {(members.Any() ? $"new {globalGeneric}Dictionary<{globalString}, {globalMeta}IAccessor> {{ {string.Join(", ", members.Select(c => $"{{ \"{c.Key}\", {c.Value} }}"))} }}" : "default")};");
+                        sb.AppendLine($"{space.Repeat(spaceCount)}public {globalBoolean} IsReadOnly => {accessor.IsReadOnly.ToName()};");
+                        sb.AppendLine($"{space.Repeat(spaceCount)}public {globalBoolean} IsUnmanagedType => {accessor.IsUnmanagedType.ToName()};");
+                        sb.AppendLine($"{space.Repeat(spaceCount)}public {globalMeta}SpecialType SpecialType => {globalMeta}SpecialType.{accessor.SpecialType};");
+                        sb.AppendLine($"{space.Repeat(spaceCount)}public {globalBoolean} IsTupleType => {accessor.IsTupleType.ToName()};");
+                        sb.AppendLine($"{space.Repeat(spaceCount)}public {globalBoolean} IsAnonymousType => {accessor.IsAnonymousType.ToName()};");
+                        sb.AppendLine($"{space.Repeat(spaceCount)}public {globalMeta}TypeKind TypeKind => {globalMeta}TypeKind.{accessor.TypeKind};");
+                        sb.AppendLine($"{space.Repeat(spaceCount)}public {globalBoolean} IsRecord => {accessor.IsRecord.ToName()};");
+                        sb.AppendLine($"{space.Repeat(spaceCount)}public {globalMeta}AsyncType AsyncType => {globalMeta}AsyncType.{GetAsyncType(accessor)};");
+                        sb.AppendLine($"{space.Repeat(spaceCount)}public {globalType} RuntimeType => {(!(runtimeType is null) ? $"typeof({runtimeType})" : "default")};");
+                        sb.AppendLine($"{space.Repeat(spaceCount)}public {globalMeta}DefaultValue DefaultValue => {GetDefaultValue(accessor, typeClean, globalSystem)};");
+
+                        spaceCount--;
+                        sb.Append($"{space.Repeat(spaceCount)}}}");
+                        if (!string.IsNullOrEmpty(assemblyName))
+                        {
+                            sb.AppendLine();
+                            spaceCount--;
+                            sb.Append($"{space.Repeat(spaceCount)}}}");
+                        }
+
+                        if (AnalysisMeta.AnalysisInfo.AccessorType.ContainsKey(fullName))
+                        {
+                            AnalysisMeta.AnalysisInfo.AccessorType[fullName] = ($"{symbol.GetFullNameStandardFormat(GetFullNameOpt.Create(noNullableQuestionMark: true, charSpecial: CharSpecial.Create(bracketLeft: '[', bracketRight: ']', asterisk: '_')))}_AccessorType", sb.ToString());
+                        }
+
+                        return $"{accessorTypes2}{key}.Singleton";
+
+                        #endregion
+                    }
+                case IFieldSymbol accessor:
+                    {
+                        //var fullName = symbol.GetFullNameStandardFormat();
+                        var type = accessor.Type;
+                        var typeFullName = type.GetFullNameRealStandardFormat(typeClean: typeClean);
+
+                        string getValue = default;
+                        string setValue = default;
+
+                        var name = $"{receiverType}.{symbol.Name}";
+                        var castName = $"(({receiverType})obj).{symbol.Name}";
+                        getValue = symbol.IsStatic ? $"() => {name}" : $"obj => {castName}";
+
+                        if (!accessor.IsReadOnly && !accessor.IsConst)
+                        {
+                            var value = TypeKind.TypeParameter == type.TypeKind ? $"({typeFullName})value" : type.IsValueType ? $"({typeFullName})value" : $"value as {typeFullName.TrimEnd('?')}";
+
+                            if (symbol.IsStatic)
+                            {
+                                setValue = $"value => {name} = {value}";
+                            }
+                            else
+                            {
+                                setValue = $"(ref {globalMeta}InstanceMeta obj, {globalObject} value) => {{ var obj2 = ({receiverType})obj.Instance; obj2.{symbol.Name} = {value}; obj = new {globalMeta}InstanceMeta(obj.TypeMeta, obj2); }}";
+                            }
+                        }
+
+                        var attrs = accessor.GetAttributes().Where(c => !(c.ApplicationSyntaxReference is null));
                         var sb = new System.Text.StringBuilder($"new {globalMeta}AccessorField(");
                         //==================Meta==================//
-                        sb.AppendFormat($"{globalMeta}Accessibility.{{0}}, ", accessor.DeclaredAccessibility.GetName());
-                        sb.AppendFormat("{0}, ", accessor.IsExtern ? "true" : "default");
-                        sb.AppendFormat("{0}, ", accessor.IsSealed ? "true" : "default");
-                        sb.AppendFormat("{0}, ", accessor.IsAbstract ? "true" : "default");
-                        sb.AppendFormat("{0}, ", accessor.IsOverride ? "true" : "default");
-                        sb.AppendFormat("{0}, ", accessor.IsVirtual ? "true" : "default");
-                        sb.AppendFormat("{0}, ", accessor.IsStatic ? "true" : "default");
-                        sb.AppendFormat("{0}, ", accessor.IsDefinition ? "true" : "default");
-                        sb.AppendFormat("\"{0}\", ", accessor.Name);
-                        sb.AppendFormat("\"{0}\", ", fullName);
+                        sb.AppendFormat(accessor.IsExtern);
+                        sb.AppendFormat(accessor.IsSealed);
+                        sb.AppendFormat(accessor.IsAbstract);
+                        sb.AppendFormat(accessor.IsOverride);
+                        sb.AppendFormat(accessor.IsVirtual);
+                        sb.AppendFormat(accessor.IsStatic);
                         sb.AppendFormat($"{globalMeta}Kind.{{0}}, ", accessor.Kind.GetName());
-                        sb.AppendFormat("{0}, ", isDeclaringSyntaxReferences ? "true" : "default");
                         sb.AppendFormat("{0}, ", attrs.Any() ? $"{GetAttributes(attrs, globalMeta, typeClean)}" : "default");
                         //==================IAccessorMember==================//
-                        sb.AppendFormat("{0}, ", accessor.IsReadOnly ? "true" : "default");
-                        sb.AppendFormat("{0}, ", skip ? "default" : type.ToMeta(opt, depth, types: types, typeClean: typeClean));
-                        sb.AppendFormat("\"{0}\", ", typeFullName);
+                        sb.AppendFormat(accessor.IsReadOnly);
+                        sb.AppendFormat("{0}, ", type.ToMeta3(opt, typeClean, default, assemblyName));
                         //==================IAccessorField==================//
-                        sb.AppendFormat("{0}, ", accessor.IsConst ? "true" : "default");
-                        sb.AppendFormat("{0}, ", accessor.IsVolatile ? "true" : "default");
-                        sb.AppendFormat("{0}, ", accessor.HasConstantValue ? "true" : "default");
-                        //sb.AppendObject(accessor.ConstantValue, ", ");
-                        sb.AppendFormat("{0}, ", ToDefaultValue(accessor));
-                        sb.AppendFormat("{0}, ", accessor.IsExplicitlyNamedTupleElement ? "true" : "default");
-
-                        if (!string.IsNullOrEmpty(getValue))
-                        {
-                            sb.AppendFormat("{0}, ", getValue);
-                        }
-                        else
-                        {
-                            sb.Append("default, ");
-                        }
-
-                        if (!string.IsNullOrEmpty(setValue))
-                        {
-                            sb.AppendFormat("{0}", setValue);
-                        }
-                        else
-                        {
-                            sb.Append("default");
-                        }
-
+                        sb.AppendFormat(accessor.IsConst);
+                        sb.AppendFormat(accessor.IsVolatile);
+                        sb.AppendFormat(accessor.HasConstantValue);
+                        sb.AppendFormat("{0}, ", accessor.HasConstantValue ? name : "default");
+                        sb.AppendFormat(accessor.IsExplicitlyNamedTupleElement);
+                        //==================Get, Set==================//
+                        sb.AppendFormat("{0}, ", !symbol.IsStatic && !string.IsNullOrEmpty(getValue) ? getValue : "default");
+                        sb.AppendFormat("{0}, ", !symbol.IsStatic && !string.IsNullOrEmpty(setValue) ? setValue : "default");
+                        sb.AppendFormat("{0}, ", symbol.IsStatic && !string.IsNullOrEmpty(getValue) ? getValue : "default");
+                        sb.AppendFormat("{0}", symbol.IsStatic && !string.IsNullOrEmpty(setValue) ? setValue : "default");
                         return sb.Append(")").ToString();
                     }
                 case IPropertySymbol accessor:
                     {
-                        depth++;
-                        var isDeclaringSyntaxReferences = symbol.DeclaringSyntaxReferences.Any();
-                        var skip = accessorDepth < depth;
-                        var fullName = symbol.GetFullNameStandardFormat();
-                        var attrs = accessor.GetAttributes().Where(c => !(c.ApplicationSyntaxReference is null));
-
-                        var isRepeat = types?.Contains(fullName) ?? false;
-                        if (!isRepeat && null != types)
-                        {
-                            types.Add(fullName);
-                        }
-
+                        //var fullName = symbol.GetFullNameStandardFormat();
                         var type = accessor.Type;
-                        var typeFullName = type.GetFullNameStandardFormat();
+                        var typeFullName = type.GetFullNameRealStandardFormat(typeClean: typeClean);
 
                         string getValue = default;
                         string setValue = default;
-                        if (!string.IsNullOrEmpty(receiverType) && 2 >= depth && !accessor.IsReadOnly)
+
+                        var name = $"{receiverType}.{symbol.Name}";
+                        var castName = $"(({receiverType})obj).{symbol.Name}";
+                        getValue = symbol.IsStatic ? $"() => {name}" : $"obj => {castName}";
+
+                        if (!accessor.IsReadOnly && !(accessor.SetMethod is null) && accessor.SetMethod.DeclaredAccessibility is Accessibility.Public && !accessor.SetMethod.IsInitOnly)
                         {
-                            var name = $"{receiverType}.{symbol.Name}";
-                            var castName = $"(({receiverType})obj).{symbol.Name}";
-                            getValue = symbol.IsStatic ? $"obj => {name}" : $"obj => {castName}";
-                            var value = TypeKind.TypeParameter == type.TypeKind ? $"({type.Name})value" : type.IsValueType ? $"({typeClean(typeFullName, false)})value" : TypeKind.Dynamic == type.TypeKind ? $"value as {typeClean(typeFullName.TrimEnd('?'), false)}" : $"value as {typeClean(typeFullName.TrimEnd('?'), false)}";
+                            var value = TypeKind.TypeParameter == type.TypeKind ? $"({typeFullName})value" : type.IsValueType ? $"({typeFullName})value" : $"value as {typeFullName.TrimEnd('?')}";
 
                             if (symbol.IsStatic)
                             {
-                                setValue = $"(ref {globalMeta}IGeneratorAccessor obj, {globalObject} value) => {name} = {value}";
+                                setValue = $"value => {name} = {value}";
                             }
                             else
                             {
-                                setValue = $"(ref {globalMeta}IGeneratorAccessor obj, {globalObject} value) => {{ var obj2 = ({receiverType})obj; obj2.{symbol.Name} = {value}; obj = obj2; }}";
+                                setValue = $"(ref {globalMeta}InstanceMeta obj, {globalObject} value) => {{ var obj2 = ({receiverType})obj.Instance; obj2.{symbol.Name} = {value}; obj = new {globalMeta}InstanceMeta(obj.TypeMeta, obj2); }}";
                             }
                         }
 
+                        var attrs = accessor.GetAttributes().Where(c => !(c.ApplicationSyntaxReference is null));
                         var sb = new System.Text.StringBuilder($"new {globalMeta}AccessorProperty(");
                         //==================Meta==================//
-                        sb.AppendFormat($"{globalMeta}Accessibility.{{0}}, ", accessor.DeclaredAccessibility.GetName());
-                        sb.AppendFormat("{0}, ", accessor.IsExtern ? "true" : "default");
-                        sb.AppendFormat("{0}, ", accessor.IsSealed ? "true" : "default");
-                        sb.AppendFormat("{0}, ", accessor.IsAbstract ? "true" : "default");
-                        sb.AppendFormat("{0}, ", accessor.IsOverride ? "true" : "default");
-                        sb.AppendFormat("{0}, ", accessor.IsVirtual ? "true" : "default");
-                        sb.AppendFormat("{0}, ", accessor.IsStatic ? "true" : "default");
-                        sb.AppendFormat("{0}, ", accessor.IsDefinition ? "true" : "default");
-                        sb.AppendFormat("\"{0}\", ", accessor.Name);
-                        sb.AppendFormat("\"{0}\", ", fullName);
+                        sb.AppendFormat(accessor.IsExtern);
+                        sb.AppendFormat(accessor.IsSealed);
+                        sb.AppendFormat(accessor.IsAbstract);
+                        sb.AppendFormat(accessor.IsOverride);
+                        sb.AppendFormat(accessor.IsVirtual);
+                        sb.AppendFormat(accessor.IsStatic);
                         sb.AppendFormat($"{globalMeta}Kind.{{0}}, ", accessor.Kind.GetName());
-                        sb.AppendFormat("{0}, ", isDeclaringSyntaxReferences ? "true" : "default");
                         sb.AppendFormat("{0}, ", attrs.Any() ? $"{GetAttributes(attrs, globalMeta, typeClean)}" : "default");
                         //==================IAccessorMember==================//
-                        sb.AppendFormat("{0}, ", accessor.IsReadOnly ? "true" : "default");
-                        sb.AppendFormat("{0}, ", skip ? "default" : type.ToMeta(opt, depth, types: types, typeClean: typeClean));
-                        sb.AppendFormat("\"{0}\", ", typeFullName);
+                        sb.AppendFormat(accessor.IsReadOnly);
+                        sb.AppendFormat("{0}, ", type.ToMeta3(opt, typeClean, default, assemblyName));
                         //==================IAccessorProperty==================//
                         sb.AppendFormat($"{globalMeta}RefKind.{{0}}, ", accessor.RefKind.GetName());
-                        sb.AppendFormat("{0}, ", accessor.IsWriteOnly ? "true" : "default");
-
-                        if (!string.IsNullOrEmpty(getValue))
-                        {
-                            sb.AppendFormat("{0}, ", getValue);
-                        }
-                        else
-                        {
-                            sb.Append("default, ");
-                        }
-
-                        if (!string.IsNullOrEmpty(setValue))
-                        {
-                            sb.AppendFormat("{0}", setValue);
-                        }
-                        else
-                        {
-                            sb.Append("default");
-                        }
-
+                        sb.AppendFormat(accessor.IsWriteOnly);
+                        //==================Get, Set==================//
+                        sb.AppendFormat("{0}, ", !symbol.IsStatic && !string.IsNullOrEmpty(getValue) ? getValue : "default");
+                        sb.AppendFormat("{0}, ", !symbol.IsStatic && !string.IsNullOrEmpty(setValue) ? setValue : "default");
+                        sb.AppendFormat("{0}, ", symbol.IsStatic && !string.IsNullOrEmpty(getValue) ? getValue : "default");
+                        sb.AppendFormat("{0}", symbol.IsStatic && !string.IsNullOrEmpty(setValue) ? setValue : "default");
                         return sb.Append(")").ToString();
+                    }
+                case IParameterSymbol accessor:
+                    {
+                        var attrs = accessor.GetAttributes().Where(c => !(c.ApplicationSyntaxReference is null));
+
+                        var sb = new System.Text.StringBuilder($"new {globalMeta}AccessorParameter(");
+                        //==================Meta==================//
+                        sb.AppendFormat($"{globalMeta}Kind.{{0}}, ", accessor.Kind.GetName());
+                        sb.AppendFormat("{0}, ", attrs.Any() ? $"{GetAttributes(attrs, globalMeta, typeClean)}" : "default");
+                        //==================IAccessorParameter==================//
+                        sb.AppendFormat(accessor.IsOptional);
+                        sb.AppendFormat(accessor.IsThis);
+                        sb.AppendFormat(accessor.IsDiscard);
+                        sb.AppendFormat("{0}, ", accessor.Type.ToMeta3(opt, typeClean, default, assemblyName));
+                        sb.AppendFormat($"{globalMeta}RefKind.{{0}}, ", accessor.RefKind.GetName());
+                        sb.AppendFormat("{0}, ", accessor.Ordinal);
+                        sb.AppendFormat(accessor.HasExplicitDefaultValue);
+                        sb.AppendFormat("{0}, ", ToDefaultValue(accessor));
+                        sb.AppendFormat(ImplicitDefaultValue(accessor));
+                        sb.AppendFormat(accessor.IsParams, true);
+                        return sb.Append(")").ToString();
+                    }
+                case IMethodSymbol accessor:
+                    {
+                        if (accessor.Parameters.Any(c => c.Type.IsRefLikePointerTypedReferenceValueTypeConstraint()))
+                        {
+                            return default;
+                        }
+                        if (accessor.ReturnType.IsRefLikePointerTypedReferenceValueTypeConstraint())
+                        {
+                            return default;
+                        }
+                        if (accessor.TypeParameters.Any(c => c.HasValueTypeConstraint))
+                        {
+                            return default;
+                        }
+
+                        var getValue = GetValueCode(accessor, receiverType, false, typeClean, opt);
+                        var getValueAsync = GetValueCode(accessor, receiverType, true, typeClean, opt);
+
+                        if (getValue?.Contains("*") ?? false)
+                        {
+                            return default;
+                        }
+
+                        var attrs = accessor.GetAttributes().Where(c => !(c.ApplicationSyntaxReference is null));
+                        var typeParameters = accessor.TypeParameters.ToDictionary(c => c.GetFullNameStandardFormat(), c => c);
+
+                        #region Members
+
+                        var sb = new System.Text.StringBuilder($"new {globalMeta}AccessorMethod(");
+                        //==================Meta==================//
+                        sb.AppendFormat(accessor.IsExtern);
+                        sb.AppendFormat(accessor.IsSealed);
+                        sb.AppendFormat(accessor.IsAbstract);
+                        sb.AppendFormat(accessor.IsOverride);
+                        sb.AppendFormat(accessor.IsVirtual);
+                        sb.AppendFormat(accessor.IsStatic);
+                        sb.AppendFormat($"{globalMeta}Kind.{{0}}, ", accessor.Kind.GetName());
+                        //==================IAccessorMethod==================//
+                        sb.AppendFormat("{0}, ", attrs.Any() ? $"{GetAttributes(attrs, globalMeta, typeClean)}" : "default");
+                        sb.AppendFormat(accessor.IsPartialDefinition);
+                        sb.AppendFormat("{0}, ", accessor.TypeParameters.Any() ? $"new {globalGeneric}Dictionary<{globalString}, {globalMeta}IAccessorTypeParameter> {{ {string.Join(", ", typeParameters.Select(c => $"{{ \"{c.Key}\", {c.Value.ToMeta3(opt, typeClean, default, assemblyName)} }}"))} }}" : "default");
+                        sb.AppendFormat($"{globalMeta}MethodKind.{{0}}, ", accessor.MethodKind.GetName());
+                        sb.AppendFormat(accessor.IsGenericMethod);
+                        sb.AppendFormat(accessor.IsExtensionMethod);
+                        sb.AppendFormat(accessor.IsAsync);
+                        sb.AppendFormat(accessor.ReturnsVoid);
+                        sb.AppendFormat($"{globalMeta}RefKind.{{0}}, ", accessor.RefKind.GetName());
+                        sb.AppendFormat("{0}, ", accessor.ReturnType?.ToMeta3(opt, typeClean, default, assemblyName) ?? "default");
+                        //Parameters
+                        sb.AppendFormat("{0}, ", accessor.Parameters.Any() ? $"new {globalMeta}IAccessorParameter[] {{ {string.Join(", ", accessor.Parameters.Select(c => c.ToMeta3(opt, typeClean, default, assemblyName)))} }}" : "default");
+                        //ParametersRealLength
+                        sb.AppendFormat("{0}, ", accessor.Parameters.Length);
+                        //ParametersMustLength
+                        sb.AppendFormat("{0}, ", accessor.Parameters.Count(c => !c.HasExplicitDefaultValue && !c.IsParams));
+                        sb.AppendFormat("{0}, ", getValue);
+                        sb.AppendFormat("{0}", getValueAsync);
+                        return sb.Append(")").ToString();
+
+                        #endregion
                     }
                 case IEventSymbol accessor:
                     {
-                        depth++;
-                        var isDeclaringSyntaxReferences = symbol.DeclaringSyntaxReferences.Any();
-                        var skip = accessorDepth < depth;
-                        var fullName = symbol.GetFullNameStandardFormat();
                         var attrs = accessor.GetAttributes().Where(c => !(c.ApplicationSyntaxReference is null));
-
-                        var isRepeat = types?.Contains(fullName) ?? false;
-                        if (!isRepeat && null != types)
-                        {
-                            types.Add(fullName);
-                        }
-
-                        var type = accessor.Type;
-                        var typeFullName = type.GetFullNameStandardFormat();
-
-                        string getValue = default;
-                        string setValue = default;
-                        if (!string.IsNullOrEmpty(receiverType) && 2 >= depth)
-                        {
-                            var name = $"{receiverType}.{symbol.Name}";
-                            var castName = $"(({receiverType})obj).{symbol.Name}";
-                            getValue = symbol.IsStatic ? $"obj => {name}" : $"obj => {castName}";
-                        }
 
                         var sb = new System.Text.StringBuilder($"new {globalMeta}AccessorEvent(");
                         //==================Meta==================//
-                        sb.AppendFormat($"{globalMeta}Accessibility.{{0}}, ", accessor.DeclaredAccessibility.GetName());
-                        sb.AppendFormat("{0}, ", accessor.IsExtern ? "true" : "default");
-                        sb.AppendFormat("{0}, ", accessor.IsSealed ? "true" : "default");
-                        sb.AppendFormat("{0}, ", accessor.IsAbstract ? "true" : "default");
-                        sb.AppendFormat("{0}, ", accessor.IsOverride ? "true" : "default");
-                        sb.AppendFormat("{0}, ", accessor.IsVirtual ? "true" : "default");
-                        sb.AppendFormat("{0}, ", accessor.IsStatic ? "true" : "default");
-                        sb.AppendFormat("{0}, ", accessor.IsDefinition ? "true" : "default");
-                        sb.AppendFormat("\"{0}\", ", accessor.Name);
-                        sb.AppendFormat("\"{0}\", ", fullName);
+                        sb.AppendFormat(accessor.IsExtern);
+                        sb.AppendFormat(accessor.IsSealed);
+                        sb.AppendFormat(accessor.IsAbstract);
+                        sb.AppendFormat(accessor.IsOverride);
+                        sb.AppendFormat(accessor.IsVirtual);
+                        sb.AppendFormat(accessor.IsStatic);
                         sb.AppendFormat($"{globalMeta}Kind.{{0}}, ", accessor.Kind.GetName());
-                        sb.AppendFormat("{0}, ", isDeclaringSyntaxReferences ? "true" : "default");
                         sb.AppendFormat("{0}, ", attrs.Any() ? $"{GetAttributes(attrs, globalMeta, typeClean)}" : "default");
                         //==================IAccessorMember==================//
                         sb.Append("false, ");
-                        sb.AppendFormat("{0}, ", skip ? "default" : type.ToMeta(opt, depth, types: types, typeClean: typeClean));
-                        sb.AppendFormat("\"{0}\", ", typeFullName);
+                        sb.AppendFormat("{0}, ", accessor.Type.ToMeta3(opt, typeClean, default, assemblyName));
                         //==================IAccessorEvent==================//
-                        sb.AppendFormat("{0}, ", accessor.IsWindowsRuntimeEvent ? "true" : "default");
-                        sb.AppendFormat("{0}, ", skip ? "default" : accessor.AddMethod?.ToMeta(opt, typeClean: typeClean) ?? "default");
-                        sb.AppendFormat("{0}, ", skip ? "default" : accessor.RemoveMethod?.ToMeta(opt, typeClean: typeClean) ?? "default");
-
-                        if (!string.IsNullOrEmpty(getValue))
-                        {
-                            sb.AppendFormat("{0}, ", getValue);
-                        }
-                        else
-                        {
-                            sb.AppendFormat("default, ");
-                        }
-
-                        if (!string.IsNullOrEmpty(setValue))
-                        {
-                            sb.AppendFormat("{0}", setValue);
-                        }
-                        else
-                        {
-                            sb.Append("default");
-                        }
-
+                        sb.AppendFormat(accessor.IsWindowsRuntimeEvent);
+                        sb.AppendFormat("{0}, ", accessor.AddMethod?.GetEventCode($"{accessor.Name} += ", receiverType, typeClean, opt) ?? "default");
+                        sb.AppendFormat("{0}", accessor.RemoveMethod?.GetEventCode($"{accessor.Name} -= ", receiverType, typeClean, opt) ?? "default");
                         return sb.Append(")").ToString();
                     }
                 default: return default;
             }
         }
 
-        public static string ToMeta(this IEnumerable<IMethodSymbol> methodSymbols, ToCodeOpt opt, int depth, string receiverType, Func<string, bool, string> typeClean)
-        {
-            var globalMeta = opt.GetGlobalName(GlobalName.Business_SourceGenerator_Meta);
-
-            var collection = string.Join(", ", methodSymbols.Select(c => c.ToMeta(opt, depth, receiverType, typeClean: typeClean)));
-
-            return $"new {globalMeta}AccessorMethodCollection(new {globalMeta}IAccessorMethod[] {{ {collection} }})";
-        }
-
         public static string GetAttributes(IEnumerable<AttributeData> attributes, string globalMeta, Func<string, bool, string> typeClean)
         {
             var attr = attributes.Select(c =>
             {
-                var args = GetAttributeArguments(c, globalMeta, typeClean);
-                var namedArgs = GetAttributeNamedArguments(c, globalMeta, typeClean);
+                var args = c.AttributeConstructor?.Parameters.Select(c2 => GetAttributeArgument(c.ConstructorArguments[c2.Ordinal], c2.Name, globalMeta, typeClean));
+
+                var namedArgs = c.NamedArguments.Select(c2 => GetAttributeArgument(c2.Value, c2.Key, globalMeta, typeClean));
 
                 return $"new {globalMeta}AccessorAttribute(\"{c.AttributeClass.Name}\", typeof({c.AttributeClass.GetFullNameStandardFormat(typeClean: typeClean)}), {((args?.Any() ?? false) ? $"new {globalMeta}TypedConstant[] {{ {string.Join(", ", args)} }}" : "default")}, {((namedArgs?.Any() ?? false) ? $"new {globalMeta}TypedConstant[] {{ {string.Join(", ", namedArgs)} }}" : "default")})";
             });
@@ -979,28 +960,11 @@ namespace Business.SourceGenerator.Analysis
             return $"new {globalMeta}AccessorAttribute[] {{ {string.Join(", ", attr)} }}";
         }
 
-        public static IEnumerable<string> GetAttributeArguments(AttributeData attribute, string globalMeta, Func<string, bool, string> typeClean) => attribute.AttributeConstructor?.Parameters.Select(c =>
-        {
-            var v = attribute.ConstructorArguments[c.Ordinal];
-
-            return $"new {globalMeta}TypedConstant(" +
-            $"\"{c.Name}\", " +
-            $"typeof({v.Type.GetFullNameStandardFormat(typeClean: typeClean)}), " +
-            $"{(v.IsNull ? "true" : "default")}, " +
-            $"{globalMeta}TypedConstantKind.{v.Kind.GetName()}, " +
-            $"{(v.Type is IArrayTypeSymbol array ? v.Values.Any() ? $"new {array.ElementType.GetFullNameStandardFormat(typeClean: typeClean)}[] {v.ToCSharpString()}" : "default" : v.ToCSharpString())})";
-        });
-
-        public static IEnumerable<string> GetAttributeNamedArguments(AttributeData attribute, string globalMeta, Func<string, bool, string> typeClean) => attribute.NamedArguments.Select(c =>
-        {
-            var v = c.Value;
-
-            return $"new {globalMeta}TypedConstant(" +
-            $"\"{c.Key}\", " +
-            $"typeof({v.Type.GetFullNameStandardFormat(typeClean: typeClean)}), " +
-            $"{(v.IsNull ? "true" : "default")}, " +
-            $"{globalMeta}TypedConstantKind.{v.Kind.GetName()}, " +
-            $"{(v.Type is IArrayTypeSymbol array ? v.Values.Any() ? $"new {array.ElementType.GetFullNameStandardFormat(typeClean: typeClean)}[] {v.ToCSharpString()}" : "default" : v.ToCSharpString())})";
-        });
+        public static string GetAttributeArgument(TypedConstant typedConstant, string name, string globalMeta, Func<string, bool, string> typeClean) => $"new {globalMeta}TypedConstant(" +
+            $"\"{name}\", " +
+            $"typeof({typedConstant.Type.GetFullNameStandardFormat(typeClean: typeClean)}), " +
+            $"{(typedConstant.IsNull ? "true" : "default")}, " +
+            $"{globalMeta}TypedConstantKind.{typedConstant.Kind.GetName()}, " +
+            $"{(typedConstant.Type is IArrayTypeSymbol array ? typedConstant.Values.Any() ? $"new {array.ElementType.GetFullNameStandardFormat(typeClean: typeClean)}[] {typedConstant.ToCSharpString()}" : "default" : typedConstant.ToCSharpString())})";
     }
 }

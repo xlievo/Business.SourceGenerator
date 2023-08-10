@@ -96,28 +96,35 @@ namespace Business.SourceGenerator
             {
                 AnalysisMeta.Init(context);
 
-                var generatorType = $"{Expression.GeneratorCode(AnalysisMeta.AnalysisInfo, context.Compilation.AssemblyName, opt, usings)}";
+                var generator = Expression.GeneratorCode(AnalysisMeta.AnalysisInfo, context.Compilation.AssemblyName, opt, usings);
+
+                var generatorType = $"{generator.types}";
 
                 #region AddSource
 
                 context.AddSource(Meta.Global.GeneratorCodeName, Microsoft.CodeAnalysis.Text.SourceText.From($"{usings2}{generatorType}", System.Text.Encoding.UTF8));
 
-                #endregion
-
-                var accessors = Expression.GeneratorAccessor(AnalysisMeta.AnalysisInfo, context.Compilation.AssemblyName, opt, usings);
-
-                #region AddSource
-
-                foreach (var item in accessors)
+                foreach (var item in generator.accessors)
                 {
                     context.AddSource(item.Key, Microsoft.CodeAnalysis.Text.SourceText.From($"{usings2}{item.Value}", System.Text.Encoding.UTF8));
+                }
+
+                #endregion
+
+                //var accessors = Expression.GeneratorAccessor(AnalysisMeta.AnalysisInfo, context.Compilation.AssemblyName, opt, usings);
+
+                #region AddSource AccessorType
+
+                foreach (var item in AnalysisMeta.AnalysisInfo.AccessorType)
+                {
+                    context.AddSource(item.Value.key, Microsoft.CodeAnalysis.Text.SourceText.From(item.Value.code, System.Text.Encoding.UTF8));
                 }
 
                 #endregion
             }
             catch (Exception ex)
             {
-                context.Log($"{Environment.NewLine}{ex}{Environment.NewLine}", DiagnosticSeverity.Error);
+                context.Log($"{ex.Message}{ex.StackTrace.Replace(Environment.NewLine, " ")}", DiagnosticSeverity.Error);
             }
             finally
             {

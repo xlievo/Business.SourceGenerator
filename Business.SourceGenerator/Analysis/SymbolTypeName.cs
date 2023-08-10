@@ -21,7 +21,6 @@ namespace Business.SourceGenerator.Analysis
     using System;
     using System.Collections.Generic;
     using System.Linq;
-    using static Business.SourceGenerator.Analysis.SyntaxToCode;
 
     public static class SymbolTypeName
     {
@@ -134,30 +133,118 @@ namespace Business.SourceGenerator.Analysis
             return value;
         }
 
+        public readonly struct CharSpecial
+        {
+            readonly static CharSpecial empty = default;
+
+            public static bool IsNull(CharSpecial special) => empty.Equals(special);
+
+            public static CharSpecial Create(char c) => new CharSpecial(c, c, c, c, c, c, c, c, c, c, c, c);
+
+            public static CharSpecial Create(char bracketLeft = '<', char bracketRight = '>', char braceLeft = '[', char braceRight = ']', char curveLeft = '(', char curveRight = ')', char curlyLeft = '{', char curlyRight = '}', char dot = '.', char comma = ',', char space = ' ', char asterisk = '*') => new CharSpecial(bracketLeft, bracketRight, braceLeft, braceRight, curveLeft, curveRight, curlyLeft, curlyRight, dot, comma, space, asterisk);
+
+            CharSpecial(char bracketLeft = default, char bracketRight = default, char braceLeft = default, char braceRight = default, char curveLeft = default, char curveRight = default, char curlyLeft = default, char curlyRight = default, char dot = default, char comma = default, char space = default, char asterisk = default)
+            {
+                BracketLeft = default == bracketLeft ? '<' : bracketLeft;
+                BracketRight = default == bracketRight ? '>' : bracketRight;
+                BraceLeft = default == braceLeft ? '[' : braceLeft;
+                BraceRight = default == braceRight ? ']' : braceRight;
+                CurveLeft = default == curveLeft ? '(' : curveLeft;
+                CurveRight = default == curveRight ? ')' : curveRight;
+                CurlyLeft = default == curlyLeft ? '{' : curlyLeft;
+                CurlyRight = default == curlyRight ? '}' : curlyRight;
+                Dot = default == dot ? '.' : dot;
+                Comma = default == comma ? ',' : comma;
+                Space = default == space ? ' ' : space;
+                Asterisk = default == asterisk ? '*' : asterisk;
+            }
+
+            /// <summary>
+            /// <
+            /// </summary>
+            public char BracketLeft { get; }
+
+            /// <summary>
+            /// >
+            /// </summary>
+            public char BracketRight { get; }
+
+            /// <summary>
+            /// [
+            /// </summary>
+            public char BraceLeft { get; }
+
+            /// <summary>
+            /// ]
+            /// </summary>
+            public char BraceRight { get; }
+
+            /// <summary>
+            /// (
+            /// </summary>
+            public char CurveLeft { get; }
+
+            /// <summary>
+            /// )
+            /// </summary>
+            public char CurveRight { get; }
+
+            /// <summary>
+            /// {
+            /// </summary>
+            public char CurlyLeft { get; }
+
+            /// <summary>
+            /// }
+            /// </summary>
+            public char CurlyRight { get; }
+
+            /// <summary>
+            /// .
+            /// </summary>
+            public char Dot { get; }
+
+            /// <summary>
+            /// ,
+            /// </summary>
+            public char Comma { get; }
+
+            /// <summary>
+            /// 
+            /// </summary>
+            public char Space { get; }
+
+            /// <summary>
+            /// *
+            /// </summary>
+            public char Asterisk { get; }
+        }
+
         public readonly struct GetFullNameOpt
         {
             public static GetFullNameOpt Create() => new GetFullNameOpt(false);
 
-            public static GetFullNameOpt Create(bool standardFormat = false, bool noNullableQuestionMark = false, AnonymousTypeStyle anonymousTypeStyle = AnonymousTypeStyle.Curly, CaptureStyle captureStyle = CaptureStyle.Pass, ParameterStyle parameterStyle = ParameterStyle.Type, TypeParameterStyle typeParameterStyle = TypeParameterStyle.FullName, string methodParameterVarName = default, string methodParameterRefVarName = default, Func<string, int, string> methodParameterVarNameCallback = default, IDictionary<string, ITypeSymbol> typeArguments = default, bool global = default, string typeParameterBracketLeft = default, string typeParameterBracketRight = default) => new GetFullNameOpt(standardFormat, noNullableQuestionMark, anonymousTypeStyle, captureStyle, parameterStyle, typeParameterStyle, methodParameterVarName, methodParameterRefVarName, methodParameterVarNameCallback, typeArguments, global, typeParameterBracketLeft, typeParameterBracketRight);
+            public static GetFullNameOpt Create(bool standardFormat = false, bool noNullableQuestionMark = false, AnonymousTypeStyle anonymousTypeStyle = AnonymousTypeStyle.Curly, CaptureStyle captureStyle = CaptureStyle.Pass, ParameterStyle parameterStyle = ParameterStyle.Type, TupleStyle tupleStyle = TupleStyle.Tuple, TypeParameterStyle typeParameterStyle = TypeParameterStyle.FullName, string methodParameterVarName = default, string methodParameterRefVarName = default, Func<string, int, string> methodParameterVarNameCallback = default, string methodName = default, IDictionary<string, ITypeSymbol> typeArguments = default, bool global = default, CharSpecial charSpecial = default) => new GetFullNameOpt(standardFormat, noNullableQuestionMark, anonymousTypeStyle, captureStyle, parameterStyle, tupleStyle, typeParameterStyle, methodParameterVarName, methodParameterRefVarName, methodParameterVarNameCallback, methodName, typeArguments, global, charSpecial);
 
-            GetFullNameOpt(bool standardFormat = false, bool noNullableQuestionMark = false, AnonymousTypeStyle anonymousTypeStyle = AnonymousTypeStyle.Curly, CaptureStyle captureStyle = CaptureStyle.Pass, ParameterStyle parameterStyle = ParameterStyle.Type, TypeParameterStyle typeParameterStyle = TypeParameterStyle.FullName, string methodParameterVarName = default, string methodParameterRefVarName = default, Func<string, int, string> methodParameterVarNameCallback = default, IDictionary<string, ITypeSymbol> typeArguments = default, bool global = default, string typeParameterBracketLeft = default, string typeParameterBracketRight = default)
+            GetFullNameOpt(bool standardFormat = false, bool noNullableQuestionMark = false, AnonymousTypeStyle anonymousTypeStyle = AnonymousTypeStyle.Curly, CaptureStyle captureStyle = CaptureStyle.Pass, ParameterStyle parameterStyle = ParameterStyle.Type, TupleStyle tupleStyle = TupleStyle.Tuple, TypeParameterStyle typeParameterStyle = TypeParameterStyle.FullName, string methodParameterVarName = default, string methodParameterRefVarName = default, Func<string, int, string> methodParameterVarNameCallback = default, string methodName = default, IDictionary<string, ITypeSymbol> typeArguments = default, bool global = default, CharSpecial charSpecial = default)
             {
                 StandardFormat = standardFormat;
                 NoNullableQuestionMark = noNullableQuestionMark;
                 AnonymousTypeStyle = anonymousTypeStyle;
                 CaptureStyle = captureStyle;
                 ParameterStyle = parameterStyle;
+                TupleStyle = tupleStyle;
                 TypeParameterStyle = typeParameterStyle;
                 MethodParameterVarName = methodParameterVarName ?? "args";
                 MethodParameterRefVarName = methodParameterRefVarName ?? "args";
                 MethodParameterVarNameCallback = methodParameterVarNameCallback;
+                MethodName = methodName;
                 TypeArguments = typeArguments;
                 Global = global;
-                TypeParameterBracketLeft = typeParameterBracketLeft ?? "<";
-                TypeParameterBracketRight = typeParameterBracketRight ?? ">";
+                CharSpecial = CharSpecial.IsNull(charSpecial) ? CharSpecial.Create() : charSpecial;
             }
 
-            public GetFullNameOpt Set(bool? standardFormat = default, bool? noNullableQuestionMark = default, AnonymousTypeStyle? anonymousTypeStyle = default, CaptureStyle? captureStyle = default, ParameterStyle? parameterStyle = default, TypeParameterStyle? typeParameterStyle = default, string methodParameterVarName = default, string methodParameterRefVarName = default, Func<string, int, string> methodParameterVarNameCallback = default, IDictionary<string, ITypeSymbol> typeArguments = default, bool? global = default, string typeParameterBracketLeft = default, string typeParameterBracketRight = default) => Create(standardFormat ?? StandardFormat, noNullableQuestionMark ?? NoNullableQuestionMark, anonymousTypeStyle ?? AnonymousTypeStyle, captureStyle ?? CaptureStyle, parameterStyle ?? ParameterStyle, typeParameterStyle ?? TypeParameterStyle, methodParameterVarName ?? MethodParameterVarName, methodParameterRefVarName ?? MethodParameterRefVarName, methodParameterVarNameCallback ?? MethodParameterVarNameCallback, typeArguments ?? TypeArguments, global ?? Global, TypeParameterBracketLeft ?? typeParameterBracketLeft, TypeParameterBracketRight ?? typeParameterBracketRight);
+            public GetFullNameOpt Set(bool? standardFormat = default, bool? noNullableQuestionMark = default, AnonymousTypeStyle? anonymousTypeStyle = default, CaptureStyle? captureStyle = default, ParameterStyle? parameterStyle = default, TupleStyle? tupleStyle = default, TypeParameterStyle? typeParameterStyle = default, string methodParameterVarName = default, string methodParameterRefVarName = default, Func<string, int, string> methodParameterVarNameCallback = default, string methodName = default, IDictionary<string, ITypeSymbol> typeArguments = default, bool? global = default, CharSpecial charSpecial = default) => Create(standardFormat ?? StandardFormat, noNullableQuestionMark ?? NoNullableQuestionMark, anonymousTypeStyle ?? AnonymousTypeStyle, captureStyle ?? CaptureStyle, parameterStyle ?? ParameterStyle, tupleStyle ?? TupleStyle, typeParameterStyle ?? TypeParameterStyle, methodParameterVarName ?? MethodParameterVarName, methodParameterRefVarName ?? MethodParameterRefVarName, methodParameterVarNameCallback ?? MethodParameterVarNameCallback, methodName ?? MethodName, typeArguments ?? TypeArguments, global ?? Global, CharSpecial.IsNull(charSpecial) ? CharSpecial : charSpecial);
 
             public bool StandardFormat { get; }
 
@@ -169,6 +256,8 @@ namespace Business.SourceGenerator.Analysis
 
             public ParameterStyle ParameterStyle { get; }
 
+            public TupleStyle TupleStyle { get; }
+
             internal TypeParameterStyle TypeParameterStyle { get; }
 
             internal string MethodParameterVarName { get; }
@@ -177,13 +266,13 @@ namespace Business.SourceGenerator.Analysis
 
             internal Func<string, int, string> MethodParameterVarNameCallback { get; }
 
+            internal string MethodName { get; }
+
             internal IDictionary<string, ITypeSymbol> TypeArguments { get; }
 
             internal bool Global { get; }
 
-            internal string TypeParameterBracketLeft { get; }
-
-            internal string TypeParameterBracketRight { get; }
+            internal CharSpecial CharSpecial { get; }
         }
 
         static bool In(this AnonymousTypeStyle value, AnonymousTypeStyle flag) => 0 != (value & flag);
@@ -298,6 +387,22 @@ namespace Business.SourceGenerator.Analysis
             MethodReal = 4
         }
 
+        /// <summary>
+        /// TupleStyle
+        /// </summary>
+        public enum TupleStyle
+        {
+            /// <summary>
+            /// ValueTuple<int?, string>
+            /// </summary>
+            Tuple,
+
+            /// <summary>
+            /// (int? c1, string c2)
+            /// </summary>
+            TypeName
+        }
+
         //internal const TypeParameterStyle MethodReal = TypeParameterStyle.Real + 1;
 
         public static string GetFullNameRealStandardFormat(this ISymbol symbol, GetFullNameOpt opt = default, Func<string, bool, string> typeClean = default)
@@ -357,6 +462,7 @@ namespace Business.SourceGenerator.Analysis
             var captureStyleNoPrefix = opt.CaptureStyle.In(CaptureStyle.NoPrefix);
             var captureStyleNoName = opt.CaptureStyle.In(CaptureStyle.NoName);
             var captureStyleNoArgs = opt.CaptureStyle.In(CaptureStyle.NoArgs);
+            var tupleStyleTypeName = opt.TupleStyle is TupleStyle.TypeName;
 
             if (captureStyleNoPrefix)
             {
@@ -371,6 +477,11 @@ namespace Business.SourceGenerator.Analysis
             if (captureStyleNoArgs)
             {
                 opt = opt.Set(captureStyle: opt.CaptureStyle ^ CaptureStyle.NoArgs);
+            }
+
+            if (tupleStyleTypeName)
+            {
+                opt = opt.Set(tupleStyle: TupleStyle.Tuple);
             }
 
             #region opt.CaptureStyle.Args
@@ -396,6 +507,11 @@ namespace Business.SourceGenerator.Analysis
 
             var objectNameClean = typeClean?.Invoke(GlobalConst.System_Object, captureStyleNoPrefix) ?? GlobalConst.System_Object;
 
+            if ('.' != opt.CharSpecial.Dot)
+            {
+                objectNameClean = objectNameClean.Replace('.', opt.CharSpecial.Dot);
+            }
+
             #region pretreatment
 
             //Return simple string representation of generic type parameters in advance and uniformly to avoid infinite recursion.
@@ -411,13 +527,22 @@ namespace Business.SourceGenerator.Analysis
                                 return $"{symbol.Name}?";
                             }
 
-                            var nullName = $"System.Nullable<{symbol.Name}>";
+                            var nullName = $"System{opt.CharSpecial.Dot}Nullable{opt.CharSpecial.BracketLeft}{symbol.Name}{opt.CharSpecial.BracketRight}";
                             return typeClean?.Invoke(nullName, captureStyleNoPrefix) ?? nullName;
                         }
                         return symbol.Name;
                     case TypeParameterStyle.Real:
                         {
                             var constraintType = TypeParameterSymbolRealType(typeParameter2);
+
+                            if (typeParameter2.TypeParameterKind is TypeParameterKind.Method && constraintType is INamedTypeSymbol named)
+                            {
+                                if (named.TypeArguments.Any(c => c.Equals(typeParameter2, SymbolEqualityComparer.Default)))
+                                {
+                                    return "*";
+                                }
+                            }
+
                             return constraintType is null ? objectNameClean : GetFullName(constraintType, opt, typeClean);
                             //return TypeParameterSymbolRealName(typeParameter2, opt, typeClean);
                         }
@@ -429,6 +554,16 @@ namespace Business.SourceGenerator.Analysis
                             }
 
                             var constraintType = TypeParameterSymbolRealType(typeParameter2);
+
+                            if (typeParameter2.TypeParameterKind is TypeParameterKind.Method && constraintType is INamedTypeSymbol named)
+                            {
+                                if (named.TypeArguments.Any(c => c.Equals(typeParameter2, SymbolEqualityComparer.Default)))
+                                {
+                                    //return GetFullName(constraintType, typeClean: typeClean);
+                                    return "*";
+                                }
+                            }
+
                             return constraintType is null ? objectNameClean : GetFullName(constraintType, opt, typeClean);
                             //return TypeParameterSymbolRealName(typeParameter2, opt, typeClean);
                         }
@@ -442,8 +577,6 @@ namespace Business.SourceGenerator.Analysis
 
             //    //return $"{global}{name2}";
             //}
-
-
 
             if (SymbolKind.DynamicType == symbol.Kind && opt.StandardFormat)
             {
@@ -476,7 +609,7 @@ namespace Business.SourceGenerator.Analysis
             else if (null != symbol.ContainingNamespace && !symbol.ContainingNamespace.IsGlobalNamespace)
             {
                 //prefix = symbol.ContainingNamespace.ToDisplayString();
-                prefix = typeClean?.Invoke(symbol.ContainingNamespace.ToDisplayString(), captureStyleNoPrefix) ?? symbol.ContainingNamespace.ToDisplayString();
+                prefix = (typeClean?.Invoke(symbol.ContainingNamespace.ToDisplayString(), captureStyleNoPrefix) ?? symbol.ContainingNamespace.ToDisplayString()).Replace('.', opt.CharSpecial.Dot);
             }
 
             var symbolName = typeClean?.Invoke(symbol.Name, true) ?? symbol.Name;
@@ -497,7 +630,7 @@ namespace Business.SourceGenerator.Analysis
                 }
             }
 
-            var prefixFullName = !string.IsNullOrEmpty(prefix) ? $"{prefix}.{symbolName}" : typeClean?.Invoke(symbolName, captureStyleNoPrefix) ?? symbolName;
+            var prefixFullName = !string.IsNullOrEmpty(prefix) ? $"{prefix}{opt.CharSpecial.Dot}{symbolName}" : typeClean?.Invoke(symbolName, captureStyleNoPrefix) ?? symbolName;
 
             //CaptureStyle.Pass is the default value and will not be processed.
             if (!opt.CaptureStyle.In(CaptureStyle.Pass))
@@ -532,6 +665,22 @@ namespace Business.SourceGenerator.Analysis
 
             switch (symbol)
             {
+                case IFieldSymbol field:
+                    {
+                        if (!(field.CorrespondingTupleField is null))
+                        {
+                            if (field.IsExplicitlyNamedTupleElement)
+                            {
+                                return $"{GetFullName(field.Type, opt, typeClean)}{opt.CharSpecial.Space}{field.Name}";
+                            }
+                            else
+                            {
+                                return $"{GetFullName(field.Type, opt, typeClean)}";
+                            }
+                        }
+
+                        return default;
+                    }
                 case INamedTypeSymbol named:
                     {
                         if (named.IsAnonymousType)
@@ -555,19 +704,19 @@ namespace Business.SourceGenerator.Analysis
                                     return c.Name;
                                 }
 
-                                return $"{named} {c.Name}";
+                                return $"{named}{opt.CharSpecial.Space}{c.Name}";
                             });
 
                             if (opt.AnonymousTypeStyle.In(AnonymousTypeStyle.Round))
                             {
-                                return $"({string.Join(", ", parameters)})";
+                                return $"{opt.CharSpecial.CurveLeft}{string.Join($"{opt.CharSpecial.Comma}{opt.CharSpecial.Space}", parameters)}{opt.CharSpecial.CurveRight}";
                             }
                             else if (opt.AnonymousTypeStyle.In(AnonymousTypeStyle.Curly))
                             {
-                                return $"{{{string.Join(", ", parameters)}}}";
+                                return $"{opt.CharSpecial.CurlyLeft}{string.Join($"{opt.CharSpecial.Comma}{opt.CharSpecial.Space}", parameters)}{opt.CharSpecial.CurlyRight}";
                             }
 
-                            return string.Join(", ", parameters);
+                            return string.Join($"{opt.CharSpecial.Comma}{opt.CharSpecial.Space}", parameters);
 
                             #endregion
                         }
@@ -578,7 +727,7 @@ namespace Business.SourceGenerator.Analysis
 
                             if (named.IsUnboundGenericType)
                             {
-                                args = string.Join(",", Enumerable.Repeat(string.Empty, named.TypeArguments.Length));
+                                args = string.Join($"{opt.CharSpecial.Comma}", Enumerable.Repeat(string.Empty, named.TypeArguments.Length));
                             }
                             else if (named.IsTupleType && 0 < named.TupleElements.Length)
                             {
@@ -586,11 +735,17 @@ namespace Business.SourceGenerator.Analysis
                                 if (named.IsDefinition)
                                 {
                                     //opt = opt.Set(typeParameterStyle: TypeParameterStyle.Name);
-                                    args = string.Join(",", Enumerable.Repeat(string.Empty, named.TypeArguments.Length));
+                                    args = string.Join($"{opt.CharSpecial.Comma}", Enumerable.Repeat(string.Empty, named.TypeArguments.Length));
                                 }
                                 else
                                 {
-                                    args = string.Join(", ", named.TupleElements.Select(c => GetFullName(c.Type, opt, typeClean)));
+                                    if (tupleStyleTypeName && 1 < named.TupleElements.Length)
+                                    {
+                                        //Must be greater than 1 parameter. (int, int) or (int a, int b)
+                                        return $"({string.Join($"{opt.CharSpecial.Comma}{opt.CharSpecial.Space}", named.TupleElements.Select(c => GetFullName(c, opt, typeClean)))})";
+                                    }
+
+                                    args = string.Join($"{opt.CharSpecial.Comma}{opt.CharSpecial.Space}", named.TupleElements.Select(c => GetFullName(c.Type, opt, typeClean)));
                                 }
                             }
                             else
@@ -609,13 +764,13 @@ namespace Business.SourceGenerator.Analysis
                                 //Merge generic parameters
                                 var typeArguments = GetTypeArguments(named.TypeArguments, opt);
 
-                                args = string.Join(", ", typeArguments.Select(c => GetFullName(c, opt.Set(typeParameterStyle: typeParameterStyle), typeClean)));
+                                args = string.Join($"{opt.CharSpecial.Comma}{opt.CharSpecial.Space}", typeArguments.Select(c => GetFullName(c, opt.Set(typeParameterStyle: typeParameterStyle), typeClean)));
                             }
 
                             //Returns the type parameter of a generic type.
                             if (captureStyleArgs)
                             {
-                                return $"{opt.TypeParameterBracketLeft}{args}{opt.TypeParameterBracketRight}";
+                                return $"{opt.CharSpecial.BracketLeft}{args}{opt.CharSpecial.BracketRight}";
                             }
 
                             //if (System_Nullable.Equals($"{prefix}.{symbol.Name}") && !opt.NoNullableQuestionMark)
@@ -634,7 +789,7 @@ namespace Business.SourceGenerator.Analysis
                                 return prefixFullName;
                             }
 
-                            return $"{prefixFullName}{opt.TypeParameterBracketLeft}{args}{opt.TypeParameterBracketRight}";
+                            return $"{prefixFullName}{opt.CharSpecial.BracketLeft}{args}{opt.CharSpecial.BracketRight}";
                         }
 
                         return prefixFullName;
@@ -652,7 +807,7 @@ namespace Business.SourceGenerator.Analysis
                                             return $"{symbol.Name}?";
                                         }
 
-                                        var nullName = $"System.Nullable<{symbol.Name}>";
+                                        var nullName = $"System{opt.CharSpecial.Dot}Nullable{opt.CharSpecial.BracketLeft}{symbol.Name}{opt.CharSpecial.BracketRight}";
                                         return typeClean?.Invoke(nullName, captureStyleNoPrefix) ?? nullName;
                                     }
                                     return symbol.Name;
@@ -687,7 +842,7 @@ namespace Business.SourceGenerator.Analysis
                             }
                             else
                             {
-                                var nullName = $"System.Nullable<{name}>";
+                                var nullName = $"System{opt.CharSpecial.Dot}Nullable{opt.CharSpecial.BracketLeft}{name}{opt.CharSpecial.BracketRight}";
                                 name = typeClean?.Invoke(nullName, captureStyleNoPrefix) ?? nullName;
                             }
                         }
@@ -696,20 +851,18 @@ namespace Business.SourceGenerator.Analysis
                     }
                 case IArrayTypeSymbol array:
                     {
-                        var rank = "[]";
+                        var rank = $"{opt.CharSpecial.BraceLeft}{opt.CharSpecial.BraceRight}";
 
                         if (1 < array.Rank)
                         {
-                            rank = $"[{string.Join(string.Empty, Enumerable.Repeat(",", array.Rank))}]";
+                            rank = $"{opt.CharSpecial.BraceLeft}{string.Join(string.Empty, Enumerable.Repeat(opt.CharSpecial.Comma, array.Rank))}{opt.CharSpecial.BraceRight}";
                         }
 
                         return $"{GetFullName(array.ElementType, opt, typeClean)}{rank}";
                     }
                 case IPointerTypeSymbol pointer:
                     {
-                        const string rank = "*";
-
-                        return $"{GetFullName(pointer.PointedAtType, opt, typeClean)}{rank}";
+                        return $"{GetFullName(pointer.PointedAtType, opt, typeClean)}{opt.CharSpecial.Asterisk}";
                     }
                 case IMethodSymbol method:
                     {
@@ -729,7 +882,7 @@ namespace Business.SourceGenerator.Analysis
                             //Merge generic parameters
                             var typeArguments = GetTypeArguments(method.TypeArguments, opt);
 
-                            args = $"{opt.TypeParameterBracketLeft}{string.Join(", ", typeArguments.Select(c => GetFullName(c, opt.Set(typeParameterStyle: typeParameterStyle), typeClean)))}{opt.TypeParameterBracketRight}";
+                            args = $"<{string.Join(", ", typeArguments.Select(c => GetFullName(c, opt.Set(typeParameterStyle: typeParameterStyle), typeClean)))}>";
 
                             //Returns the type parameter of a generic method.
                             if (captureStyleArgs)
@@ -739,7 +892,7 @@ namespace Business.SourceGenerator.Analysis
                         }
 
                         //var methodName = $"{typeClean?.Invoke(prefixFullName, noPrefix) ?? prefixFullName}{args}";
-                        var methodName = $"{prefixFullName}{args}";
+                        var methodName = $"{(opt.MethodName ?? prefixFullName)}{args}";
 
                         if (opt.CaptureStyle.In(CaptureStyle.MethodName))
                         {
@@ -758,12 +911,22 @@ namespace Business.SourceGenerator.Analysis
                             switch (opt.ParameterStyle)
                             {
                                 case ParameterStyle.Type:
+                                    if (tupleStyleTypeName)
+                                    {
+                                        //Add TupleStyle.TypeName to pass to parameter type resolution.
+                                        opt = opt.Set(tupleStyle: TupleStyle.TypeName);
+                                    }
                                     typeName = GetFullName(type, opt, typeClean);
                                     break;
                                 case ParameterStyle.Name:
                                     typeName = c.Name;
                                     break;
                                 case ParameterStyle.TypeName:
+                                    if (tupleStyleTypeName)
+                                    {
+                                        ////Add TupleStyle.TypeName to pass to parameter type resolution.
+                                        opt = opt.Set(tupleStyle: TupleStyle.TypeName);
+                                    }
                                     typeName = $"{GetFullName(type, opt, typeClean)} {c.Name}";
                                     break;
                                 default: break;
@@ -823,6 +986,8 @@ namespace Business.SourceGenerator.Analysis
 
             return typeClean?.Invoke(prefixFullName, captureStyleNoPrefix) ?? prefixFullName;
         }
+
+        public static string Repeat(this string v, int range) => string.Join(string.Empty, Enumerable.Range(0, range).Select(c => v));
 
         /// <summary>
         /// Merge generic parameters
@@ -900,7 +1065,7 @@ namespace Business.SourceGenerator.Analysis
 
         internal static (string refs, string refs2) GetMethodRef(this IEnumerable<IParameterSymbol> parameters, string methodParameterVarName, string methodParameterVarName2, Func<string, bool, string> typeClean, SyntaxToCode.ToCodeOpt opt)
         {
-            var globalMeta = opt.GetGlobalName(GlobalName.Business_SourceGenerator_Meta);
+            var globalMeta = opt.GetGlobalName(SyntaxToCode.GlobalName.Business_SourceGenerator_Meta);
 
             var refs = new System.Text.StringBuilder(null);
             var refs2 = new System.Text.StringBuilder(null);
@@ -1021,9 +1186,25 @@ namespace Business.SourceGenerator.Analysis
             return constraintTypes.FirstOrDefault();
         }
 
+        public static bool IsSpan(this ITypeSymbol typeSymbol) => TypeChecked(typeSymbol, type =>
+        {
+            var typeFullName = type.GetFullNameStandardFormat();
+            return typeFullName.StartsWith("System.Span") || typeFullName.StartsWith("System.ReadOnlySpan");
+        });
+
+        public static bool IsRefLikePointerTypedReferenceValueTypeConstraint(this ITypeSymbol typeSymbol) => TypeChecked(typeSymbol, type => type.IsRefLikeType || type.TypeKind is TypeKind.Pointer || type.TypeKind is TypeKind.FunctionPointer || type.SpecialType is SpecialType.System_TypedReference || (type is INamedTypeSymbol named && named.TypeParameters.Any(c => c.HasValueTypeConstraint && named.TypeArguments[c.Ordinal].IsTypeParameter())));
+
+        public static bool IsRefLikeType(this ITypeSymbol typeSymbol) => TypeChecked(typeSymbol, type => type.IsRefLikeType);
+
         public static bool IsPointerType(this ITypeSymbol typeSymbol) => TypeChecked(typeSymbol, type => type.TypeKind is TypeKind.Pointer || type.TypeKind is TypeKind.FunctionPointer);
 
-        public static bool HasGenericType(this ITypeSymbol typeSymbol) => TypeChecked(typeSymbol, type => type.TypeKind is TypeKind.TypeParameter);
+        public static bool IsTypedReference(this ITypeSymbol typeSymbol) => TypeChecked(typeSymbol, type => type.SpecialType is SpecialType.System_TypedReference);
+
+        public static bool IsValueTypeConstraint(this ITypeSymbol typeSymbol) => typeSymbol is INamedTypeSymbol named && named.TypeParameters.Any(c => c.HasValueTypeConstraint && named.TypeArguments[c.Ordinal].IsTypeParameter());
+
+        public static bool IsTypeParameter(this ITypeSymbol typeSymbol) => TypeChecked(typeSymbol, type => type.TypeKind is TypeKind.TypeParameter);
+
+        public static bool IsGenericType(this INamedTypeSymbol typeSymbol) => TypeChecked(typeSymbol, type => type is INamedTypeSymbol named && named.IsGenericType);
 
         public static bool TypeChecked(this ITypeSymbol typeSymbol, Func<ITypeSymbol, bool> check)
         {
