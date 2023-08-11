@@ -52,7 +52,6 @@
   </ItemGroup>
 
   <ItemGroup>
-    <ProjectReference Include="..\Business.SourceGenerator.Meta\Business.SourceGenerator.Meta.csproj" />
     <ProjectReference Include="..\Business.SourceGenerator\Business.SourceGenerator.csproj" />
   </ItemGroup>
 
