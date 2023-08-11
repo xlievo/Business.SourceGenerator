@@ -104,9 +104,9 @@ namespace Business.SourceGenerator
 
                 context.AddSource(Meta.Global.GeneratorCodeName, Microsoft.CodeAnalysis.Text.SourceText.From($"{usings2}{generatorType}", System.Text.Encoding.UTF8));
 
-                foreach (var item in generator.accessors)
+                foreach (var item in generator.code)
                 {
-                    context.AddSource(item.Key, Microsoft.CodeAnalysis.Text.SourceText.From($"{usings2}{item.Value}", System.Text.Encoding.UTF8));
+                    context.AddSource($"{Guid.NewGuid():N}_TypeMeta", Microsoft.CodeAnalysis.Text.SourceText.From($"{usings2}{item}", System.Text.Encoding.UTF8));
                 }
 
                 #endregion
@@ -117,7 +117,7 @@ namespace Business.SourceGenerator
 
                 foreach (var item in AnalysisMeta.AnalysisInfo.AccessorType)
                 {
-                    context.AddSource(item.Value.key, Microsoft.CodeAnalysis.Text.SourceText.From(item.Value.code, System.Text.Encoding.UTF8));
+                    context.AddSource($"{Guid.NewGuid():N}_AccessorType", Microsoft.CodeAnalysis.Text.SourceText.From(item.Value, System.Text.Encoding.UTF8));
                 }
 
                 #endregion

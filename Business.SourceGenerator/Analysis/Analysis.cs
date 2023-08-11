@@ -20,9 +20,7 @@ namespace Business.SourceGenerator.Analysis
     using Microsoft.CodeAnalysis.CSharp.Syntax;
     using System;
     using System.Collections.Generic;
-    using System.Collections.ObjectModel;
     using System.Linq;
-    using System.Reflection;
     using static Business.SourceGenerator.Analysis.AnalysisMeta;
     using static Business.SourceGenerator.Analysis.SymbolToMeta;
     using static Business.SourceGenerator.Analysis.SymbolTypeName;
@@ -505,7 +503,7 @@ namespace Business.SourceGenerator.Analysis
         }
         */
 
-        public static (string id, string key, string code) GeneratorAccessor(ITypeSymbol typeSymbol, string assemblyName, string makes, bool noParameterConstructor, List<string> result, bool isCustom, ToCodeOpt opt, string[] usings = default)
+        public static (string key, string code) GeneratorAccessor(ITypeSymbol typeSymbol, string assemblyName, string makes, bool noParameterConstructor, List<string> result, bool isCustom, ToCodeOpt opt, string[] usings = default)
         {
             var format = opt.StandardFormat ? Environment.NewLine : " ";
             var space = Meta.Global.Space;
@@ -565,10 +563,11 @@ namespace Business.SourceGenerator.Analysis
                 sb.Append($"{format}}}");
             }
 
-            return (typeSymbol.GetFullNameStandardFormat(GetFullNameOpt.Create(noNullableQuestionMark: true, charSpecial: CharSpecial.Create(bracketLeft: '[', bracketRight: ']', asterisk: '_'))), key, sb.ToString());
+            //return (typeSymbol.GetFullNameStandardFormat(GetFullNameOpt.Create(noNullableQuestionMark: true, charSpecial: CharSpecial.Create(bracketLeft: '[', bracketRight: ']', asterisk: '_'))), key, sb.ToString());
+            return (key, sb.ToString());
         }
 
-        public static (string types, IDictionary<string, string> accessors) GeneratorCode(AnalysisInfoModel analysisInfo, string assemblyName, ToCodeOpt opt, string[] usings = default)
+        public static (string types, IEnumerable<string> code) GeneratorCode(AnalysisInfoModel analysisInfo, string assemblyName, ToCodeOpt opt, string[] usings = default)
         {
             var format = opt.StandardFormat ? Environment.NewLine : " ";
             var space = Meta.Global.Space;
@@ -589,7 +588,7 @@ namespace Business.SourceGenerator.Analysis
             //var types = GetTypes(analysisInfo);
 
             var sb = new System.Text.StringBuilder(null);
-            var generators = new Dictionary<string, (string types, (string id, string key, string code) accessors)>();
+            var generators = new Dictionary<string, (string types, (string key, string code) accessors)>();
 
             #region all type
 
@@ -736,7 +735,7 @@ namespace Business.SourceGenerator.Analysis
 
             #endregion
 
-            return (sb.ToString(), generators.Values.ToDictionary(c => c.accessors.id, c => c.accessors.code));
+            return (sb.ToString(), generators.Values.Select(c => c.accessors.code));
 
             /*
             static Dictionary<string, string> SetGenerics(IEnumerable<INamedTypeSymbol> makeGenerics, Func<string, bool, string> typeClean, ToCodeOpt opt, params ITypeSymbol[] typeArgument)

@@ -361,7 +361,7 @@ namespace Business.SourceGenerator.Analysis
                             return $"{accessorTypes2}{key}.Singleton";
                         }
 
-                        AnalysisMeta.AnalysisInfo.AccessorType.Add(fullName, default);
+                        AnalysisMeta.AnalysisInfo.AccessorType.TryAdd(fullName, default);
 
                         var runtimeType = GetRuntimeType(accessor, typeClean);
                         var isTupleType = accessor.IsTupleType && !accessor.IsDefinition;
@@ -516,14 +516,14 @@ namespace Business.SourceGenerator.Analysis
                             sb.Append($"{space.Repeat(spaceCount)}}}");
                         }
 
+                        #endregion
+
                         if (AnalysisMeta.AnalysisInfo.AccessorType.ContainsKey(fullName))
                         {
-                            AnalysisMeta.AnalysisInfo.AccessorType[fullName] = ($"{symbol.GetFullNameStandardFormat(GetFullNameOpt.Create(noNullableQuestionMark: true, charSpecial: CharSpecial.Create(bracketLeft: '[', bracketRight: ']', asterisk: '_')))}_AccessorType", sb.ToString());
+                            AnalysisMeta.AnalysisInfo.AccessorType[fullName] = sb.ToString();
                         }
 
                         return $"{accessorTypes2}{key}.Singleton";
-
-                        #endregion
                     }
                 case ITypeParameterSymbol accessor:
                     {
@@ -578,7 +578,7 @@ namespace Business.SourceGenerator.Analysis
                             return $"{accessorTypes2}{key}.Singleton";
                         }
 
-                        AnalysisMeta.AnalysisInfo.AccessorType.Add(fullName, default);
+                        AnalysisMeta.AnalysisInfo.AccessorType.TryAdd(fullName, default);
 
                         var runtimeType = GetRuntimeType(accessor, typeClean);
                         var isTupleType = accessor.IsTupleType && !accessor.IsDefinition;
@@ -724,14 +724,14 @@ namespace Business.SourceGenerator.Analysis
                             sb.Append($"{space.Repeat(spaceCount)}}}");
                         }
 
+                        #endregion
+
                         if (AnalysisMeta.AnalysisInfo.AccessorType.ContainsKey(fullName))
                         {
-                            AnalysisMeta.AnalysisInfo.AccessorType[fullName] = ($"{symbol.GetFullNameStandardFormat(GetFullNameOpt.Create(noNullableQuestionMark: true, charSpecial: CharSpecial.Create(bracketLeft: '[', bracketRight: ']', asterisk: '_')))}_AccessorType", sb.ToString());
+                            AnalysisMeta.AnalysisInfo.AccessorType[fullName] = sb.ToString();
                         }
 
                         return $"{accessorTypes2}{key}.Singleton";
-
-                        #endregion
                     }
                 case IFieldSymbol accessor:
                     {

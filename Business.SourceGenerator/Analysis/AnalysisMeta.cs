@@ -24,7 +24,6 @@ namespace Business.SourceGenerator.Analysis
     using System.Collections.Generic;
     using System.Collections.Specialized;
     using System.Linq;
-    using static Business.SourceGenerator.Analysis.SyntaxToCode;
 
     internal static class AnalysisMeta
     {
@@ -52,13 +51,13 @@ namespace Business.SourceGenerator.Analysis
         //    //["System.Type"] = "global::Business.SourceGenerator.Meta.Types.TypeType.Singleton",
         //    //["System."] = "global::Business.SourceGenerator.Meta.Types..Singleton",
         //}
-    readonly static Lazy<AnalysisInfoModel> analysisInfoModel = new Lazy<AnalysisInfoModel>(() => new AnalysisInfoModel(new ConcurrentDictionary<string, StringCollection>(), new ConcurrentDictionary<string, SymbolInfo>(), new ConcurrentDictionary<string, SymbolInfo>(), new ConcurrentDictionary<string, ConcurrentDictionary<string, AssignmentExpressionSyntax>>(), new ConcurrentDictionary<string, ConcurrentDictionary<string, SymbolInfo>>(), new ConcurrentDictionary<string, ConcurrentDictionary<string, ConcurrentDictionary<string, AttributeSyntax>>>(), new Dictionary<string, (string key, string code)>()));
+        readonly static Lazy<AnalysisInfoModel> analysisInfoModel = new Lazy<AnalysisInfoModel>(() => new AnalysisInfoModel(new ConcurrentDictionary<string, StringCollection>(), new ConcurrentDictionary<string, SymbolInfo>(), new ConcurrentDictionary<string, SymbolInfo>(), new ConcurrentDictionary<string, ConcurrentDictionary<string, AssignmentExpressionSyntax>>(), new ConcurrentDictionary<string, ConcurrentDictionary<string, SymbolInfo>>(), new ConcurrentDictionary<string, ConcurrentDictionary<string, ConcurrentDictionary<string, AttributeSyntax>>>(), new ConcurrentDictionary<string, string>()));
 
         public static AnalysisInfoModel AnalysisInfo => analysisInfoModel.Value;
 
         public readonly struct AnalysisInfoModel
         {
-            internal AnalysisInfoModel(ConcurrentDictionary<string, StringCollection> syntaxTrees, ConcurrentDictionary<string, SymbolInfo> declaredSymbols, ConcurrentDictionary<string, SymbolInfo> typeSymbols, ConcurrentDictionary<string, ConcurrentDictionary<string, AssignmentExpressionSyntax>> staticAssignments, ConcurrentDictionary<string, ConcurrentDictionary<string, SymbolInfo>> invocations, ConcurrentDictionary<string, ConcurrentDictionary<string, ConcurrentDictionary<string, AttributeSyntax>>> attributes, Dictionary<string, (string key, string code)> accessorType)
+            internal AnalysisInfoModel(ConcurrentDictionary<string, StringCollection> syntaxTrees, ConcurrentDictionary<string, SymbolInfo> declaredSymbols, ConcurrentDictionary<string, SymbolInfo> typeSymbols, ConcurrentDictionary<string, ConcurrentDictionary<string, AssignmentExpressionSyntax>> staticAssignments, ConcurrentDictionary<string, ConcurrentDictionary<string, SymbolInfo>> invocations, ConcurrentDictionary<string, ConcurrentDictionary<string, ConcurrentDictionary<string, AttributeSyntax>>> attributes, ConcurrentDictionary<string, string> accessorType)
             {
                 SyntaxTrees = syntaxTrees;
                 DeclaredSymbols = declaredSymbols;
@@ -83,7 +82,7 @@ namespace Business.SourceGenerator.Analysis
 
             public readonly ConcurrentDictionary<string, ConcurrentDictionary<string, ConcurrentDictionary<string, AttributeSyntax>>> Attributes { get; }
 
-            public readonly Dictionary<string, (string key, string code)> AccessorType { get; }
+            public readonly ConcurrentDictionary<string, string> AccessorType { get; }
 
             //public readonly IReadOnlyDictionary<string, string> BasrType { get; }
         }
@@ -140,7 +139,9 @@ namespace Business.SourceGenerator.Analysis
             {
                 References = symbol?.DeclaringSyntaxReferences.FirstOrDefault()?.GetSyntax() ?? declared.DeclaringSyntaxReferences.FirstOrDefault()?.GetSyntax();
                 IsCustom = !(References is null || !declared.DeclaringSyntaxReferences.Any());
-                Names = new Names(syntax.GetFullName(), symbol?.GetFullName(), declared.GetFullName(), declared.GetFullNameStandardFormat(), assemblyName);
+
+                var declaredFull = declared.GetFullName();
+                Names = new Names(syntax.GetFullName(), symbol?.GetFullName() ?? declaredFull, declaredFull, declared.GetFullNameStandardFormat(), assemblyName);
             }
 
             public SymbolInfo Set(SyntaxNode syntax = default, ISymbol symbol = default, ISymbol declared = default, ISymbol source = default, SyntaxNode references = default, bool? isCustom = default, Names? names = default, ConcurrentDictionary<string, ConcurrentDictionary<string, AttributeSyntax>> attributes = default, IEnumerable<ITypeSymbol> genericArguments = default) => new SymbolInfo(syntax ?? Syntax, symbol ?? Symbol, declared ?? Declared, source ?? Source, references ?? References, isCustom ?? IsCustom, attributes ?? Attributes, names ?? Names, genericArguments);
@@ -178,6 +179,7 @@ namespace Business.SourceGenerator.Analysis
 
         public static void Init(GeneratorExecutionContext context)
         {
+            //System.Diagnostics.Debugger.Launch();
             if (!(context.SyntaxReceiver is SyntaxReceiver))
             {
                 return;
