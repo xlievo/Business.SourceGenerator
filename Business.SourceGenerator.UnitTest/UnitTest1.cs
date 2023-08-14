@@ -821,8 +821,8 @@ namespace UnitAssembly
         [InlineData("TypeFull.cs")]
         public void TypeFullTest(string file, bool global = false)
         {
-            System.TypedReference ddd = default;
-            System.Reflection.FieldInfo ddd2 = default;
+            //System.TypedReference ddd = default;
+            //System.Reflection.FieldInfo ddd2 = default;
             //System.Reflection.FieldInfo vvv2 = default;
             //var dd = typeof(global::System.ValueTuple<global::System.Object, global::System.Object, global::System.Object, global::System.Object, global::System.Object, global::System.Object, global::System.Object, global::System.Object>);
             //var sss = new System_Nullable_System_DateOnly__Type();
@@ -904,9 +904,9 @@ namespace UnitAssembly
                         RefArg.Out<(int? c1, string? c2)>()
                         );
 
-            //MyCode.TypeFull<int>.C2 = 555;
+            MyCode.TypeFull<int>.C2 = 555;
             //typeof(MyCode.TypeFull<int>).AsGeneratorType().AccessorSet(""C2"", 666);
-            //return MyCode.TypeFull<int>.C2;
+            return MyCode.TypeFull<int>.C2;
 
             return result;
         }}

@@ -330,12 +330,13 @@ namespace Business.SourceGenerator.Analysis
                 return true;
             }
 
-            if ((Accessibility.Public != typeSymbol.DeclaredAccessibility && SymbolKind.DynamicType != typeSymbol.Kind) || typeSymbol.IsStatic || typeSymbol.IsRefLikePointerTypedReferenceValueTypeConstraint())
+            if ((Accessibility.Public != typeSymbol.DeclaredAccessibility && SymbolKind.DynamicType != typeSymbol.Kind) || typeSymbol.IsStatic || typeSymbol.IsRefLikePointerTypedReferenceTypeParameter())
             {
-                if (SymbolKind.ArrayType != typeSymbol.Kind)
-                {
-                    return true;
-                }
+                //if (SymbolKind.ArrayType != typeSymbol.Kind)
+                //{
+                //    return true;
+                //}
+                return true;
             }
 
             if (SpecialType.System_Void == typeSymbol.SpecialType)
@@ -791,7 +792,7 @@ namespace Business.SourceGenerator.Analysis
 
             foreach (var constructor in named.InstanceConstructors)
             {
-                if (Accessibility.Public != constructor.DeclaredAccessibility)
+                if (constructor.IsObsolete() || Accessibility.Public != constructor.DeclaredAccessibility)
                 {
                     continue;
                 }
@@ -857,7 +858,7 @@ namespace Business.SourceGenerator.Analysis
             //new()
             if (typeParameter.HasConstructorConstraint)
             {
-                if (typeSymbol is INamedTypeSymbol namedType && !namedType.InstanceConstructors.Any(c => 0 == c.Parameters.Length))
+                if (typeSymbol is INamedTypeSymbol namedType && !namedType.InstanceConstructors.Any(c => 0 == c.Parameters.Length && !c.IsObsolete()))
                 {
                     return false;
                 }

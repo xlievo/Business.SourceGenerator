@@ -196,7 +196,7 @@ namespace Business.SourceGenerator.Analysis
 
             var arrayTypeName = type is IArrayTypeSymbol arrayType ? GetRuntimeType(arrayType.ElementType, typeClean) : default;
 
-            var defaultConstructor = !type.IsAbstract && (type.TypeKind is TypeKind.Class || type.TypeKind is TypeKind.Struct) && type is INamedTypeSymbol named && named.InstanceConstructors.Any(c => c.DeclaredAccessibility is Accessibility.Public && !c.Parameters.Any());
+            var defaultConstructor = !type.IsAbstract && (type.TypeKind is TypeKind.Class || type.TypeKind is TypeKind.Struct) && type is INamedTypeSymbol named && named.InstanceConstructors.Any(c => c.DeclaredAccessibility is Accessibility.Public && !c.Parameters.Any() && !c.IsObsolete());
 
             var typeDefault = type.IsValueType ? $"default({typeName})" : "default";
             var typeConstructor = defaultConstructor ? $"new {typeName}()" : isArray ? $"{globalSystem}Array.Empty<{arrayTypeName}>()" : typeDefault;
@@ -366,7 +366,7 @@ namespace Business.SourceGenerator.Analysis
                         var runtimeType = GetRuntimeType(accessor, typeClean);
                         var isTupleType = accessor.IsTupleType && !accessor.IsDefinition;
                         var fullName2 = isTupleType ? symbol.GetFullNameRealStandardFormat(GetFullNameOpt.Create(tupleStyle: TupleStyle.TypeName), typeClean: typeClean) : symbol.GetFullNameRealStandardFormat(typeClean: typeClean);
-                        var attrs = accessor.GetAttributes().Where(c => !(c.ApplicationSyntaxReference is null));
+                        var attrs = accessor.GetAttributes().Where(c => !(c.ApplicationSyntaxReference is null) && c.AttributeClass.DeclaredAccessibility is Accessibility.Public);
 
                         #region members
 
@@ -398,7 +398,7 @@ namespace Business.SourceGenerator.Analysis
                                     break;
                                 case IFieldSymbol member:
                                     {
-                                        if (member.IsImplicitlyDeclared || member.Type.IsRefLikePointerTypedReferenceValueTypeConstraint()) { continue; }
+                                        if (member.IsObsolete() || member.IsImplicitlyDeclared || member.Type.IsRefLikePointerTypedReferenceValueTypeConstraint()) { continue; }
 
                                         if (member.Type.Kind is SymbolKind.Event) { continue; }
 
@@ -409,7 +409,7 @@ namespace Business.SourceGenerator.Analysis
                                     break;
                                 case IPropertySymbol member:
                                     {
-                                        if (member.IsImplicitlyDeclared || member.Type.IsRefLikePointerTypedReferenceValueTypeConstraint() || member.IsIndexer) { continue; }
+                                        if (member.IsObsolete() || member.IsImplicitlyDeclared || member.Type.IsRefLikePointerTypedReferenceValueTypeConstraint() || member.IsIndexer) { continue; }
 
                                         if (member.Type.Kind is SymbolKind.Event) { continue; }
 
@@ -420,7 +420,7 @@ namespace Business.SourceGenerator.Analysis
                                     break;
                                 case IEventSymbol member:
                                     {
-                                        if (!symbol.DeclaringSyntaxReferences.Any()) { continue; }
+                                        if (!symbol.DeclaringSyntaxReferences.Any() || member.IsObsolete()) { continue; }
                                         if (member.Type.IsRefLikePointerTypedReferenceValueTypeConstraint()) { continue; }
 
                                         if (member.Type.IsValueTypeConstraint()) { continue; }
@@ -614,7 +614,7 @@ namespace Business.SourceGenerator.Analysis
                                     break;
                                 case IFieldSymbol member:
                                     {
-                                        if (member.IsImplicitlyDeclared || member.Type.IsRefLikePointerTypedReferenceValueTypeConstraint()) { continue; }
+                                        if (member.IsObsolete() || member.IsImplicitlyDeclared || member.Type.IsRefLikePointerTypedReferenceValueTypeConstraint()) { continue; }
 
                                         if (member.Type.Kind is SymbolKind.Event) { continue; }
 
@@ -625,7 +625,7 @@ namespace Business.SourceGenerator.Analysis
                                     break;
                                 case IPropertySymbol member:
                                     {
-                                        if (member.IsImplicitlyDeclared || member.Type.IsRefLikePointerTypedReferenceValueTypeConstraint() || member.IsIndexer) { continue; }
+                                        if (member.IsObsolete() || member.IsImplicitlyDeclared || member.Type.IsRefLikePointerTypedReferenceValueTypeConstraint() || member.IsIndexer) { continue; }
 
                                         if (member.Type.Kind is SymbolKind.Event) { continue; }
 
@@ -636,7 +636,7 @@ namespace Business.SourceGenerator.Analysis
                                     break;
                                 case IEventSymbol member:
                                     {
-                                        if (!symbol.DeclaringSyntaxReferences.Any()) { continue; }
+                                        if (!symbol.DeclaringSyntaxReferences.Any() || member.IsObsolete()) { continue; }
                                         if (member.Type.IsRefLikePointerTypedReferenceValueTypeConstraint()) { continue; }
 
                                         if (member.Type.IsValueTypeConstraint()) { continue; }
@@ -736,14 +736,15 @@ namespace Business.SourceGenerator.Analysis
                 case IFieldSymbol accessor:
                     {
                         //var fullName = symbol.GetFullNameStandardFormat();
+                        var symbolName = "event" == symbol.Name ? $"@{symbol.Name}" : symbol.Name;
                         var type = accessor.Type;
                         var typeFullName = type.GetFullNameRealStandardFormat(typeClean: typeClean);
 
                         string getValue = default;
                         string setValue = default;
 
-                        var name = $"{receiverType}.{symbol.Name}";
-                        var castName = $"(({receiverType})obj).{symbol.Name}";
+                        var name = $"{receiverType}.{symbolName}";
+                        var castName = $"(({receiverType})obj).{symbolName}";
                         getValue = symbol.IsStatic ? $"() => {name}" : $"obj => {castName}";
 
                         if (!accessor.IsReadOnly && !accessor.IsConst)
@@ -756,11 +757,11 @@ namespace Business.SourceGenerator.Analysis
                             }
                             else
                             {
-                                setValue = $"(ref {globalMeta}InstanceMeta obj, {globalObject} value) => {{ var obj2 = ({receiverType})obj.Instance; obj2.{symbol.Name} = {value}; obj = new {globalMeta}InstanceMeta(obj.TypeMeta, obj2); }}";
+                                setValue = $"(ref {globalMeta}InstanceMeta obj, {globalObject} value) => {{ var obj2 = ({receiverType})obj.Instance; obj2.{symbolName} = {value}; obj = new {globalMeta}InstanceMeta(obj.TypeMeta, obj2); }}";
                             }
                         }
 
-                        var attrs = accessor.GetAttributes().Where(c => !(c.ApplicationSyntaxReference is null));
+                        var attrs = accessor.GetAttributes().Where(c => !(c.ApplicationSyntaxReference is null) && c.AttributeClass.DeclaredAccessibility is Accessibility.Public);
                         var sb = new System.Text.StringBuilder($"new {globalMeta}AccessorField(");
                         //==================Meta==================//
                         sb.AppendFormat(accessor.IsExtern);
@@ -790,15 +791,20 @@ namespace Business.SourceGenerator.Analysis
                 case IPropertySymbol accessor:
                     {
                         //var fullName = symbol.GetFullNameStandardFormat();
+                        var symbolName = "event" == symbol.Name ? $"@{symbol.Name}" : symbol.Name;
                         var type = accessor.Type;
                         var typeFullName = type.GetFullNameRealStandardFormat(typeClean: typeClean);
 
                         string getValue = default;
                         string setValue = default;
 
-                        var name = $"{receiverType}.{symbol.Name}";
-                        var castName = $"(({receiverType})obj).{symbol.Name}";
-                        getValue = symbol.IsStatic ? $"() => {name}" : $"obj => {castName}";
+                        var name = $"{receiverType}.{symbolName}";
+                        var castName = $"(({receiverType})obj).{symbolName}";
+
+                        if (!accessor.IsWriteOnly && !(accessor.GetMethod is null) && accessor.GetMethod.DeclaredAccessibility is Accessibility.Public && !accessor.GetMethod.IsInitOnly)
+                        {
+                            getValue = symbol.IsStatic ? $"() => {name}" : $"obj => {castName}";
+                        }
 
                         if (!accessor.IsReadOnly && !(accessor.SetMethod is null) && accessor.SetMethod.DeclaredAccessibility is Accessibility.Public && !accessor.SetMethod.IsInitOnly)
                         {
@@ -810,11 +816,11 @@ namespace Business.SourceGenerator.Analysis
                             }
                             else
                             {
-                                setValue = $"(ref {globalMeta}InstanceMeta obj, {globalObject} value) => {{ var obj2 = ({receiverType})obj.Instance; obj2.{symbol.Name} = {value}; obj = new {globalMeta}InstanceMeta(obj.TypeMeta, obj2); }}";
+                                setValue = $"(ref {globalMeta}InstanceMeta obj, {globalObject} value) => {{ var obj2 = ({receiverType})obj.Instance; obj2.{symbolName} = {value}; obj = new {globalMeta}InstanceMeta(obj.TypeMeta, obj2); }}";
                             }
                         }
 
-                        var attrs = accessor.GetAttributes().Where(c => !(c.ApplicationSyntaxReference is null));
+                        var attrs = accessor.GetAttributes().Where(c => !(c.ApplicationSyntaxReference is null) && c.AttributeClass.DeclaredAccessibility is Accessibility.Public);
                         var sb = new System.Text.StringBuilder($"new {globalMeta}AccessorProperty(");
                         //==================Meta==================//
                         sb.AppendFormat(accessor.IsExtern);
@@ -840,7 +846,7 @@ namespace Business.SourceGenerator.Analysis
                     }
                 case IParameterSymbol accessor:
                     {
-                        var attrs = accessor.GetAttributes().Where(c => !(c.ApplicationSyntaxReference is null));
+                        var attrs = accessor.GetAttributes().Where(c => !(c.ApplicationSyntaxReference is null) && c.AttributeClass.DeclaredAccessibility is Accessibility.Public);
 
                         var sb = new System.Text.StringBuilder($"new {globalMeta}AccessorParameter(");
                         //==================Meta==================//
@@ -861,6 +867,10 @@ namespace Business.SourceGenerator.Analysis
                     }
                 case IMethodSymbol accessor:
                     {
+                        if (accessor.IsObsolete())
+                        {
+                            return default;
+                        }
                         if (accessor.Parameters.Any(c => c.Type.IsRefLikePointerTypedReferenceValueTypeConstraint()))
                         {
                             return default;
@@ -882,7 +892,7 @@ namespace Business.SourceGenerator.Analysis
                             return default;
                         }
 
-                        var attrs = accessor.GetAttributes().Where(c => !(c.ApplicationSyntaxReference is null));
+                        var attrs = accessor.GetAttributes().Where(c => !(c.ApplicationSyntaxReference is null) && c.AttributeClass.DeclaredAccessibility is Accessibility.Public);
                         var typeParameters = accessor.TypeParameters.ToDictionary(c => c.GetFullNameStandardFormat(), c => c);
 
                         #region Members
@@ -921,7 +931,7 @@ namespace Business.SourceGenerator.Analysis
                     }
                 case IEventSymbol accessor:
                     {
-                        var attrs = accessor.GetAttributes().Where(c => !(c.ApplicationSyntaxReference is null));
+                        var attrs = accessor.GetAttributes().Where(c => !(c.ApplicationSyntaxReference is null) && c.AttributeClass.DeclaredAccessibility is Accessibility.Public);
 
                         var sb = new System.Text.StringBuilder($"new {globalMeta}AccessorEvent(");
                         //==================Meta==================//

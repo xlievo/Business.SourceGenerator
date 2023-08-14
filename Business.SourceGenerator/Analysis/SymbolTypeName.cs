@@ -1186,6 +1186,8 @@ namespace Business.SourceGenerator.Analysis
             return constraintTypes.FirstOrDefault();
         }
 
+        public static bool IsObsolete(this ISymbol symbol) => symbol.GetAttributes().Any(c => "System.ObsoleteAttribute" == c.AttributeClass.GetFullName() && 1 < c.ConstructorArguments.Length && c.ConstructorArguments[1].Value is true);
+
         public static bool IsSpan(this ITypeSymbol typeSymbol) => TypeChecked(typeSymbol, type =>
         {
             var typeFullName = type.GetFullNameStandardFormat();
@@ -1193,6 +1195,8 @@ namespace Business.SourceGenerator.Analysis
         });
 
         public static bool IsRefLikePointerTypedReferenceValueTypeConstraint(this ITypeSymbol typeSymbol) => TypeChecked(typeSymbol, type => type.IsRefLikeType || type.TypeKind is TypeKind.Pointer || type.TypeKind is TypeKind.FunctionPointer || type.SpecialType is SpecialType.System_TypedReference || (type is INamedTypeSymbol named && named.TypeParameters.Any(c => c.HasValueTypeConstraint && named.TypeArguments[c.Ordinal].IsTypeParameter())));
+
+        public static bool IsRefLikePointerTypedReferenceTypeParameter(this ITypeSymbol typeSymbol) => TypeChecked(typeSymbol, type => type.IsRefLikeType || type.TypeKind is TypeKind.Pointer || type.TypeKind is TypeKind.FunctionPointer || type.SpecialType is SpecialType.System_TypedReference || type.TypeKind is TypeKind.TypeParameter);
 
         public static bool IsRefLikeType(this ITypeSymbol typeSymbol) => TypeChecked(typeSymbol, type => type.IsRefLikeType);
 
