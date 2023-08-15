@@ -518,6 +518,7 @@ namespace Business.SourceGenerator.Analysis
             var sb = new System.Text.StringBuilder(null);
 
             var key = $"{typeSymbol.GetFullNameStandardFormat(GetFullNameOpt.Create(noNullableQuestionMark: true, charSpecial: CharSpecial.Create('_')))}__{typeSymbol.Kind.GetName()}_{typeSymbol.TypeKind.GetName()}_{typeSymbol.SpecialType.GetName()}";
+
             string key2 = default;
 
             int spaceCount = 0;
@@ -532,7 +533,7 @@ namespace Business.SourceGenerator.Analysis
 
             spaceCount++;
 
-            if (typeSymbol.SpecialType is SpecialType.None && (typeSymbol.TypeKind is TypeKind.Class || typeSymbol.TypeKind is TypeKind.Struct))
+            if (typeSymbol.TypeKind is TypeKind.Class || typeSymbol.TypeKind is TypeKind.Struct || typeSymbol.TypeKind is TypeKind.Enum)
             {
                 key2 = typeSymbol.ToMeta3(opt, typeClean, default, assemblyName);// $"{key}_Accessor";
 
@@ -546,6 +547,11 @@ namespace Business.SourceGenerator.Analysis
 
                 //sb.AppendLine(format);
             }
+
+            //if (string.IsNullOrEmpty(key2))
+            //{
+
+            //}
 
             sb.AppendFormat($"{space.Repeat(spaceCount)}readonly static {globalSystem}Lazy<{globalMeta}TypeMeta> {{0}} = new {globalSystem}Lazy<{globalMeta}TypeMeta>(() => new {globalMeta}TypeMeta({{1}}, {{2}}, {{3}}, {{4}}, {{5}}, {{6}}));",
                 key,

@@ -25,7 +25,6 @@ using System;
 
 
 
-
 namespace MyCode
 {
     public interface INumberBase<TSelf>

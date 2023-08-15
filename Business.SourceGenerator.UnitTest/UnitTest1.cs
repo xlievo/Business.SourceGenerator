@@ -904,6 +904,9 @@ namespace UnitAssembly
                         RefArg.Out<(int? c1, string? c2)>()
                         );
 
+            var dtt = typeof(DateTime).AsGeneratorType().AccessorGet<DateTime>(""Now"");
+            return dtt;
+
             MyCode.TypeFull<int>.C2 = 555;
             //typeof(MyCode.TypeFull<int>).AsGeneratorType().AccessorSet(""C2"", 666);
             return MyCode.TypeFull<int>.C2;

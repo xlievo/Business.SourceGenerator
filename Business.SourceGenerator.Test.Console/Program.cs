@@ -40,7 +40,7 @@ namespace Business.SourceGenerator.Test.Console
         {
             BusinessSourceGenerator.Generator.SetGeneratorCode();
 
-            var dtt = typeof(DateTimeOffset).AsGeneratorType().AccessorGet<DateTimeOffset>("Now");
+            var dtt = typeof(DateTime).AsGeneratorType().AccessorGet<DateTime>("Now");
             System.Console.WriteLine(dtt.Ticks);
 
             var d2 = dtt.AsGeneratorType().AccessorGet<long>("Ticks");
