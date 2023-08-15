@@ -179,6 +179,7 @@ namespace Business.SourceGenerator.Analysis
 
         public static void Init(GeneratorExecutionContext context)
         {
+            //OutputItemType="Analyzer" ReferenceOutputAssembly="false"
             //System.Diagnostics.Debugger.Launch();
             if (!(context.SyntaxReceiver is SyntaxReceiver))
             {

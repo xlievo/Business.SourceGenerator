@@ -708,12 +708,14 @@ namespace Business.SourceGenerator.Analysis
                 spaceCount++;
             }
 
+            sb.SetSummary(space.Repeat(spaceCount), Meta.Global.GeneratorCodeName);
             sb.AppendFormat("{0}public partial class {2} : {3}IGeneratorCode {1}{0}{{{1}", space.Repeat(spaceCount), format, Meta.Global.GeneratorCodeName, globalMeta);
 
             spaceCount++;
 
             sb.AppendFormat("{0}readonly static {1}Lazy<{2}{3}> generator = new {1}Lazy<{2}{3}>(() => new {2}{3}());", space.Repeat(spaceCount), globalSystem, globalAssemblyName, Meta.Global.GeneratorCodeName);
             sb.AppendLine(format);
+            sb.SetSummary(space.Repeat(spaceCount), "Generator");
             sb.AppendFormat("{0}public static {1}IGeneratorCode Generator {{ get {{ return generator.Value; }} }}", space.Repeat(spaceCount), globalMeta);
             sb.AppendLine(format);
 
@@ -723,6 +725,7 @@ namespace Business.SourceGenerator.Analysis
 
             sb.AppendFormat("{0}static {1}IReadOnlyDictionary<{2}, {3}TypeMeta> Singleton {{ get {{ return generatorType.Value; }} }}", space.Repeat(spaceCount), globalGeneric, globalType, globalMeta);
             sb.AppendLine(format);
+            sb.SetSummary(space.Repeat(spaceCount), "GeneratorType");
             sb.AppendFormat("{0}public {1}IReadOnlyDictionary<{2}, {3}TypeMeta> GeneratorType {{ get {{ return Singleton; }} }}", space.Repeat(spaceCount), globalGeneric, globalType, globalMeta);
 
             spaceCount--;

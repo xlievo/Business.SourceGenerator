@@ -471,41 +471,44 @@ namespace Business.SourceGenerator.Analysis
                             spaceCount++;
                         }
 
+                        sb.SetSummary(space.Repeat(spaceCount), key);
                         sb.AppendLine($"{space.Repeat(spaceCount)}public readonly struct {key} : {globalMeta}IAccessorNamedType");
                         sb.AppendLine($"{space.Repeat(spaceCount)}{{");
                         spaceCount++;
                         sb.AppendLine($"{space.Repeat(spaceCount)}readonly static {globalLazy}<{accessorTypes2}{key}> instance = new {globalLazy}<{accessorTypes2}{key}>(() => new {accessorTypes2}{key}());");
+                        sb.SetSummary(space.Repeat(spaceCount), "Singleton");
                         sb.AppendLine($"public static {accessorTypes2}{key} Singleton => instance.Value;");
                         //sb.AppendLine($"{space.Repeat(spaceCount)}public {key}() {{ }}");
+                        sb.SetSummary(space.Repeat(spaceCount), "ToString()");
                         sb.AppendLine($"{space.Repeat(spaceCount)}public override {globalString} ToString() => $\"{{Kind}}\";");
                         //==================Meta==================//
-                        sb.AppendLine($"{space.Repeat(spaceCount)}public {globalBoolean} IsExtern => {symbol.IsExtern.ToName()};");
-                        sb.AppendLine($"{space.Repeat(spaceCount)}public {globalBoolean} IsSealed => {symbol.IsSealed.ToName()};");
-                        sb.AppendLine($"{space.Repeat(spaceCount)}public {globalBoolean} IsAbstract => {symbol.IsAbstract.ToName()};");
-                        sb.AppendLine($"{space.Repeat(spaceCount)}public {globalBoolean} IsOverride => {symbol.IsOverride.ToName()};");
-                        sb.AppendLine($"{space.Repeat(spaceCount)}public {globalBoolean} IsVirtual => {symbol.IsVirtual.ToName()};");
-                        sb.AppendLine($"{space.Repeat(spaceCount)}public {globalBoolean} IsStatic => {symbol.IsStatic.ToName()};");
-                        sb.AppendLine($"{space.Repeat(spaceCount)}public {globalMeta}Kind Kind => {globalMeta}Kind.{symbol.Kind};");
+                        sb.AddProperty(space.Repeat(spaceCount), globalBoolean, "IsExtern", symbol.IsExtern.ToName());
+                        sb.AddProperty(space.Repeat(spaceCount), globalBoolean, "IsSealed", symbol.IsSealed.ToName());
+                        sb.AddProperty(space.Repeat(spaceCount), globalBoolean, "IsAbstract", symbol.IsAbstract.ToName());
+                        sb.AddProperty(space.Repeat(spaceCount), globalBoolean, "IsOverride", symbol.IsOverride.ToName());
+                        sb.AddProperty(space.Repeat(spaceCount), globalBoolean, "IsVirtual", symbol.IsVirtual.ToName());
+                        sb.AddProperty(space.Repeat(spaceCount), globalBoolean, "IsStatic", symbol.IsStatic.ToName());
+                        sb.AddProperty(space.Repeat(spaceCount), $"{globalMeta}Kind", "Kind", $"{globalMeta}Kind.{symbol.Kind}");
                         //==================IAccessorType==================//
-                        sb.AppendLine($"{space.Repeat(spaceCount)}public {globalGeneric}IDictionary<{globalString}, {globalMeta}IAccessor> Members => {(members.Any() ? $"new {globalGeneric}Dictionary<{globalString}, {globalMeta}IAccessor> {{ {string.Join(", ", members.Select(c => $"{{ \"{c.Key}\", {c.Value} }}"))} }}" : "default")};");
-                        sb.AppendLine($"{space.Repeat(spaceCount)}public {globalBoolean} IsReadOnly => {accessor.IsReadOnly.ToName()};");
-                        sb.AppendLine($"{space.Repeat(spaceCount)}public {globalBoolean} IsUnmanagedType => {accessor.IsUnmanagedType.ToName()};");
-                        sb.AppendLine($"{space.Repeat(spaceCount)}public {globalMeta}SpecialType SpecialType => {globalMeta}SpecialType.{accessor.SpecialType};");
-                        sb.AppendLine($"{space.Repeat(spaceCount)}public {globalBoolean} IsTupleType => {accessor.IsTupleType.ToName()};");
-                        sb.AppendLine($"{space.Repeat(spaceCount)}public {globalBoolean} IsAnonymousType => {accessor.IsAnonymousType.ToName()};");
-                        sb.AppendLine($"{space.Repeat(spaceCount)}public {globalMeta}TypeKind TypeKind => {globalMeta}TypeKind.{accessor.TypeKind};");
-                        sb.AppendLine($"{space.Repeat(spaceCount)}public {globalBoolean} IsRecord => {accessor.IsRecord.ToName()};");
-                        sb.AppendLine($"{space.Repeat(spaceCount)}public {globalMeta}AsyncType AsyncType => {globalMeta}AsyncType.{GetAsyncType(accessor)};");
-                        sb.AppendLine($"{space.Repeat(spaceCount)}public {globalType} RuntimeType => {(!(runtimeType is null) ? $"typeof({runtimeType})" : "default")};");
-                        sb.AppendLine($"{space.Repeat(spaceCount)}public {globalMeta}DefaultValue DefaultValue => {GetDefaultValue(accessor, typeClean, globalSystem)};");
+                        sb.AddProperty(space.Repeat(spaceCount), $"{globalGeneric}IDictionary<{globalString}, {globalMeta}IAccessor>", "Members", members.Any() ? $"new {globalGeneric}Dictionary<{globalString}, {globalMeta}IAccessor> {{ {string.Join(", ", members.Select(c => $"{{ \"{c.Key}\", {c.Value} }}"))} }}" : "default");
+                        sb.AddProperty(space.Repeat(spaceCount), globalBoolean, "IsReadOnly", accessor.IsReadOnly.ToName());
+                        sb.AddProperty(space.Repeat(spaceCount), globalBoolean, "IsUnmanagedType", accessor.IsUnmanagedType.ToName());
+                        sb.AddProperty(space.Repeat(spaceCount), $"{globalMeta}SpecialType", "SpecialType", $"{globalMeta}SpecialType.{accessor.SpecialType}");
+                        sb.AddProperty(space.Repeat(spaceCount), globalBoolean, "IsTupleType", accessor.IsTupleType.ToName());
+                        sb.AddProperty(space.Repeat(spaceCount), globalBoolean, "IsAnonymousType", accessor.IsAnonymousType.ToName());
+                        sb.AddProperty(space.Repeat(spaceCount), $"{globalMeta}TypeKind", "TypeKind", $"{globalMeta}TypeKind.{accessor.TypeKind}");
+                        sb.AddProperty(space.Repeat(spaceCount), globalBoolean, "IsRecord", accessor.IsRecord.ToName());
+                        sb.AddProperty(space.Repeat(spaceCount), $"{globalMeta}AsyncType", "AsyncType", $"{globalMeta}AsyncType.{GetAsyncType(accessor)}");
+                        sb.AddProperty(space.Repeat(spaceCount), globalType, "RuntimeType", !(runtimeType is null) ? $"typeof({runtimeType})" : "default");
+                        sb.AddProperty(space.Repeat(spaceCount), $"{globalMeta}DefaultValue", "DefaultValue", GetDefaultValue(accessor, typeClean, globalSystem));
                         //==================IAccessorNamedType==================//
-                        sb.AppendLine($"{space.Repeat(spaceCount)}public {globalMeta}AccessorAttribute[] Attributes => {(attrs.Any() ? $"{GetAttributes(attrs, globalMeta, typeClean)}" : "default")};");
-                        sb.AppendLine($"{space.Repeat(spaceCount)}public {globalGeneric}IEnumerable<{globalMeta}IAccessorField> TupleElements => {((isTupleType && accessor.TupleElements.Any()) ? $"new {globalMeta}IAccessorField[] {{ {string.Join(", ", accessor.TupleElements.Select(c => c.ToMeta3(opt, typeClean, fullName2, assemblyName)))} }}" : "default")};");
-                        sb.AppendLine($"{space.Repeat(spaceCount)}public {globalBoolean} MightContainExtensionMethods => {accessor.MightContainExtensionMethods.ToName()};");
-                        sb.AppendLine($"{space.Repeat(spaceCount)}public {globalBoolean} IsSerializable => {accessor.IsSerializable.ToName()};");
-                        sb.AppendLine($"{space.Repeat(spaceCount)}public {globalBoolean} IsPartial => {accessor.IsPartial().ToName()};");
-                        sb.AppendLine($"{space.Repeat(spaceCount)}public {globalBoolean} HasTypeParameter => {accessor.IsTypeParameter().ToName()};");
-                        sb.AppendLine($"{space.Repeat(spaceCount)}public {globalMeta}IAccessorType[] TypeArguments => {(accessor.TypeArguments.Any() ? $"new {globalMeta}IAccessorType[] {{ {string.Join(", ", accessor.TypeArguments.Select(c => c.ToMeta3(opt, typeClean, fullName2, assemblyName)))} }}" : "default")};");
+                        sb.AddProperty(space.Repeat(spaceCount), $"{globalMeta}AccessorAttribute[]", "Attributes", attrs.Any() ? $"{GetAttributes(attrs, globalMeta, typeClean)}" : "default");
+                        sb.AddProperty(space.Repeat(spaceCount), $"{globalGeneric}IEnumerable<{globalMeta}IAccessorField>", "TupleElements", (isTupleType && accessor.TupleElements.Any()) ? $"new {globalMeta}IAccessorField[] {{ {string.Join(", ", accessor.TupleElements.Select(c => c.ToMeta3(opt, typeClean, fullName2, assemblyName)))} }}" : "default");
+                        sb.AddProperty(space.Repeat(spaceCount), globalBoolean, "MightContainExtensionMethods", accessor.MightContainExtensionMethods.ToName());
+                        sb.AddProperty(space.Repeat(spaceCount), globalBoolean, "IsSerializable", accessor.IsSerializable.ToName());
+                        sb.AddProperty(space.Repeat(spaceCount), globalBoolean, "IsPartial", accessor.IsPartial().ToName());
+                        sb.AddProperty(space.Repeat(spaceCount), globalBoolean, "HasTypeParameter", accessor.IsTypeParameter().ToName());
+                        sb.AddProperty(space.Repeat(spaceCount), $"{globalMeta}IAccessorType[]", "TypeArguments", accessor.TypeArguments.Any() ? $"new {globalMeta}IAccessorType[] {{ {string.Join(", ", accessor.TypeArguments.Select(c => c.ToMeta3(opt, typeClean, fullName2, assemblyName)))} }}" : "default");
 
                         spaceCount--;
                         sb.Append($"{space.Repeat(spaceCount)}}}");
@@ -687,33 +690,36 @@ namespace Business.SourceGenerator.Analysis
                             spaceCount++;
                         }
 
+                        sb.SetSummary(space.Repeat(spaceCount), key);
                         sb.AppendLine($"{space.Repeat(spaceCount)}public readonly struct {key} : {globalMeta}IAccessorType");
                         sb.AppendLine($"{space.Repeat(spaceCount)}{{");
                         spaceCount++;
                         sb.AppendLine($"{space.Repeat(spaceCount)}readonly static {globalLazy}<{accessorTypes2}{key}> instance = new {globalLazy}<{accessorTypes2}{key}>(() => new {accessorTypes2}{key}());");
+                        sb.SetSummary(space.Repeat(spaceCount), "Singleton");
                         sb.AppendLine($"public static {accessorTypes2}{key} Singleton => instance.Value;");
                         //sb.AppendLine($"{space.Repeat(spaceCount)}public {key}() {{ }}");
+                        sb.SetSummary(space.Repeat(spaceCount), "ToString()");
                         sb.AppendLine($"{space.Repeat(spaceCount)}public override {globalString} ToString() => $\"{{Kind}}\";");
                         //==================Meta==================//
-                        sb.AppendLine($"{space.Repeat(spaceCount)}public {globalBoolean} IsExtern => {accessor.IsExtern.ToName()};");
-                        sb.AppendLine($"{space.Repeat(spaceCount)}public {globalBoolean} IsSealed => {symbol.IsSealed.ToName()};");
-                        sb.AppendLine($"{space.Repeat(spaceCount)}public {globalBoolean} IsAbstract => {symbol.IsAbstract.ToName()};");
-                        sb.AppendLine($"{space.Repeat(spaceCount)}public {globalBoolean} IsOverride => {symbol.IsOverride.ToName()};");
-                        sb.AppendLine($"{space.Repeat(spaceCount)}public {globalBoolean} IsVirtual => {symbol.IsVirtual.ToName()};");
-                        sb.AppendLine($"{space.Repeat(spaceCount)}public {globalBoolean} IsStatic => {symbol.IsStatic.ToName()};");
-                        sb.AppendLine($"{space.Repeat(spaceCount)}public {globalMeta}Kind Kind => {globalMeta}Kind.{symbol.Kind};");
+                        sb.AddProperty(space.Repeat(spaceCount), globalBoolean, "IsExtern", symbol.IsExtern.ToName());
+                        sb.AddProperty(space.Repeat(spaceCount), globalBoolean, "IsSealed", symbol.IsSealed.ToName());
+                        sb.AddProperty(space.Repeat(spaceCount), globalBoolean, "IsAbstract", symbol.IsAbstract.ToName());
+                        sb.AddProperty(space.Repeat(spaceCount), globalBoolean, "IsOverride", symbol.IsOverride.ToName());
+                        sb.AddProperty(space.Repeat(spaceCount), globalBoolean, "IsVirtual", symbol.IsVirtual.ToName());
+                        sb.AddProperty(space.Repeat(spaceCount), globalBoolean, "IsStatic", symbol.IsStatic.ToName());
+                        sb.AddProperty(space.Repeat(spaceCount), $"{globalMeta}Kind", "Kind", $"{globalMeta}Kind.{symbol.Kind}");
                         //==================IAccessorType==================//
-                        sb.AppendLine($"{space.Repeat(spaceCount)}public {globalGeneric}IDictionary<{globalString}, {globalMeta}IAccessor> Members => {(members.Any() ? $"new {globalGeneric}Dictionary<{globalString}, {globalMeta}IAccessor> {{ {string.Join(", ", members.Select(c => $"{{ \"{c.Key}\", {c.Value} }}"))} }}" : "default")};");
-                        sb.AppendLine($"{space.Repeat(spaceCount)}public {globalBoolean} IsReadOnly => {accessor.IsReadOnly.ToName()};");
-                        sb.AppendLine($"{space.Repeat(spaceCount)}public {globalBoolean} IsUnmanagedType => {accessor.IsUnmanagedType.ToName()};");
-                        sb.AppendLine($"{space.Repeat(spaceCount)}public {globalMeta}SpecialType SpecialType => {globalMeta}SpecialType.{accessor.SpecialType};");
-                        sb.AppendLine($"{space.Repeat(spaceCount)}public {globalBoolean} IsTupleType => {accessor.IsTupleType.ToName()};");
-                        sb.AppendLine($"{space.Repeat(spaceCount)}public {globalBoolean} IsAnonymousType => {accessor.IsAnonymousType.ToName()};");
-                        sb.AppendLine($"{space.Repeat(spaceCount)}public {globalMeta}TypeKind TypeKind => {globalMeta}TypeKind.{accessor.TypeKind};");
-                        sb.AppendLine($"{space.Repeat(spaceCount)}public {globalBoolean} IsRecord => {accessor.IsRecord.ToName()};");
-                        sb.AppendLine($"{space.Repeat(spaceCount)}public {globalMeta}AsyncType AsyncType => {globalMeta}AsyncType.{GetAsyncType(accessor)};");
-                        sb.AppendLine($"{space.Repeat(spaceCount)}public {globalType} RuntimeType => {(!(runtimeType is null) ? $"typeof({runtimeType})" : "default")};");
-                        sb.AppendLine($"{space.Repeat(spaceCount)}public {globalMeta}DefaultValue DefaultValue => {GetDefaultValue(accessor, typeClean, globalSystem)};");
+                        sb.AddProperty(space.Repeat(spaceCount), $"{globalGeneric}IDictionary<{globalString}, {globalMeta}IAccessor>", "Members", members.Any() ? $"new {globalGeneric}Dictionary<{globalString}, {globalMeta}IAccessor> {{ {string.Join(", ", members.Select(c => $"{{ \"{c.Key}\", {c.Value} }}"))} }}" : "default");
+                        sb.AddProperty(space.Repeat(spaceCount), globalBoolean, "IsReadOnly", accessor.IsReadOnly.ToName());
+                        sb.AddProperty(space.Repeat(spaceCount), globalBoolean, "IsUnmanagedType", accessor.IsUnmanagedType.ToName());
+                        sb.AddProperty(space.Repeat(spaceCount), $"{globalMeta}SpecialType", "SpecialType", $"{globalMeta}SpecialType.{accessor.SpecialType}");
+                        sb.AddProperty(space.Repeat(spaceCount), globalBoolean, "IsTupleType", accessor.IsTupleType.ToName());
+                        sb.AddProperty(space.Repeat(spaceCount), globalBoolean, "IsAnonymousType", accessor.IsAnonymousType.ToName());
+                        sb.AddProperty(space.Repeat(spaceCount), $"{globalMeta}TypeKind", "TypeKind", $"{globalMeta}TypeKind.{accessor.TypeKind}");
+                        sb.AddProperty(space.Repeat(spaceCount), globalBoolean, "IsRecord", accessor.IsRecord.ToName());
+                        sb.AddProperty(space.Repeat(spaceCount), $"{globalMeta}AsyncType", "AsyncType", $"{globalMeta}AsyncType.{GetAsyncType(accessor)}");
+                        sb.AddProperty(space.Repeat(spaceCount), globalType, "RuntimeType", !(runtimeType is null) ? $"typeof({runtimeType})" : "default");
+                        sb.AddProperty(space.Repeat(spaceCount), $"{globalMeta}DefaultValue", "DefaultValue", GetDefaultValue(accessor, typeClean, globalSystem));
 
                         spaceCount--;
                         sb.Append($"{space.Repeat(spaceCount)}}}");
@@ -976,5 +982,18 @@ namespace Business.SourceGenerator.Analysis
             $"{(typedConstant.IsNull ? "true" : "default")}, " +
             $"{globalMeta}TypedConstantKind.{typedConstant.Kind.GetName()}, " +
             $"{(typedConstant.Type is IArrayTypeSymbol array ? typedConstant.Values.Any() ? $"new {array.ElementType.GetFullNameStandardFormat(typeClean: typeClean)}[] {typedConstant.ToCSharpString()}" : "default" : typedConstant.ToCSharpString())})";
+
+        public static void SetSummary(this System.Text.StringBuilder sb, string space, string v)
+        {
+            sb.AppendLine($"{space}/// <summary>");
+            sb.AppendLine($"{space}/// {v}");
+            sb.AppendLine($"{space}/// </summary>");
+        }
+
+        static void AddProperty(this System.Text.StringBuilder sb, string space, string type, string name, string value)
+        {
+            SetSummary(sb, space, name);
+            sb.AppendLine($"{space}public {type} {name} => {value};");
+        }
     }
 }

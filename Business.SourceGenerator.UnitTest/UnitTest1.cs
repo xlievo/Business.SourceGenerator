@@ -1029,7 +1029,7 @@ namespace UnitAssembly
             => CSharpCompilation.Create(assemblyName,
                 new[] { CSharpSyntaxTree.ParseText(source) },
                 new[] { MetadataReference.CreateFromFile(typeof(Binder).GetTypeInfo().Assembly.Location) },
-                new CSharpCompilationOptions(outputKind));
+                new CSharpCompilationOptions(outputKind, allowUnsafe: true));
 
         static int MainInvoke(Compilation compilation)
         {

@@ -1186,7 +1186,7 @@ namespace Business.SourceGenerator.Analysis
             return constraintTypes.FirstOrDefault();
         }
 
-        public static bool IsObsolete(this ISymbol symbol) => symbol.GetAttributes().Any(c => "System.ObsoleteAttribute" == c.AttributeClass.GetFullName() && 1 < c.ConstructorArguments.Length && c.ConstructorArguments[1].Value is true);
+        public static bool IsObsolete(this ISymbol symbol) => symbol.GetAttributes().Any(c => "System.ObsoleteAttribute" == c.AttributeClass.GetFullName());// && 1 < c.ConstructorArguments.Length && c.ConstructorArguments[1].Value is true
 
         public static bool IsSpan(this ITypeSymbol typeSymbol) => TypeChecked(typeSymbol, type =>
         {

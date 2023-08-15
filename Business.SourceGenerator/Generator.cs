@@ -98,29 +98,34 @@ namespace Business.SourceGenerator
 
                 var generator = Expression.GeneratorCode(AnalysisMeta.AnalysisInfo, context.Compilation.AssemblyName, opt, usings);
 
-                var generatorType = $"{generator.types}";
+                var app = context.Compilation.Options.OutputKind is OutputKind.ConsoleApplication || context.Compilation.Options.OutputKind is OutputKind.WindowsApplication || context.Compilation.Options.OutputKind is OutputKind.WindowsRuntimeApplication;
 
-                #region AddSource
-
-                context.AddSource(Meta.Global.GeneratorCodeName, Microsoft.CodeAnalysis.Text.SourceText.From($"{usings2}{generatorType}", System.Text.Encoding.UTF8));
-
-                foreach (var item in generator.code)
+                if (app)
                 {
-                    context.AddSource($"{Guid.NewGuid():N}_TypeMeta", Microsoft.CodeAnalysis.Text.SourceText.From($"{usings2}{item}", System.Text.Encoding.UTF8));
+                    var generatorType = $"{generator.types}";
+
+                    #region AddSource
+
+                    context.AddSource(Meta.Global.GeneratorCodeName, Microsoft.CodeAnalysis.Text.SourceText.From($"{usings2}{generatorType}", System.Text.Encoding.UTF8));
+
+                    foreach (var item in generator.code)
+                    {
+                        context.AddSource($"{Guid.NewGuid():N}_TypeMeta", Microsoft.CodeAnalysis.Text.SourceText.From($"{usings2}{item}", System.Text.Encoding.UTF8));
+                    }
+
+                    #endregion
+
+                    //var accessors = Expression.GeneratorAccessor(AnalysisMeta.AnalysisInfo, context.Compilation.AssemblyName, opt, usings);
+
+                    #region AddSource AccessorType
+
+                    foreach (var item in AnalysisMeta.AnalysisInfo.AccessorType)
+                    {
+                        context.AddSource($"{Guid.NewGuid():N}_AccessorType", Microsoft.CodeAnalysis.Text.SourceText.From(item.Value, System.Text.Encoding.UTF8));
+                    }
+
+                    #endregion
                 }
-
-                #endregion
-
-                //var accessors = Expression.GeneratorAccessor(AnalysisMeta.AnalysisInfo, context.Compilation.AssemblyName, opt, usings);
-
-                #region AddSource AccessorType
-
-                foreach (var item in AnalysisMeta.AnalysisInfo.AccessorType)
-                {
-                    context.AddSource($"{Guid.NewGuid():N}_AccessorType", Microsoft.CodeAnalysis.Text.SourceText.From(item.Value, System.Text.Encoding.UTF8));
-                }
-
-                #endregion
             }
             catch (Exception ex)
             {
