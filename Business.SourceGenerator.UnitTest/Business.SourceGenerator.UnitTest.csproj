@@ -24,6 +24,7 @@
   </PropertyGroup>
 
   <ItemGroup>
+    <PackageReference Include="Business.SourceGenerator" Version="0.0.7.27" />
     <PackageReference Include="Business.SourceGenerator.Meta" Version="0.0.0.69" />
     <PackageReference Include="Microsoft.CodeAnalysis.Analyzers" Version="3.3.4">
       <PrivateAssets>all</PrivateAssets>
