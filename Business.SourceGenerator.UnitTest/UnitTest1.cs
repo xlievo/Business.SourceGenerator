@@ -882,6 +882,8 @@ namespace UnitAssembly
         {{
             {assemblyName}.BusinessSourceGenerator.Generator.SetGeneratorCode();
 
+            System.Console.WriteLine(""xxx"");
+
             // public System.Threading.Tasks.ValueTask<T2> StructMethod<T2>(string? a, ref T2 b, out (int? c1, string? c2) c)
              var args = new object[] {{ ""yyy"", RefArg.Out<int>(), RefArg.Ref(555), RefArg.Out<int>(), ""www"" }};
 

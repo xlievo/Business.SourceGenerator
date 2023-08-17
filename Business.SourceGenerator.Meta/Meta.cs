@@ -1370,6 +1370,11 @@ namespace Business.SourceGenerator.Meta
         /// </summary>
         public AsyncType AsyncType { get; }
 
+        ///// <summary>
+        ///// Gets the symbol name. Returns the null if unnamed.
+        ///// </summary>
+        //public string Name { get; }
+
         /// <summary>
         /// Gets the runtime type.
         /// </summary>
@@ -2501,6 +2506,7 @@ namespace Business.SourceGenerator.Meta
             TypeKind = typeKind;
             IsRecord = isRecord;
             AsyncType = asyncType;
+            //Name = name;
             RuntimeType = runtimeType;
             DefaultValue = defaultValue;
             Ordinal = ordinal;
@@ -2608,6 +2614,11 @@ namespace Business.SourceGenerator.Meta
         /// Returns asynchronous type if this method is an async method.
         /// </summary>
         public readonly AsyncType AsyncType { get; }
+
+        ///// <summary>
+        ///// Gets the symbol name. Returns the null if unnamed.
+        ///// </summary>
+        //public readonly string Name { get; }
 
         /// <summary>
         /// Gets the runtime type.

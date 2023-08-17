@@ -121,6 +121,15 @@ namespace Business.SourceGenerator
 
                     foreach (var item in AnalysisMeta.AnalysisInfo.AccessorType)
                     {
+                        //var kkk = item.Key.Replace("<", "_").Replace(">", "_").Replace("?", "_");
+                        //if (200 < kkk.Length)
+                        //{
+                        //    kkk = kkk.Substring(0, 200);
+                        //}
+                        //if (kkk.Contains("{System.String account}"))
+                        //{
+
+                        //}
                         context.AddSource($"{Guid.NewGuid():N}_AccessorType", Microsoft.CodeAnalysis.Text.SourceText.From(item.Value, System.Text.Encoding.UTF8));
                     }
 

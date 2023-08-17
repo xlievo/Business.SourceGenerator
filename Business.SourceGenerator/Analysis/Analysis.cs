@@ -318,60 +318,60 @@ namespace Business.SourceGenerator.Analysis
             });
         }
         */
-        static bool IsTypeParameter(ITypeSymbol typeSymbol)
-        {
-            if (TypeKind.TypeParameter == typeSymbol.TypeKind)
-            {
-                return true;
-            }
+        //static bool IsTypeParameter(ITypeSymbol typeSymbol)
+        //{
+        //    if (TypeKind.TypeParameter == typeSymbol.TypeKind)
+        //    {
+        //        return true;
+        //    }
 
-            if (typeSymbol is IArrayTypeSymbol arrayType && TypeKind.TypeParameter == arrayType.ElementType.TypeKind)
-            {
-                return true;
-            }
+        //    if (typeSymbol is IArrayTypeSymbol arrayType && TypeKind.TypeParameter == arrayType.ElementType.TypeKind)
+        //    {
+        //        return true;
+        //    }
 
-            if ((Accessibility.Public != typeSymbol.DeclaredAccessibility && SymbolKind.DynamicType != typeSymbol.Kind) || typeSymbol.IsStatic || typeSymbol.IsRefLikePointerTypedReferenceTypeParameter())
-            {
-                //if (SymbolKind.ArrayType != typeSymbol.Kind)
-                //{
-                //    return true;
-                //}
-                return true;
-            }
+        //    if ((Accessibility.Public != typeSymbol.DeclaredAccessibility && SymbolKind.DynamicType != typeSymbol.Kind) || typeSymbol.IsStatic || typeSymbol.IsRefLikePointerTypedReferenceTypeParameter())
+        //    {
+        //        //if (SymbolKind.ArrayType != typeSymbol.Kind)
+        //        //{
+        //        //    return true;
+        //        //}
+        //        return true;
+        //    }
 
-            if (SpecialType.System_Void == typeSymbol.SpecialType)
-            {
-                return true;
-            }
+        //    if (SpecialType.System_Void == typeSymbol.SpecialType)
+        //    {
+        //        return true;
+        //    }
 
-            if (TypeKind.Error == typeSymbol.TypeKind)
-            {
-                return true;
-            }
+        //    if (TypeKind.Error == typeSymbol.TypeKind)
+        //    {
+        //        return true;
+        //    }
 
-            if (typeSymbol.ContainingType is INamedTypeSymbol containingType && containingType.IsGenericType && containingType.TypeArguments.Any(c => IsTypeParameter(c)))
-            {
-                return true;
-            }
+        //    if (typeSymbol.ContainingType is INamedTypeSymbol containingType && containingType.IsGenericType && containingType.TypeArguments.Any(c => IsTypeParameter(c)))
+        //    {
+        //        return true;
+        //    }
 
-            if (typeSymbol is INamedTypeSymbol named)
-            {
-                if (named.IsUnboundGenericType)
-                {
-                    return true;
-                }
+        //    if (typeSymbol is INamedTypeSymbol named)
+        //    {
+        //        if (named.IsUnboundGenericType)
+        //        {
+        //            return true;
+        //        }
 
-                foreach (var item in named.TypeArguments)
-                {
-                    if (IsTypeParameter(item))
-                    {
-                        return true;
-                    }
-                }
-            }
+        //        foreach (var item in named.TypeArguments)
+        //        {
+        //            if (IsTypeParameter(item))
+        //            {
+        //                return true;
+        //            }
+        //        }
+        //    }
 
-            return false;
-        }
+        //    return false;
+        //}
 
         //static readonly string AccessorKey = TypeNameFormatter.TypeName.GetFormattedName(typeof(IGeneratorAccessor), TypeNameFormatter.TypeNameFormatOptions.Namespaces);
 
@@ -601,27 +601,37 @@ namespace Business.SourceGenerator.Analysis
 
             var definitions = makeGenerics.Where(c => !c.TypeArguments.Any(c => !(c.TypeKind is TypeKind.TypeParameter)) && c.IsGenericType && !c.IsAbstract);
 
-            foreach (var info in analysisInfo.TypeSymbols)
+            foreach (var info in analysisInfo.TypeSymbols)//.OrderBy(c => c.Key)
             {
                 var typeSymbol = info.Value.Declared as ITypeSymbol;
+
+                if ("Business.SourceGenerator" == typeSymbol.GetFullName(GetFullNameOpt.Create(captureStyle: CaptureStyle.Prefix)))
+                {
+                    continue;
+                }
 
                 if (Meta.Global.BusinessSourceGeneratorMeta == typeSymbol.GetFullName(GetFullNameOpt.Create(captureStyle: CaptureStyle.Prefix)))
                 {
                     continue;
                 }
 
-                if (IsTypeParameter(typeSymbol))
+                if ((!(typeSymbol.DeclaredAccessibility is Accessibility.Public) && !(typeSymbol.Kind is SymbolKind.DynamicType)) || typeSymbol.SpecialType is SpecialType.System_Void || typeSymbol.TypeKind is TypeKind.Delegate || typeSymbol.IsAbstract)
                 {
                     continue;
                 }
+
+                if (typeSymbol.TypeChecked(type => type.IsRefLikeType || type.TypeKind is TypeKind.Pointer || type.TypeKind is TypeKind.FunctionPointer || type.SpecialType is SpecialType.System_TypedReference || type.TypeKind is TypeKind.TypeParameter || type.IsAnonymousType || (type is INamedTypeSymbol named && named.IsUnboundGenericType)))
+                {
+                    continue;
+                }
+
+                //if (IsTypeParameter(typeSymbol))
+                //{
+                //    continue;
+                //}
 
                 //if (makeGenericsKeys.Contains(typeSymbol.GetFullNameOrig()))
                 if (makeGenericsKeys.Contains(info.Value.Names.DeclaredStandard))
-                {
-                    continue;
-                }
-
-                if (typeSymbol.SpecialType is SpecialType.System_Void || typeSymbol.TypeKind is TypeKind.Delegate || typeSymbol.IsAbstract)
                 {
                     continue;
                 }
@@ -645,7 +655,7 @@ namespace Business.SourceGenerator.Analysis
                     default: continue;
                 }
 
-                var definitions2 = definitions.Where(c => CheckConstraint(typeSymbol, c.TypeParameters.First()));
+                var definitions2 = definitions.Where(c => CheckConstraint(typeSymbol, c.TypeParameters.First()) && !typeSymbol.IsStatic);
 
                 var makes = string.Join(", ", definitions2.Select(c =>
                 {

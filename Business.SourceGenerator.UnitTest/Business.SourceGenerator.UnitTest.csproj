@@ -24,8 +24,8 @@
   </PropertyGroup>
 
   <ItemGroup>
-    <PackageReference Include="Business.SourceGenerator" Version="0.0.7.28" />
-    <PackageReference Include="Business.SourceGenerator.Meta" Version="0.0.0.69" />
+    <PackageReference Include="Business.SourceGenerator" Version="0.0.7.30" />
+    <PackageReference Include="Business.SourceGenerator.Meta" Version="0.0.0.71" />
     <PackageReference Include="Microsoft.CodeAnalysis.Analyzers" Version="3.3.4">
       <PrivateAssets>all</PrivateAssets>
       <IncludeAssets>runtime; build; native; contentfiles; analyzers; buildtransitive</IncludeAssets>
@@ -35,7 +35,7 @@
       <PrivateAssets>all</PrivateAssets>
       <IncludeAssets>runtime; build; native; contentfiles; analyzers; buildtransitive</IncludeAssets>
     </PackageReference>
-    <PackageReference Include="Microsoft.NET.Test.Sdk" Version="17.7.0" />
+    <PackageReference Include="Microsoft.NET.Test.Sdk" Version="17.7.1" />
     <PackageReference Include="System.Threading.Tasks.Extensions" Version="4.5.4" />
     <PackageReference Include="TypeNameFormatter.Sources" Version="1.1.1">
       <PrivateAssets>all</PrivateAssets>
@@ -53,6 +53,7 @@
   </ItemGroup>
 
   <ItemGroup>
+    <ProjectReference Include="..\Business.SourceGenerator.Meta\Business.SourceGenerator.Meta.csproj" />
     <ProjectReference Include="..\Business.SourceGenerator\Business.SourceGenerator.csproj" />
   </ItemGroup>
 

@@ -499,6 +499,7 @@ namespace Business.SourceGenerator.Analysis
                         sb.AddProperty(space.Repeat(spaceCount), $"{globalMeta}TypeKind", "TypeKind", $"{globalMeta}TypeKind.{accessor.TypeKind}");
                         sb.AddProperty(space.Repeat(spaceCount), globalBoolean, "IsRecord", accessor.IsRecord.ToName());
                         sb.AddProperty(space.Repeat(spaceCount), $"{globalMeta}AsyncType", "AsyncType", $"{globalMeta}AsyncType.{GetAsyncType(accessor)}");
+                        //sb.AddProperty(space.Repeat(spaceCount), globalString, "Name", $"\"{fullName}\"");
                         sb.AddProperty(space.Repeat(spaceCount), globalType, "RuntimeType", !(runtimeType is null) ? $"typeof({runtimeType})" : "default");
                         sb.AddProperty(space.Repeat(spaceCount), $"{globalMeta}DefaultValue", "DefaultValue", GetDefaultValue(accessor, typeClean, globalSystem));
                         //==================IAccessorNamedType==================//
@@ -530,6 +531,7 @@ namespace Business.SourceGenerator.Analysis
                     }
                 case ITypeParameterSymbol accessor:
                     {
+                        //var fullName = symbol.GetFullNameStandardFormat();
                         var runtimeType = accessor.GetFullNameRealStandardFormat(typeClean: typeClean);
 
                         var sb = new System.Text.StringBuilder($"new {globalMeta}AccessorTypeParameter(");
@@ -551,6 +553,7 @@ namespace Business.SourceGenerator.Analysis
                         sb.AppendFormat($"{globalMeta}TypeKind.{{0}}, ", accessor.TypeKind.GetName());
                         sb.AppendFormat(accessor.IsRecord);
                         sb.AppendFormat($"{globalMeta}AsyncType.{{0}}, ", GetAsyncType(accessor).GetName());
+                        //sb.AppendFormat("{0}, ", $"\"{fullName}\"");
                         sb.AppendFormat("{0}, ", (!(runtimeType is null) ? $"typeof({runtimeType})" : "default"));
                         sb.AppendFormat("{0}, ", GetDefaultValue(accessor, typeClean, globalSystem));
                         //==================IAccessorTypeParameter==================//
@@ -718,6 +721,7 @@ namespace Business.SourceGenerator.Analysis
                         sb.AddProperty(space.Repeat(spaceCount), $"{globalMeta}TypeKind", "TypeKind", $"{globalMeta}TypeKind.{accessor.TypeKind}");
                         sb.AddProperty(space.Repeat(spaceCount), globalBoolean, "IsRecord", accessor.IsRecord.ToName());
                         sb.AddProperty(space.Repeat(spaceCount), $"{globalMeta}AsyncType", "AsyncType", $"{globalMeta}AsyncType.{GetAsyncType(accessor)}");
+                        //sb.AddProperty(space.Repeat(spaceCount), globalString, "Name", $"\"{fullName}\"");
                         sb.AddProperty(space.Repeat(spaceCount), globalType, "RuntimeType", !(runtimeType is null) ? $"typeof({runtimeType})" : "default");
                         sb.AddProperty(space.Repeat(spaceCount), $"{globalMeta}DefaultValue", "DefaultValue", GetDefaultValue(accessor, typeClean, globalSystem));
 

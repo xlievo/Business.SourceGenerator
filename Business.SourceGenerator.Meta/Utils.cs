@@ -42,6 +42,22 @@ namespace Business.SourceGenerator
         /// <summary>
         /// Gets the property or field value of a specified object.
         /// </summary>
+        /// <param name="instanceMeta">The object whose value will be get.</param>
+        /// <param name="name">property or field name.</param>
+        /// <returns>Return member value.</returns>
+        public static object AccessorGet(this InstanceMeta instanceMeta, string name)
+        {
+            if (!(instanceMeta.TypeMeta.AsGeneratorType(name, out IAccessor accessor) is AccessorException.No) || !(accessor is IAccessorMember member) || member.IsStatic || member.GetValue is null)
+            {
+                return default;
+            }
+
+            return member.GetValue(instanceMeta.Instance);
+        }
+
+        /// <summary>
+        /// Gets the property or field value of a specified object.
+        /// </summary>
         /// <typeparam name="Type">Returns the caller of the specified type.</typeparam>
         /// <param name="instanceMeta">The object whose value will be get.</param>
         /// <param name="name">property or field name.</param>
@@ -59,6 +75,22 @@ namespace Business.SourceGenerator
         /// <summary>
         /// Gets the property or field value of a specified object.
         /// </summary>
+        /// <param name="typeMeta">The object whose value will be get.</param>
+        /// <param name="name">property or field name.</param>
+        /// <returns></returns>
+        public static object AccessorGet(this TypeMeta typeMeta, string name)
+        {
+            if (!(typeMeta.AsGeneratorType(name, out IAccessor accessor) is AccessorException.No) || !(accessor is IAccessorMember member) || !member.IsStatic || member.GetValueStatic is null)
+            {
+                return default;
+            }
+
+            return member.GetValueStatic();
+        }
+
+        /// <summary>
+        /// Gets the property or field value of a specified object.
+        /// </summary>
         /// <typeparam name="Type">Returns the caller of the specified type.</typeparam>
         /// <param name="typeMeta">The object whose value will be get.</param>
         /// <param name="name">property or field name.</param>
@@ -71,6 +103,28 @@ namespace Business.SourceGenerator
             }
 
             return (Type)member.GetValueStatic();
+        }
+
+        /// <summary>
+        /// Gets the property or field value of a specified object.
+        /// </summary>
+        /// <param name="typeMeta">The object whose value will be get.</param>
+        /// <param name="name">property or field name.</param>
+        /// <param name="instance">The object whose property or field value will be returned.</param>
+        /// <returns></returns>
+        public static object AccessorGet(this TypeMeta typeMeta, string name, object instance)
+        {
+            if (instance is null)
+            {
+                throw AccessorException.InstanceNull.AsException();
+            }
+
+            if (!(typeMeta.AsGeneratorType(name, out IAccessor accessor) is AccessorException.No) || !(accessor is IAccessorMember member) || member.IsStatic || member.GetValue is null)
+            {
+                return default;
+            }
+
+            return member.GetValue(instance);
         }
 
         /// <summary>
@@ -215,7 +269,7 @@ namespace Business.SourceGenerator
         /// <param name="instance">The object on which to invoke the method or constructor.</param>
         /// <param name="args">Method parameter array.</param>
         /// <returns></returns>
-        public static bool AccessorMethodSkipGeneric<ResultType>(this TypeMeta typeMeta, string name,  out ResultType result, object instance = default, params object[] args)
+        public static bool AccessorMethodSkipGeneric<ResultType>(this TypeMeta typeMeta, string name, out ResultType result, object instance = default, params object[] args)
         {
             var success = AccessorMethod(new InstanceMeta(typeMeta, instance), name, out object result2, true, args);
 
@@ -233,7 +287,7 @@ namespace Business.SourceGenerator
         /// <param name="instance">The object on which to invoke the method or constructor.</param>
         /// <param name="args">Method parameter array</param>
         /// <returns></returns>
-        public static bool AccessorMethodSkipGeneric(this TypeMeta typeMeta, string name,  out object result, object instance = default, params object[] args) => AccessorMethod(new InstanceMeta(typeMeta, instance), name, out result, true, args);
+        public static bool AccessorMethodSkipGeneric(this TypeMeta typeMeta, string name, out object result, object instance = default, params object[] args) => AccessorMethod(new InstanceMeta(typeMeta, instance), name, out result, true, args);
 
         #endregion
 
@@ -775,7 +829,7 @@ namespace Business.SourceGenerator
                 return AccessorException.AccessorNull;
             }
 
-            if (!typeMeta.AccessorType.Members.TryGetValue(name, out accessor))
+            if (!(typeMeta.AccessorType.Members?.TryGetValue(name, out accessor) ?? false))
             {
                 return AccessorException.MemberNotExist;
             }

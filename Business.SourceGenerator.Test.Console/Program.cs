@@ -40,6 +40,13 @@ namespace Business.SourceGenerator.Test.Console
         {
             BusinessSourceGenerator.Generator.SetGeneratorCode();
 
+            var nullTypes = BusinessSourceGenerator.Generator.GeneratorType.Where(c => c.Value.AccessorType is null).ToArray();
+
+            foreach (var item in nullTypes)
+            {
+                System.Console.WriteLine(item.Key);
+            }
+
             var dtt = typeof(DateTime).AsGeneratorType().AccessorGet<DateTime>("Now");
             System.Console.WriteLine(dtt.Ticks);
 
@@ -199,10 +206,10 @@ namespace Business.SourceGenerator.Test.Console
 
             //StructMember2(ref string? a, out int* b, ref (int c1, string c2) c, out (int? c1, string? c2) d)
             //StructMember2(ref string? a, out int b, ref (int c1, string c2) c, out (int? c1, string? c2) d)
-            if (MyStruct111.AccessorMethod("StructMember2", out (int c1, string c2) value222, 
-                RefArg.Ref("a"), 
-                RefArg.Out<int>(), 
-                RefArg.Ref((777, "xzzzxx")), 
+            if (MyStruct111.AccessorMethod("StructMember2", out (int c1, string c2) value222,
+                RefArg.Ref("a"),
+                RefArg.Out<int>(),
+                RefArg.Ref((777, "xzzzxx")),
                 RefArg.Out<(int?, string?)>()))
             {
                 System.Console.WriteLine(value222);
