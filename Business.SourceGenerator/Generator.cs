@@ -20,6 +20,8 @@ namespace Business.SourceGenerator
     using Microsoft.CodeAnalysis;
     using System;
     using System.Collections.Generic;
+    using System.Diagnostics;
+    using System.IO;
     using System.Linq;
 
     [Generator(LanguageNames.CSharp)]
@@ -103,6 +105,46 @@ namespace Business.SourceGenerator
                 if (app)
                 {
                     var generatorType = $"{generator.types}";
+
+                    //var file = System.IO.Path.GetTempFileName();
+                    //System.IO.File.WriteAllText(file, generatorType, System.Text.Encoding.UTF8);
+                    
+                    ////context.Compilation.Emit().
+                    //try
+                    //{
+                    //    using (var ms = new MemoryStream())
+                    //    {
+                    //        var compilation = context.Compilation.AddSyntaxTree(generatorType, context.ParseOptions);
+                    //        //context.AddSource(Meta.Global.GeneratorCodeName, Microsoft.CodeAnalysis.Text.SourceText.From($"{usings2}{generatorType}", System.Text.Encoding.UTF8));
+
+                    //        var emit = compilation.Emit(ms);
+
+                    //        if (emit.Success)
+                    //        {
+                    //            System.IO.File.WriteAllBytes("D:\\Source\\Repos\\Business.SourceGenerator.Test\\csc\\Class1.dll", ms.ToArray());
+                    //        }
+                    //    }
+                    //    var refs = string.Join(" ", context.Compilation.References.Select(c => $"/r:\"{c.Display}\""));
+                    //    using (var p = Process.Start(new ProcessStartInfo("dotnet", @$"""C:\Program Files\dotnet\sdk\7.0.400\Roslyn\bincore\csc.dll"" {file} /target:library {refs} /out:D:\Source\Repos\Business.SourceGenerator.Test\csc\Class1.dll") { RedirectStandardOutput = true }))
+                    //    {
+                    //        var output = p.StandardOutput.ReadToEnd();
+                    //    }
+                    //}
+                    //catch (Exception)
+                    //{
+                    //    throw;
+                    //}
+                    //finally
+                    //{
+                    //    System.IO.File.Delete(file);
+                    //}
+
+                    //using (var p = new Process())
+                    //{
+                    //    p.StartInfo = new ProcessStartInfo("cmd", "");
+                    //}
+
+                    //System.IO.File.Delete(file);
 
                     #region AddSource
 

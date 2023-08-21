@@ -620,7 +620,7 @@ namespace Business.SourceGenerator.Analysis
                     continue;
                 }
 
-                if (typeSymbol.TypeChecked(type => type.IsRefLikeType || type.TypeKind is TypeKind.Pointer || type.TypeKind is TypeKind.FunctionPointer || type.SpecialType is SpecialType.System_TypedReference || type.TypeKind is TypeKind.TypeParameter || type.IsAnonymousType || (type is INamedTypeSymbol named && named.IsUnboundGenericType)))
+                if (typeSymbol.TypeChecked(type => type.IsRefLikeType || type.TypeKind is TypeKind.Pointer || type.TypeKind is TypeKind.FunctionPointer || type.SpecialType is SpecialType.System_TypedReference || type.TypeKind is TypeKind.TypeParameter || type.IsAnonymousType || (type is INamedTypeSymbol named && named.IsUnboundGenericType) || "System.Reflection" == type.GetFullName(GetFullNameOpt.Create(captureStyle: CaptureStyle.Prefix))))
                 {
                     continue;
                 }

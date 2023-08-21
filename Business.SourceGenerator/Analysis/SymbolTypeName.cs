@@ -1194,9 +1194,11 @@ namespace Business.SourceGenerator.Analysis
             return typeFullName.StartsWith("System.Span") || typeFullName.StartsWith("System.ReadOnlySpan");
         });
 
-        public static bool IsRefLikePointerTypedReferenceValueTypeConstraint(this ITypeSymbol typeSymbol) => TypeChecked(typeSymbol, type => type.IsRefLikeType || type.TypeKind is TypeKind.Pointer || type.TypeKind is TypeKind.FunctionPointer || type.SpecialType is SpecialType.System_TypedReference || (type is INamedTypeSymbol named && named.TypeParameters.Any(c => c.HasValueTypeConstraint && named.TypeArguments[c.Ordinal].IsTypeParameter())));
+        public static bool IsRefLikePointerTypedReferenceValueTypeConstraint(this ITypeSymbol typeSymbol) => TypeChecked(typeSymbol, type => type.IsRefLikeType || type.TypeKind is TypeKind.Pointer || type.TypeKind is TypeKind.FunctionPointer || type.SpecialType is SpecialType.System_TypedReference || (type is INamedTypeSymbol named && named.TypeParameters.Any(c => c.HasValueTypeConstraint && named.TypeArguments[c.Ordinal].IsTypeParameter())) || "System.Reflection" == type.GetFullName(GetFullNameOpt.Create(captureStyle: CaptureStyle.Prefix)));
 
-        public static bool IsRefLikePointerTypedReferenceTypeParameter(this ITypeSymbol typeSymbol) => TypeChecked(typeSymbol, type => type.IsRefLikeType || type.TypeKind is TypeKind.Pointer || type.TypeKind is TypeKind.FunctionPointer || type.SpecialType is SpecialType.System_TypedReference || type.TypeKind is TypeKind.TypeParameter);
+        //public static bool IsRefLikePointerTypedReferenceTypeParameter(this ITypeSymbol typeSymbol) => TypeChecked(typeSymbol, type => type.IsRefLikeType || type.TypeKind is TypeKind.Pointer || type.TypeKind is TypeKind.FunctionPointer || type.SpecialType is SpecialType.System_TypedReference || type.TypeKind is TypeKind.TypeParameter);
+
+        public static bool IsCustom(this ITypeSymbol typeSymbol) => TypeChecked(typeSymbol, type => !type.DeclaringSyntaxReferences.Any());
 
         public static bool IsRefLikeType(this ITypeSymbol typeSymbol) => TypeChecked(typeSymbol, type => type.IsRefLikeType);
 
