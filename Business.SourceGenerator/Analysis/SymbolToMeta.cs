@@ -490,7 +490,7 @@ namespace Business.SourceGenerator.Analysis
                         sb.AddProperty(space.Repeat(spaceCount), globalBoolean, "IsStatic", symbol.IsStatic.ToName());
                         sb.AddProperty(space.Repeat(spaceCount), $"{globalMeta}Kind", "Kind", $"{globalMeta}Kind.{symbol.Kind}");
                         //==================IAccessorType==================//
-                        sb.AddProperty(space.Repeat(spaceCount), $"{globalGeneric}IDictionary<{globalString}, {globalMeta}IAccessor>?", "Members", members.Any() ? $"new {globalGeneric}Dictionary<{globalString}, {globalMeta}IAccessor> {{ {string.Join(", ", members.Select(c => $"{{ \"{c.Key}\", {c.Value} }}"))} }}" : "default");
+                        sb.AddProperty(space.Repeat(spaceCount), $"{globalGeneric}IDictionary<{globalString}, {globalMeta}IAccessor>", "Members", members.Any() ? $"new {globalGeneric}Dictionary<{globalString}, {globalMeta}IAccessor> {{ {string.Join(", ", members.Select(c => $"{{ \"{c.Key}\", {c.Value} }}"))} }}" : "default");
                         sb.AddProperty(space.Repeat(spaceCount), globalBoolean, "IsReadOnly", accessor.IsReadOnly.ToName());
                         sb.AddProperty(space.Repeat(spaceCount), globalBoolean, "IsUnmanagedType", accessor.IsUnmanagedType.ToName());
                         sb.AddProperty(space.Repeat(spaceCount), $"{globalMeta}SpecialType", "SpecialType", $"{globalMeta}SpecialType.{accessor.SpecialType}");
@@ -503,13 +503,13 @@ namespace Business.SourceGenerator.Analysis
                         sb.AddProperty(space.Repeat(spaceCount), globalType, "RuntimeType", !(runtimeType is null) ? $"typeof({runtimeType})" : "default");
                         sb.AddProperty(space.Repeat(spaceCount), $"{globalMeta}DefaultValue", "DefaultValue", GetDefaultValue(accessor, typeClean, globalSystem));
                         //==================IAccessorNamedType==================//
-                        sb.AddProperty(space.Repeat(spaceCount), $"{globalMeta}AccessorAttribute[]?", "Attributes", attrs.Any() ? $"{GetAttributes(attrs, globalMeta, typeClean)}" : "default");
-                        sb.AddProperty(space.Repeat(spaceCount), $"{globalGeneric}IEnumerable<{globalMeta}IAccessorField>?", "TupleElements", (isTupleType && accessor.TupleElements.Any()) ? $"new {globalMeta}IAccessorField[] {{ {string.Join(", ", accessor.TupleElements.Select(c => c.ToMeta3(opt, typeClean, fullName2, assemblyName)))} }}" : "default");
+                        sb.AddProperty(space.Repeat(spaceCount), $"{globalMeta}AccessorAttribute[]", "Attributes", attrs.Any() ? $"{GetAttributes(attrs, globalMeta, typeClean)}" : "default");
+                        sb.AddProperty(space.Repeat(spaceCount), $"{globalGeneric}IEnumerable<{globalMeta}IAccessorField>", "TupleElements", (isTupleType && accessor.TupleElements.Any()) ? $"new {globalMeta}IAccessorField[] {{ {string.Join(", ", accessor.TupleElements.Select(c => c.ToMeta3(opt, typeClean, fullName2, assemblyName)))} }}" : "default");
                         sb.AddProperty(space.Repeat(spaceCount), globalBoolean, "MightContainExtensionMethods", accessor.MightContainExtensionMethods.ToName());
                         sb.AddProperty(space.Repeat(spaceCount), globalBoolean, "IsSerializable", accessor.IsSerializable.ToName());
                         sb.AddProperty(space.Repeat(spaceCount), globalBoolean, "IsPartial", accessor.IsPartial().ToName());
                         sb.AddProperty(space.Repeat(spaceCount), globalBoolean, "HasTypeParameter", accessor.IsTypeParameter().ToName());
-                        sb.AddProperty(space.Repeat(spaceCount), $"{globalMeta}IAccessorType[]?", "TypeArguments", accessor.TypeArguments.Any() ? $"new {globalMeta}IAccessorType[] {{ {string.Join(", ", accessor.TypeArguments.Select(c => c.ToMeta3(opt, typeClean, fullName2, assemblyName)))} }}" : "default");
+                        sb.AddProperty(space.Repeat(spaceCount), $"{globalMeta}IAccessorType[]", "TypeArguments", accessor.TypeArguments.Any() ? $"new {globalMeta}IAccessorType[] {{ {string.Join(", ", accessor.TypeArguments.Select(c => c.ToMeta3(opt, typeClean, fullName2, assemblyName)))} }}" : "default");
 
                         spaceCount--;
                         sb.Append($"{space.Repeat(spaceCount)}}}");
@@ -712,7 +712,7 @@ namespace Business.SourceGenerator.Analysis
                         sb.AddProperty(space.Repeat(spaceCount), globalBoolean, "IsStatic", symbol.IsStatic.ToName());
                         sb.AddProperty(space.Repeat(spaceCount), $"{globalMeta}Kind", "Kind", $"{globalMeta}Kind.{symbol.Kind}");
                         //==================IAccessorType==================//
-                        sb.AddProperty(space.Repeat(spaceCount), $"{globalGeneric}IDictionary<{globalString}, {globalMeta}IAccessor>?", "Members", members.Any() ? $"new {globalGeneric}Dictionary<{globalString}, {globalMeta}IAccessor> {{ {string.Join(", ", members.Select(c => $"{{ \"{c.Key}\", {c.Value} }}"))} }}" : "default");
+                        sb.AddProperty(space.Repeat(spaceCount), $"{globalGeneric}IDictionary<{globalString}, {globalMeta}IAccessor>", "Members", members.Any() ? $"new {globalGeneric}Dictionary<{globalString}, {globalMeta}IAccessor> {{ {string.Join(", ", members.Select(c => $"{{ \"{c.Key}\", {c.Value} }}"))} }}" : "default");
                         sb.AddProperty(space.Repeat(spaceCount), globalBoolean, "IsReadOnly", accessor.IsReadOnly.ToName());
                         sb.AddProperty(space.Repeat(spaceCount), globalBoolean, "IsUnmanagedType", accessor.IsUnmanagedType.ToName());
                         sb.AddProperty(space.Repeat(spaceCount), $"{globalMeta}SpecialType", "SpecialType", $"{globalMeta}SpecialType.{accessor.SpecialType}");
